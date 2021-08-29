@@ -1,5 +1,6 @@
 package com._7aske.grain;
 
+import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.config.ConfigurationBuilder;
 import com._7aske.grain.exception.AppInitializationException;
@@ -15,13 +16,17 @@ import java.util.concurrent.Executors;
 
 public abstract class GrainApp {
 	private Configuration configuration;
+	private String basePackage;
 	private boolean running = true;
 
 	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
-
 	protected GrainApp() {
+	}
+
+	void run() {
 		doConfigure();
+		doRegisterGrains();
 		doRun();
 	}
 
@@ -45,11 +50,23 @@ public abstract class GrainApp {
 		}
 	}
 
+	private void doRegisterGrains() {
+		GrainRegistry registry = new GrainRegistry(basePackage);
+	}
+
 	private void doConfigure() {
 		this.configure(configurationBuilder);
 		this.configuration = configurationBuilder.build();
 	}
 
 	protected void configure(ConfigurationBuilder builder) {
+	}
+
+	public final String getBasePackage() {
+		return basePackage;
+	}
+
+	final void setBasePackage(String basePackage) {
+		this.basePackage = basePackage;
 	}
 }

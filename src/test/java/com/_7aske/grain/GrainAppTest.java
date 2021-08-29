@@ -1,6 +1,8 @@
 package com._7aske.grain;
 
+import com._7aske.grain.component.Controller;
 import com._7aske.grain.config.ConfigurationBuilder;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -12,6 +14,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 class GrainAppTest {
 	ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+	@Controller
+	static class TestController {
+		public String get(){
+			return "Test";
+		}
+	}
 
 	static class TestApp extends GrainApp {
 	}
@@ -60,5 +69,21 @@ class GrainAppTest {
 		} catch (IOException e) {
 			assertTrue(true);
 		}
+	}
+
+	static class DebugApp extends GrainApp {
+		@Override
+		protected void configure(ConfigurationBuilder builder) {
+			builder.port(33631);
+		}
+
+	}
+
+
+	@Test
+	@Disabled("Used for debugging purposes")
+	void test_debug() {
+		GrainAppRunner.run(DebugApp.class);
+		assertTrue(true);
 	}
 }
