@@ -62,6 +62,10 @@ public class HttpRequest {
 		this.body = body;
 	}
 
+	public Map<String, String> getHeaders() {
+		return headers;
+	}
+
 	@Override
 	public String toString() {
 		return "HttpRequest{" +
