@@ -5,6 +5,7 @@ public enum HttpStatus {
 	SWITCHING_PROTOCOLS(101, "Switching Protocols"),
 	PROCESSING(102, "Processing"),
 	CHECKPOINT(103, "Checkpoint"),
+	OK(200, "OK"),
 	CREATED(201, "Created"),
 	ACCEPTED(202, "Accepted"),
 	NON_AUTHORITATIVE_INFORMATION(203, "Non-Authoritative Information"),
@@ -81,4 +82,13 @@ public enum HttpStatus {
 	HttpStatus(int value, String reason) {
 		this.value = value;
 		this.reason = reason;
-	}}
+	}
+
+	public int getValue() {
+		return value;
+	}
+
+	public String getReason() {
+		return reason;
+	}
+}

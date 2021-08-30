@@ -2,17 +2,17 @@ package com._7aske.grain.component;
 
 import com._7aske.grain.util.ReflectionUtil;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GrainRegistry {
 	private Set<Object> grains = new HashSet<>();
 	private final String basePackage;
+	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
 	public GrainRegistry(String pkg) {
 		if (pkg == null)
@@ -21,38 +21,34 @@ public class GrainRegistry {
 		doInitializeGrains();
 	}
 
-	private Set<Class<?>> getGrains(Package pkg) {
-		InputStream stream = ClassLoader.getSystemClassLoader()
-				.getResourceAsStream(pkg.getName().replaceAll("[.]", "/"));
+	private Set<Class<?>> getGrains(String pkg) {
+		InputStream stream = classLoader.getResourceAsStream(pkg.replaceAll("[.]", "/"));
+
+		if (stream == null) {
+			return new HashSet<>();
+		}
 
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 
 		return reader.lines()
-				.filter(line -> line.endsWith(".class"))
-				.map(line -> getClass(line, basePackage))
+				.flatMap(line -> {
+					if (line.endsWith(".class")) {
+						return Stream.of(getClass(line, pkg));
+					} else {
+						return getGrains(pkg + "." + line).stream();
+					}
+				})
 				.filter(Objects::nonNull)
 				.filter(c -> {
-					if (c.isAnnotationPresent(Grain.class)){
-						return true;
-					}
+					if (c.isAnnotationPresent(Grain.class)) return true;
+					// check if annotation is inherited
 					return Arrays.stream(c.getAnnotations()).anyMatch(a -> a.annotationType().isAnnotationPresent(Grain.class));
 				})
 				.collect(Collectors.toSet());
 	}
 
 	private void doInitializeGrains() {
-		Package[] packages = Package.getPackages();
-
-		List<Package> ownPackages = Arrays.stream(packages)
-				.filter(pkg -> pkg.getName().startsWith(basePackage))
-				.collect(Collectors.toList());
-
-		Set<Class<?>> grainClasses = ownPackages.stream()
-				.flatMap(pkg -> {
-					Set<Class<?>> stream = getGrains(pkg);
-					return stream.stream();
-				})
-				.collect(Collectors.toSet());
+		Set<Class<?>> grainClasses = getGrains(basePackage);
 
 		grains = grainClasses.stream()
 				.map(c -> {
@@ -70,12 +66,11 @@ public class GrainRegistry {
 
 	private Class<?> getClass(String className, String packageName) {
 		try {
-			return Class.forName(packageName + "."
-					+ className.substring(0, className.lastIndexOf('.')));
+			String fullClassName = packageName + "." + className.substring(0, className.lastIndexOf('.'));
+			return Class.forName(fullClassName);
 		} catch (ClassNotFoundException e) {
-			// handle the exception
+			return null;
 		}
-		return null;
 	}
 
 	public Set<Object> getControllers() {

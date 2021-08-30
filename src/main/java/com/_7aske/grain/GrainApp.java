@@ -20,6 +20,7 @@ public abstract class GrainApp {
 	private boolean running = true;
 
 	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+	private GrainRegistry grainRegistry;
 
 	protected GrainApp() {
 	}
@@ -40,7 +41,7 @@ public abstract class GrainApp {
 
 			while (running) {
 				Socket socket = serverSocket.accept();
-				executor.execute(RequestHandler.handle(socket));
+				executor.execute(RequestHandler.handle(grainRegistry, socket));
 			}
 
 		} catch (UnknownHostException e) {
@@ -51,7 +52,7 @@ public abstract class GrainApp {
 	}
 
 	private void doRegisterGrains() {
-		GrainRegistry registry = new GrainRegistry(basePackage);
+		grainRegistry = new GrainRegistry(basePackage);
 	}
 
 	private void doConfigure() {
