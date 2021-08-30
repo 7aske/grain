@@ -5,10 +5,8 @@ import com._7aske.grain.component.ControllerRegistry;
 import com._7aske.grain.component.ControllerWrapper;
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpRequestParser;
-import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.HttpStatus;
+import com._7aske.grain.http.*;
+import com._7aske.grain.http.view.View;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -79,8 +77,18 @@ public class RequestHandler implements Runnable {
 			Object result;
 			try {
 				result = doRun(request, response);
-				response.setStatus(HttpStatus.OK);
-				response.setBody((String) result);
+				if (response.getStatus() == null)
+					response.setStatus(HttpStatus.OK);
+
+				if (result instanceof View) {
+					String httpString = ((View) result).getContent();
+					response.setBody(httpString);
+					response.setHeader(HttpHeaders.CONTENT_TYPE, ((View) result).getContentType());
+					response.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(response.length()));
+				} else if (result instanceof String) {
+					response.setBody((String) result);
+				}
+
 			} catch (HttpException ex) {
 				response.setStatus(ex.getStatus());
 				response.setBody(ex.getMessage());

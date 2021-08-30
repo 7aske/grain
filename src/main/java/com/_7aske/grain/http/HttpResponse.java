@@ -11,6 +11,7 @@ public class HttpResponse {
 	private HttpStatus status;
 	private Map<String, String> headers = new HashMap<>();
 	private String body = null;
+	private String generatedString = null;
 
 	public HttpResponse() {
 	}
@@ -24,23 +25,25 @@ public class HttpResponse {
 	}
 
 	public String getHttpString() {
-		StringBuilder builder = new StringBuilder();
-		builder
-				.append(version)
-				.append(" ")
-				.append(status.getValue())
-				.append(" ")
-				.append(status.getReason())
-				.append(CRLF);
-		for (Map.Entry<String, String> kv : headers.entrySet()) {
-			builder.append(kv.getKey()).append(": ").append(kv.getValue()).append(CRLF);
+		if (generatedString == null) {
+			StringBuilder builder = new StringBuilder();
+			builder
+					.append(version)
+					.append(" ")
+					.append(status.getValue())
+					.append(" ")
+					.append(status.getReason())
+					.append(CRLF);
+			for (Map.Entry<String, String> kv : headers.entrySet()) {
+				builder.append(kv.getKey()).append(": ").append(kv.getValue()).append(CRLF);
+			}
+			builder.append(CRLF);
+			if (body != null) {
+				builder.append(body);
+			}
+			generatedString = builder.toString();
 		}
-		builder.append(CRLF);
-		if (body != null) {
-			builder.append(body);
-		}
-		return builder.toString();
-
+		return generatedString;
 	}
 
 	public String getVersion() {
@@ -81,5 +84,9 @@ public class HttpResponse {
 
 	public void setBody(String body) {
 		this.body = body;
+	}
+
+	public int length() {
+		return getHttpString().length();
 	}
 }

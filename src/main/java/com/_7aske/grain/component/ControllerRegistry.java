@@ -24,7 +24,7 @@ public class ControllerRegistry {
 				.filter(c -> c.getClass().isAnnotationPresent(RequestMapping.class))
 				.filter(c -> {
 					RequestMapping mapping = c.getClass().getAnnotation(RequestMapping.class);
-					return HttpPathUtil.arePathsMatching(path, mapping.path());
+					return HttpPathUtil.arePathsMatching(path, mapping.value());
 				})
 				.map(ControllerWrapper::new)
 				.findFirst();

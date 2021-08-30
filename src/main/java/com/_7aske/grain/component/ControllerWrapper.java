@@ -22,7 +22,7 @@ public class ControllerWrapper {
 				.filter(m -> m.isAnnotationPresent(RequestMapping.class))
 				.filter(m -> {
 					RequestMapping methodMapping = m.getAnnotation(RequestMapping.class);
-					return HttpPathUtil.arePathsMatching(path, mapping.path() + methodMapping.path())
+					return HttpPathUtil.arePathsMatching(path, mapping.value() + methodMapping.value())
 							&& methodMapping.method().equals(method);
 				})
 				.map(ControllerMethodWrapper::new)
