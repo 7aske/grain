@@ -3,6 +3,7 @@ package com._7aske.grain.http;
 import java.io.Serializable;
 
 public class HttpHeaders implements Serializable {
+	private HttpHeaders(){}
 	private static final long serialVersionUID = 2641892452976043664L;
 
 	public static final String ACCEPT = "Accept";

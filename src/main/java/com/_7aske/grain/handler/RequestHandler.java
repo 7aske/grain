@@ -13,19 +13,18 @@ import com._7aske.grain.http.HttpStatus;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static com._7aske.grain.util.ArrayUtil.swap;
+
 public class RequestHandler implements Runnable {
 	private final Socket socket;
-	private final GrainRegistry registry;
 	private final ControllerRegistry controllerRegistry;
 
 	public RequestHandler(GrainRegistry registry, Socket socket) {
 		this.socket = socket;
-		this.registry = registry;
 		this.controllerRegistry = new ControllerRegistry(registry);
 	}
 
@@ -56,12 +55,6 @@ public class RequestHandler implements Runnable {
 		}
 
 		return Arrays.copyOfRange(retval, 0, method.getParameterCount());
-	}
-
-	private static void swap(Object[] x, int a, int b) {
-		Object t = x[a];
-		x[a] = x[b];
-		x[b] = t;
 	}
 
 	public int findArgIndexByClass(Class<?> clazz, Object... args) {
