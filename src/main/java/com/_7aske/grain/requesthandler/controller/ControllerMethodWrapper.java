@@ -16,7 +16,7 @@ public class ControllerMethodWrapper {
 		this.method = method;
 		RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
 		this.httpMethod = requestMapping.method();
-		this.path = requestMapping.value();
+		this.path = requestMapping.value().startsWith("/") ? requestMapping.value() : "/" + requestMapping.value();
 	}
 
 	public Object invoke(Object instance, Object... args) {
