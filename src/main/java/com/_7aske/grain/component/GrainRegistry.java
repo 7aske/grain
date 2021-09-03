@@ -1,11 +1,17 @@
 package com._7aske.grain.component;
 
+import com._7aske.grain.requesthandler.middleware.Middleware;
 import com._7aske.grain.util.ReflectionUtil;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,7 +27,7 @@ public class GrainRegistry {
 		doInitializeGrains();
 	}
 
-	private Set<Class<?>> getGrains(String pkg) {
+	private Set<Class<?>> loadGrains(String pkg) {
 		InputStream stream = classLoader.getResourceAsStream(pkg.replaceAll("[.]", "/"));
 
 		if (stream == null) {
@@ -35,7 +41,7 @@ public class GrainRegistry {
 					if (line.endsWith(".class")) {
 						return Stream.of(getClass(line, pkg));
 					} else {
-						return getGrains(pkg + "." + line).stream();
+						return loadGrains(pkg + "." + line).stream();
 					}
 				})
 				.filter(Objects::nonNull)
@@ -48,7 +54,7 @@ public class GrainRegistry {
 	}
 
 	private void doInitializeGrains() {
-		Set<Class<?>> grainClasses = getGrains(basePackage);
+		Set<Class<?>> grainClasses = loadGrains(basePackage);
 
 		grains = grainClasses.stream()
 				.map(c -> {
@@ -76,6 +82,17 @@ public class GrainRegistry {
 	public Set<Object> getControllers() {
 		return grains.stream()
 				.filter(g -> g.getClass().isAnnotationPresent(Controller.class))
+				.collect(Collectors.toSet());
+	}
+
+	public Set<Object> getGrains() {
+		return grains;
+	}
+
+	public Set<Middleware> getMiddlewares() {
+		return grains.stream()
+				.filter(g -> Arrays.asList(g.getClass().getInterfaces()).contains(Middleware.class))
+				.map(Middleware.class::cast)
 				.collect(Collectors.toSet());
 	}
 }

@@ -2,6 +2,8 @@ package com._7aske.grain.testpackage;
 
 import com._7aske.grain.component.Controller;
 import com._7aske.grain.controller.RequestMapping;
+import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.view.DataView;
 
 @Controller
@@ -16,5 +18,10 @@ public class TestController {
 		dataView.setData("firstName", firstName);
 		dataView.setData("lastName", lastName);
 		return dataView;
+	}
+
+	@RequestMapping(value = "json", method = HttpMethod.POST)
+	public String postJson(HttpRequest request) {
+		return request.getBody().toString();
 	}
 }

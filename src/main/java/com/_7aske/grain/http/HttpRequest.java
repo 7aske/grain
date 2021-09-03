@@ -8,7 +8,7 @@ public class HttpRequest {
 	private String path;
 	private HttpMethod method;
 	private Map<String, String> headers;
-	private String body;
+	private Object body;
 
 	public HttpRequest() {
 		this.headers = new HashMap<>();
@@ -54,11 +54,15 @@ public class HttpRequest {
 		headers.put(header, value);
 	}
 
-	public String getBody() {
+	public boolean hasHeader(String header) {
+		return headers.get(header) != null;
+	}
+
+	public Object getBody() {
 		return body;
 	}
 
-	public void setBody(String body) {
+	public void setBody(Object body) {
 		this.body = body;
 	}
 
@@ -73,7 +77,8 @@ public class HttpRequest {
 				", path='" + path + '\'' +
 				", method=" + method +
 				", headers=" + headers +
-				", body='" + body + '\'' +
+				", body=" + body +
 				'}';
 	}
+
 }

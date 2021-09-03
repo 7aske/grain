@@ -8,7 +8,6 @@ import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import static com._7aske.grain.util.ArrayUtil.swap;
 
@@ -21,8 +20,8 @@ public class ControllerHandler implements RequestHandler {
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
-		Optional<ControllerMethodWrapper> handlerMethod = controller.getMethod(request.getPath(), request.getMethod());
-		ControllerMethodWrapper method = handlerMethod.orElseThrow(HttpException.NotFound::new);
+		ControllerMethodWrapper method = controller.getMethod(request.getPath(), request.getMethod())
+				.orElseThrow(HttpException.NotFound::new);
 
 		Object result = method.invoke(controller.getInstance(), sortedVarArgs(method, request, response));
 

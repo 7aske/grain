@@ -33,6 +33,7 @@ public class DataView extends AbstractView {
 			if (key != null)
 				matcher.appendReplacement(builder, data.get(key));
 		}
+		matcher.appendTail(builder);
 
 		return builder.toString();
 	}

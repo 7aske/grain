@@ -2,12 +2,14 @@ package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.controller.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
-import com._7aske.grain.util.HttpPathUtil;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com._7aske.grain.util.HttpPathUtil.arePathsMatching;
+import static com._7aske.grain.util.HttpPathUtil.join;
 
 public class ControllerWrapper {
 	private final Object controller;
@@ -25,7 +27,7 @@ public class ControllerWrapper {
 
 	public Optional<ControllerMethodWrapper> getMethod(String path, HttpMethod method) {
 		return methods.stream()
-				.filter(m -> HttpPathUtil.arePathsMatching(path, getPath() + m.getPath())
+				.filter(m -> arePathsMatching(path, join(getPath(), m.getPath()))
 						&& (method == null || m.getHttpMethod().equals(method)))
 				.findFirst();
 	}
