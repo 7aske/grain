@@ -2,6 +2,7 @@ package com._7aske.grain;
 
 import com._7aske.grain.component.Controller;
 import com._7aske.grain.config.ConfigurationBuilder;
+import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -72,6 +73,11 @@ class GrainAppTest {
 	}
 
 	static class DebugApp extends GrainApp {
+		@Override
+		protected void staticLocationRegistry(StaticLocationsRegistry registry) {
+			registry.addStaticLocation("/home/nik/.local/src/js/website/build");
+		}
+
 		@Override
 		protected void configure(ConfigurationBuilder builder) {
 			builder.port(33631);

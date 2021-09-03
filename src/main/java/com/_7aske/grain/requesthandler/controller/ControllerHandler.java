@@ -4,7 +4,7 @@ import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpHeaders;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.view.View;
+import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.util.Arrays;
@@ -26,9 +26,9 @@ public class ControllerHandler implements RequestHandler {
 
 		Object result = method.invoke(controller.getInstance(), sortedVarArgs(method, request, response));
 
-		if (result instanceof View) {
-			response.setBody(((View) result).getContent());
-			response.setHeader(HttpHeaders.CONTENT_TYPE, ((View) result).getContentType());
+		if (result instanceof AbstractView) {
+			response.setBody(((AbstractView) result).getContent());
+			response.setHeader(HttpHeaders.CONTENT_TYPE, ((AbstractView) result).getContentType());
 		} else if (result instanceof String) {
 			response.setBody((String) result);
 			response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain");

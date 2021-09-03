@@ -37,7 +37,7 @@ public class StaticLocationHandler implements RequestHandler {
 	public void handle(HttpRequest request, HttpResponse response) {
 		Path path = Paths.get(getLocation(), request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
-			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/plain"));
+			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
 			response.setBody(new String(inputStream.readAllBytes()));
 			response.setStatus(HttpStatus.OK);
 		} catch (IOException ex) {
@@ -77,7 +77,13 @@ public class StaticLocationHandler implements RequestHandler {
 	@Override
 	public boolean canHandle(String path) {
 		if (isResource) {
-			return classLoader.getResource(Paths.get(getLocation(), path).toString()) != null;
+			URL url = classLoader.getResource(path);
+			if (url == null) return false;
+			File file = new File(url.getPath());
+			if (file.isDirectory()) {
+				file = new File(url.getPath() + "/index.html");
+			}
+			return file.exists();
 		} else {
 			return new File(Paths.get(getLocation(), path).toAbsolutePath().toString()).exists();
 		}

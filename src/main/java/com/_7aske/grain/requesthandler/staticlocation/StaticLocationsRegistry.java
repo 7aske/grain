@@ -13,7 +13,7 @@ public class StaticLocationsRegistry  {
 		locations.add("resources:/public");
 	}
 
-	public void registerStaticLocation(String path) {
+	public void addStaticLocation(String path) {
 		if (path.startsWith(RESOURCES_PREFIX)) {
 			locations.add(path);
 		} else {
@@ -21,7 +21,7 @@ public class StaticLocationsRegistry  {
 		}
 	}
 
-	public void unregisterStaticLocation(String path) {
+	public void removeStaticLocation(String path) {
 		if (path.startsWith(RESOURCES_PREFIX)) {
 			locations.remove(path);
 		} else {

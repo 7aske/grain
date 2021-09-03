@@ -27,9 +27,9 @@ public abstract class GrainApp {
 	protected GrainApp() {
 	}
 
-	void run() {
-		doConfigure();
+	final void run() {
 		doInitializeComponents();
+		doConfigure();
 		doRun();
 	}
 
@@ -61,9 +61,13 @@ public abstract class GrainApp {
 	private void doConfigure() {
 		this.configure(configurationBuilder);
 		this.configuration = configurationBuilder.build();
+		this.staticLocationRegistry(staticLocationsRegistry);
 	}
 
 	protected void configure(ConfigurationBuilder builder) {
+	}
+
+	protected void staticLocationRegistry(StaticLocationsRegistry registry) {
 	}
 
 	public final String getBasePackage() {
