@@ -67,7 +67,7 @@ public class JsonDeserializer {
 		try {
 			return Float.parseFloat(val);
 		} catch (NumberFormatException ex) {
-			return null;
+			throw new JsonDeserializationException("Unexpected token " + val + " " + iterator.getInfo());
 		}
 	}
 
@@ -79,6 +79,11 @@ public class JsonDeserializer {
 		List<Object> list = new ArrayList<>();
 		iterator.next(); // skip [
 		while (true) {
+			if (iterator.hasNext() && iterator.peek().equals("]")) {
+				iterator.next();
+				break;
+			}
+
 			iterator.eatWhitespace();
 			Object val = parseValue();
 			iterator.eatWhitespace();
@@ -100,6 +105,10 @@ public class JsonDeserializer {
 		Map<String, Object> obj = new HashMap<>();
 		iterator.next(); // skip '{'
 		while (true) {
+			if (iterator.hasNext() && iterator.peek().equals("}")) {
+				iterator.next();
+				break;
+			}
 			Pair<String, Object> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
 			if (iterator.peek().equals(","))
