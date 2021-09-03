@@ -17,5 +17,6 @@ This is a pet project to showcase programming paradigms, stereotypes and pattern
 * Component system
   * Controllers
     * Method request mapping
+    * View templates
 * Static directory serving
   * Classpath and non-classpath directories
