@@ -6,8 +6,10 @@ public class HttpPathUtil {
 	}
 
 	public static boolean arePathsMatching(String httpPath, String controllerPath) {
-		String[] controllerPathSegments = controllerPath.split("/+");
-		String[] pathSegments = httpPath.split("/+");
+		String _httpPath = httpPath.startsWith("/") ? httpPath.substring(1) : httpPath;
+		String _controllerPath = controllerPath.startsWith("/") ? controllerPath.substring(1) : controllerPath;
+		String[] controllerPathSegments = _controllerPath.split("/+");
+		String[] pathSegments = _httpPath.split("/+");
 		if (pathSegments.length < controllerPathSegments.length) {
 			return false;
 		}

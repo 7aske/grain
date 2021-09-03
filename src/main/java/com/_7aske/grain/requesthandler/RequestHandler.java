@@ -5,4 +5,5 @@ import com._7aske.grain.http.HttpResponse;
 
 public interface RequestHandler {
 	void handle(HttpRequest request, HttpResponse response);
+	boolean canHandle(String path);
 }

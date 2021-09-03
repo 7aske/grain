@@ -1,7 +1,8 @@
 package com._7aske.grain.requesthandler;
 
-import com._7aske.grain.http.HttpRequest;
+import java.util.Optional;
 
 public interface HandlerRegistry {
-	boolean canHandle(HttpRequest request);
+	boolean canHandle(String Path);
+	Optional<RequestHandler> getHandler(String path);
 }

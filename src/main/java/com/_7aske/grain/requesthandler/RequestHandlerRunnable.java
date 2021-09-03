@@ -5,7 +5,9 @@ import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpRequestParser;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.requesthandler.controller.ControllerRegistry;
+import com._7aske.grain.http.HttpStatus;
+import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
+import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 import java.io.BufferedInputStream;
@@ -15,13 +17,13 @@ import java.net.Socket;
 
 public class RequestHandlerRunnable implements Runnable {
 	private final Socket socket;
-	// private final StaticHandler staticHandler;
-	private final ControllerRegistry controllerRegistry;
+	private final StaticHandlerRegistry staticHandlerRegistry;
+	private final ControllerHandlerRegistry controllerRegistry;
 
 	public RequestHandlerRunnable(GrainRegistry grainRegistry, StaticLocationsRegistry staticLocationsRegistry, Socket socket) {
 		this.socket = socket;
-		this.controllerRegistry = new ControllerRegistry(grainRegistry);
-		// this.staticHandler = new StaticHandler(staticLocationsRegistry);
+		this.controllerRegistry = new ControllerHandlerRegistry(grainRegistry);
+		this.staticHandlerRegistry = new StaticHandlerRegistry(staticLocationsRegistry);
 	}
 
 	@Override
@@ -32,9 +34,12 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpRequestParser parser = new HttpRequestParser(reader);
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
+			response.setStatus(HttpStatus.NOT_FOUND);
 
-			controllerRegistry.getControllerForPath(request.getPath())
-					.ifPresent(controller -> controller.handle(request, response));
+			controllerRegistry.getHandler(request.getPath())
+					.ifPresent(handler -> handler.handle(request, response));
+			staticHandlerRegistry.getHandler(request.getPath())
+					.ifPresent(handler -> handler.handle(request, response));
 
 			writer.write(response.getHttpString());
 		} catch (IOException e) {

@@ -1,17 +1,17 @@
 package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.component.GrainRegistry;
-import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.requesthandler.HandlerRegistry;
+import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class ControllerRegistry implements HandlerRegistry {
-	private final List<ControllerHandler> controllers;
+public class ControllerHandlerRegistry implements HandlerRegistry {
+	private final List<RequestHandler> controllers;
 
-	public ControllerRegistry(GrainRegistry grainRegistry) {
+	public ControllerHandlerRegistry(GrainRegistry grainRegistry) {
 		this.controllers = grainRegistry.getControllers()
 				.stream()
 				.map(ControllerWrapper::new)
@@ -19,15 +19,15 @@ public class ControllerRegistry implements HandlerRegistry {
 				.collect(Collectors.toList());
 	}
 
-	public Optional<ControllerHandler> getControllerForPath(String path) {
+	public Optional<RequestHandler> getHandler(String path) {
 		return controllers
 				.stream()
-				.filter(c -> c.getWrapper().getMethod(path).isPresent())
+				.filter(c -> c.canHandle(path))
 				.findFirst();
 	}
 
 	@Override
-	public boolean canHandle(HttpRequest request) {
-		return getControllerForPath(request.getPath()).isPresent();
+	public boolean canHandle(String path) {
+		return getHandler(path).isPresent();
 	}
 }

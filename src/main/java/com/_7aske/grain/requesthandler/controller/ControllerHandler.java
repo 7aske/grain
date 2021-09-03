@@ -19,6 +19,7 @@ public class ControllerHandler implements RequestHandler {
 		this.controller = wrapper;
 	}
 
+	@Override
 	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
 		Optional<ControllerMethodWrapper> handlerMethod = controller.getMethod(request.getPath(), request.getMethod());
 		ControllerMethodWrapper method = handlerMethod.orElseThrow(HttpException.NotFound::new);
@@ -35,6 +36,11 @@ public class ControllerHandler implements RequestHandler {
 			response.setBody(result.toString());
 			response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
 		}
+	}
+
+	@Override
+	public boolean canHandle(String path) {
+		return controller.getMethod(path).isPresent();
 	}
 
 	private Object[] sortedVarArgs(ControllerMethodWrapper method, Object... args) {
@@ -60,9 +66,5 @@ public class ControllerHandler implements RequestHandler {
 			}
 		}
 		return -1;
-	}
-
-	public ControllerWrapper getWrapper() {
-		return controller;
 	}
 }
