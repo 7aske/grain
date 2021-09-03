@@ -1,24 +1,19 @@
 package com._7aske.grain.http.view;
 
-import javax.swing.text.Caret;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Paths;
+
+import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 
 public class View {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private final String path;
-	private String contentType;
+	private final String contentType;
 
 	public View(String path) {
 		this.path = path;
-		try {
-			this.contentType = Files.probeContentType(Paths.get(path));
-		} catch (IOException e) {
-			this.contentType = "text/plain";
-			e.printStackTrace();
-		}
+		this.contentType = probeContentTypeNoThrow(Paths.get(path), "text/html");
 	}
 
 	public String getContent() {

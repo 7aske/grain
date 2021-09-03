@@ -12,9 +12,4 @@ public class TestController {
 	public View get() {
 		return new View("test.html");
 	}
-
-	@RequestMapping("static/style.css")
-	public View style() {
-		return new View("static/style.css");
-	}
 }

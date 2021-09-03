@@ -11,11 +11,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry.RESOURCES_PREFIX;
+import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 
 public class StaticLocationHandler implements RequestHandler {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -37,9 +37,7 @@ public class StaticLocationHandler implements RequestHandler {
 	public void handle(HttpRequest request, HttpResponse response) {
 		Path path = Paths.get(getLocation(), request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
-			String contentType = Files.probeContentType(path);
-			if (contentType != null)
-				response.setHeader(HttpHeaders.CONTENT_TYPE, contentType);
+			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/plain"));
 			response.setBody(new String(inputStream.readAllBytes()));
 			response.setStatus(HttpStatus.OK);
 		} catch (IOException ex) {
