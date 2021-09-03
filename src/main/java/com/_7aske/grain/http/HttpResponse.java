@@ -8,7 +8,7 @@ import static com._7aske.grain.http.HttpConstants.HTTP_V1;
 
 public class HttpResponse {
 	private String version = HTTP_V1;
-	private HttpStatus status;
+	private HttpStatus status = HttpStatus.OK;
 	private Map<String, String> headers = new HashMap<>();
 	private String body = null;
 	private String generatedString = null;
@@ -83,7 +83,10 @@ public class HttpResponse {
 	}
 
 	public void setBody(String body) {
+		if (body == null)
+			return;
 		this.body = body;
+		this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(body.length()));
 	}
 
 	public int length() {

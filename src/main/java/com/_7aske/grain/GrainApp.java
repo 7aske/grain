@@ -4,7 +4,8 @@ import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.config.ConfigurationBuilder;
 import com._7aske.grain.exception.AppInitializationException;
-import com._7aske.grain.handler.RequestHandler;
+import com._7aske.grain.requesthandler.RequestHandlerRunnable;
+import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -21,13 +22,14 @@ public abstract class GrainApp {
 
 	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 	private GrainRegistry grainRegistry;
+	private StaticLocationsRegistry staticLocationsRegistry;
 
 	protected GrainApp() {
 	}
 
 	void run() {
 		doConfigure();
-		doRegisterGrains();
+		doInitializeComponents();
 		doRun();
 	}
 
@@ -41,7 +43,7 @@ public abstract class GrainApp {
 
 			while (running) {
 				Socket socket = serverSocket.accept();
-				executor.execute(RequestHandler.handle(grainRegistry, socket));
+				executor.execute(new RequestHandlerRunnable(grainRegistry, staticLocationsRegistry, socket));
 			}
 
 		} catch (UnknownHostException e) {
@@ -51,8 +53,9 @@ public abstract class GrainApp {
 		}
 	}
 
-	private void doRegisterGrains() {
+	private void doInitializeComponents() {
 		grainRegistry = new GrainRegistry(basePackage);
+		staticLocationsRegistry = new StaticLocationsRegistry();
 	}
 
 	private void doConfigure() {
