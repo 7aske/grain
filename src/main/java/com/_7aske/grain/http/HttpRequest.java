@@ -1,5 +1,8 @@
 package com._7aske.grain.http;
 
+import com._7aske.grain.http.json.JsonArray;
+import com._7aske.grain.http.json.JsonObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +63,10 @@ public class HttpRequest {
 
 	public Object getBody() {
 		return body;
+	}
+
+	public JsonObject getJsonBody() {
+		return (JsonObject) body;
 	}
 
 	public void setBody(Object body) {

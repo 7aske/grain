@@ -29,6 +29,9 @@ public class HttpPathUtil {
 			String curr = segments[i];
 			if (builder.charAt(builder.length() - 1) == PATH_SEP && curr.startsWith(String.valueOf(PATH_SEP))) {
 				builder.append(curr.substring(1));
+			} else if (builder.charAt(builder.length() - 1) != PATH_SEP && !curr.startsWith(String.valueOf(PATH_SEP))) {
+				builder.append("/");
+				builder.append(curr);
 			} else {
 				builder.append(curr);
 			}

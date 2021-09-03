@@ -10,14 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 public class JsonDeserializer {
-	private String content;
-	private IndexedStringIterator iterator;
-	private Map<String, Object> json;
+	private final IndexedStringIterator iterator;
 
 	public JsonDeserializer(String content) {
-		this.content = content;
 		this.iterator = new IndexedStringIterator(content);
-		this.json = new HashMap<>();
 	}
 
 	private Pair<String, Object> parseEntry() {
@@ -67,7 +63,7 @@ public class JsonDeserializer {
 		try {
 			return Float.parseFloat(val);
 		} catch (NumberFormatException ex) {
-			throw new JsonDeserializationException("Unexpected token " + val + " " + iterator.getInfo());
+			throw new JsonDeserializationException("Unexpected token '" + val + "' " + iterator.getInfo());
 		}
 	}
 
@@ -126,7 +122,8 @@ public class JsonDeserializer {
 		}
 	}
 
-	public Map<String, Object> parse() {
+	public JsonObject parse() {
+		Map<String, Object> json = new HashMap<>();
 		iterator.eatWhitespace();
 		if (!iterator.peek().equals("{")) {
 			throw new JsonDeserializationException("Expected '{' " + iterator.getInfo());
@@ -149,7 +146,7 @@ public class JsonDeserializer {
 			}
 		}
 
-		return json;
+		return new JsonObject(json);
 	}
 
 }

@@ -1,7 +1,9 @@
 package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.component.GrainRegistry;
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.exception.json.JsonDeserializationException;
 import com._7aske.grain.http.*;
 import com._7aske.grain.http.json.JsonDeserializer;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
@@ -40,22 +42,32 @@ public class RequestHandlerRunnable implements Runnable {
 	public void run() {
 		try (BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
 		     PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
-
 			HttpRequestParser parser = new HttpRequestParser(reader);
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
-			response.setStatus(HttpStatus.NOT_FOUND);
 
-			middlewareRegistry.getHandlers(request.getPath())
-					.forEach(handler -> handler.handle(request, response));
-			controllerRegistry.getHandler(request.getPath())
-					.ifPresent(handler -> handler.handle(request, response));
-			staticHandlerRegistry.getHandler(request.getPath())
-					.ifPresent(handler -> handler.handle(request, response));
+			try {
+				middlewareRegistry.getHandlers(request.getPath())
+						.forEach(handler -> handler.handle(request, response));
+				controllerRegistry.getHandler(request.getPath())
+						.ifPresent(handler -> handler.handle(request, response));
+				staticHandlerRegistry.getHandler(request.getPath())
+						.ifPresent(handler -> handler.handle(request, response));
 
-			writer.write(response.getHttpString());
+			} catch (HttpException ex) {
+				response.setHeader(CONTENT_TYPE, "text/html");
+				response.setStatus(ex.getStatus());
+				response.setBody(ex.getMessage());
+			} catch (GrainRuntimeException ex) {
+				response.setHeader(CONTENT_TYPE, "text/html");
+				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+				response.setBody(ex.getMessage());
+			} finally {
+				writer.write(response.getHttpString());
+			}
+
 		} catch (IOException e) {
-			throw new HttpException.InternalServerError(e);
+			e.printStackTrace();
 		}
 	}
 }
