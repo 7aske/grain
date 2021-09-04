@@ -32,6 +32,12 @@ public class StringIterator implements Iterator<String> {
 		throw new NoSuchElementException();
 	}
 
+	public boolean isPeek(String val) {
+		if (hasNext())
+			return String.valueOf(content.charAt(index)).equals(val);
+		return false;
+	}
+
 	public String eatWhile(Predicate<String> predicate) {
 		StringBuilder builder = new StringBuilder();
 
@@ -59,6 +65,8 @@ public class StringIterator implements Iterator<String> {
 				String peek = peek();
 				if (peek.equals("\t") || peek.equals("\n") || peek.equals("\\") || peek.equals("\"")) {
 					builder.append(next());
+				} else {
+					// TODO: handle error
 				}
 			} else {
 				builder.append(ch);

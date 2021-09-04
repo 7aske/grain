@@ -2,7 +2,7 @@ package com._7aske.grain.http.json;
 
 import java.util.*;
 
-public class JsonArray implements Collection<Object> {
+public class JsonArray implements List<Object> {
 	private final List<Object> data;
 
 	public JsonArray() {
@@ -21,6 +21,8 @@ public class JsonArray implements Collection<Object> {
 			}
 		}
 	}
+
+
 
 	@Override
 	public int size() {
@@ -73,6 +75,11 @@ public class JsonArray implements Collection<Object> {
 	}
 
 	@Override
+	public boolean addAll(int index, Collection<?> c) {
+		return data.addAll(c);
+	}
+
+	@Override
 	public boolean removeAll(Collection<?> c) {
 		return data.removeAll(c);
 	}
@@ -85,6 +92,75 @@ public class JsonArray implements Collection<Object> {
 	@Override
 	public void clear() {
 		data.clear();
+	}
+
+	@Override
+	public Object get(int index) {
+		return data.get(index);
+	}
+
+	public <T> T get(int index, Class<T> clazz) {
+		return clazz.cast(data.get(index));
+	}
+
+	public JsonObject getObject(int index) {
+		return (JsonObject) data.get(index);
+	}
+
+	public JsonArray getArray(int index) {
+		return (JsonArray) data.get(index);
+	}
+
+	public String getString(int index) {
+		return (String) data.get(index);
+	}
+
+	public Number getNumber(int index) {
+		return (Number) data.get(index);
+	}
+
+	public Boolean getBoolean(int index) {
+		return (Boolean) data.get(index);
+	}
+
+	@Override
+	public Object set(int index, Object element) {
+		return data.set(index, element);
+	}
+
+	@Override
+	public void add(int index, Object element) {
+		data.add(index, element);
+	}
+
+	@Override
+	public Object remove(int index) {
+		return data.remove(index);
+	}
+
+	@Override
+	public int indexOf(Object o) {
+		return data.indexOf(o);
+	}
+
+	@Override
+	public int lastIndexOf(Object o) {
+		return data.lastIndexOf(o);
+	}
+
+	@Override
+	public ListIterator<Object> listIterator() {
+		return data.listIterator();
+	}
+
+	@Override
+	public ListIterator<Object> listIterator(int index) {
+		return data.listIterator(index);
+	}
+
+	@Override
+	public List<Object> subList(int fromIndex, int toIndex) {
+		return data.subList(fromIndex, toIndex);
 	}
 
 	public String toJsonString() {
@@ -117,6 +193,13 @@ public class JsonArray implements Collection<Object> {
 
 		builder.append("]");
 		return builder.toString();
+	}
+
+	@Override
+	public String toString() {
+		return "JsonArray{" +
+				"data=" + data +
+				'}';
 	}
 }
 

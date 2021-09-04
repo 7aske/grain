@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 class JsonSerializerTest {
 	static class Nested {
 		String nested;
@@ -48,8 +51,13 @@ class JsonSerializerTest {
 		JsonObject object = new JsonDeserializer(json).parse();
 		JsonSerializer<TestClass> serializer = new JsonSerializer<>(TestClass.class);
 		TestClass test = serializer.serialize(object);
-
-		System.out.println(test);
-
+		assertEquals(1, test.list.size());
+		assertEquals("ohyes", test.list.get(0).nested);
+		assertEquals("field", test.field);
+		assertEquals(true, test.bool);
+		assertEquals(1, test.num);
+		assertNull(test.nullable);
+		assertEquals("yes", test.test.nested);
+		assertEquals(3.3f, test.flt);
 	}
 }

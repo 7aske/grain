@@ -19,11 +19,9 @@ public class JsonSerializer<T> {
 	public List<Object> serialize(Class<?> type, JsonArray arr) {
 		List<Object> res = new ArrayList<>();
 		for (Object object : arr) {
-			if (Number.class.isAssignableFrom(type)) {
-				res.add(object);
-			} else if (String.class.isAssignableFrom(type)) {
-				res.add(object);
-			} else if (Boolean.class.isAssignableFrom(type)) {
+			if (Number.class.isAssignableFrom(type) ||
+					String.class.isAssignableFrom(type) ||
+					Boolean.class.isAssignableFrom(type)) {
 				res.add(object);
 			} else if (List.class.isAssignableFrom(type)) {
 				res.add(serialize(type, (JsonArray) object));
@@ -49,18 +47,14 @@ public class JsonSerializer<T> {
 				field.setAccessible(true);
 				Class<?> type = field.getType();
 				String name = field.getName();
-				if (Number.class.isAssignableFrom(type)) {
-					Object val = object.get(name);
-					field.set(instance, val);
-				} else if (String.class.isAssignableFrom(type)) {
-					Object val = object.get(name);
-					field.set(instance, val);
-				} else if (Boolean.class.isAssignableFrom(type)) {
+				if (Number.class.isAssignableFrom(type) ||
+						String.class.isAssignableFrom(type) ||
+						Boolean.class.isAssignableFrom(type)) {
 					Object val = object.get(name);
 					field.set(instance, val);
 				} else if (List.class.isAssignableFrom(type)) {
-					List<Object> list = serialize((Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0],
-							(JsonArray) object.get(name));
+					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+					List<Object> list = serialize(genericType, (JsonArray) object.get(name));
 					field.set(instance, list);
 				} else {
 					if (object.get(name) == null) {

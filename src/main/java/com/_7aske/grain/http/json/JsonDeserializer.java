@@ -18,15 +18,15 @@ public class JsonDeserializer {
 
 	private Pair<String, Object> parseEntry() {
 		iterator.eatWhitespace();
-		if (!iterator.peek().equals("\"")) {
+		if (!iterator.isPeek("\"")) {
 			throw new JsonDeserializationException("Expected '\"' " + iterator.getInfo());
 		}
 		String key = iterator.eatKey();
 		iterator.eatWhitespace();
-		if (!iterator.peek().equals(":")) {
+		if (!iterator.isPeek(":")) {
 			throw new JsonDeserializationException("Expected ':' " + iterator.getInfo());
 		} else {
-			iterator.next();
+			iterator.next(); // skip ':'
 		}
 		iterator.eatWhitespace();
 		Object value = parseValue();
@@ -79,25 +79,19 @@ public class JsonDeserializer {
 	private Object parseArray() {
 		List<Object> list = new ArrayList<>();
 		iterator.next(); // skip [
-		while (true) {
-			if (iterator.hasNext() && iterator.peek().equals("]")) {
-				iterator.next();
-				break;
-			}
+		while (!iterator.isPeek("]")) {
 
 			iterator.eatWhitespace();
 			Object val = parseValue();
 			iterator.eatWhitespace();
 			list.add(val);
-			if (iterator.peek().equals(",")) {
+			if (iterator.isPeek(",")) {
 				iterator.next();
 				iterator.eatWhitespace();
-			} else if (iterator.peek().equals("]")) {
-				iterator.next();
-				iterator.eatWhitespace();
-				break;
 			}
 		}
+		iterator.next();
+		iterator.eatWhitespace();
 
 		return list;
 	}
@@ -105,35 +99,29 @@ public class JsonDeserializer {
 	private Object parseObject() {
 		Map<String, Object> obj = new HashMap<>();
 		iterator.next(); // skip '{'
-		while (true) {
-			if (iterator.hasNext() && iterator.peek().equals("}")) {
-				iterator.next();
-				break;
-			}
+		while (!iterator.isPeek("}")) {
 			Pair<String, Object> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
-			if (iterator.peek().equals(","))
+			if (iterator.isPeek(","))
 				iterator.next();
-			else
-				break;
 		}
 		iterator.eatWhitespace();
-		if (!iterator.peek().equals("}")) {
-			throw new JsonDeserializationException("Expected '}' at " + iterator.getInfo());
-		} else {
-			iterator.next();
+		if (iterator.isPeek("}")) {
+			iterator.next(); // skip '}'
 			iterator.eatWhitespace();
 			return obj;
 		}
+
+		throw new JsonDeserializationException("Expected '}' at " + iterator.getInfo());
 	}
 
 	public JsonObject parse() {
 		Map<String, Object> json = new HashMap<>();
 		iterator.eatWhitespace();
-		if (!iterator.peek().equals("{")) {
-			throw new JsonDeserializationException("Expected '{' " + iterator.getInfo());
+		if (iterator.peek().equals("{")) {
+			iterator.next(); // skip '{'
 		} else {
-			iterator.next();
+			throw new JsonDeserializationException("Expected '{' " + iterator.getInfo());
 		}
 
 		while (iterator.hasNext()) {
@@ -142,9 +130,9 @@ public class JsonDeserializer {
 
 			iterator.eatWhitespace();
 
-			if (iterator.hasNext() && iterator.peek().equals(",")) {
+			if (iterator.isPeek(",")) {
 				iterator.next();
-			} else if (iterator.hasNext() && (iterator.peek().equals("}"))) {
+			} else if (iterator.isPeek("}")) {
 				break;
 			} else {
 				throw new JsonDeserializationException("Expected '}' at " + iterator.getInfo());
