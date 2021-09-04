@@ -26,6 +26,10 @@ public class JsonObject {
 		}
 	}
 
+	public Map<String, Object> getData() {
+		return this.data;
+	}
+
 	public <T> T get(String key, Class<T> clazz) {
 		return clazz.cast(data.get(key));
 	}

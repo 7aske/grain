@@ -12,6 +12,7 @@ import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.Map;
 
 import static com._7aske.grain.util.ArrayUtil.swap;
 
@@ -37,6 +38,8 @@ public class ControllerHandler implements RequestHandler {
 				params[i] = response;
 			} else if (param.isAnnotationPresent(JsonBody.class)) {
 				params[i] = new JsonSerializer<>(param.getType()).serialize((JsonObject) request.getBody());
+			} else if (Map.class.isAssignableFrom(param.getType())) {
+				params[i] = ((JsonObject)request.getBody()).getData();
 			}
 		}
 
