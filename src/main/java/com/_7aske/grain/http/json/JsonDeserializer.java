@@ -61,7 +61,12 @@ public class JsonDeserializer {
 			return null;
 		}
 		try {
-			return Float.parseFloat(val);
+			float parsed = Float.parseFloat(val);
+			if (parsed == (int) parsed) {
+				return (int) parsed;
+			} else {
+				return parsed;
+			}
 		} catch (NumberFormatException ex) {
 			throw new JsonDeserializationException("Unexpected token '" + val + "' " + iterator.getInfo());
 		}

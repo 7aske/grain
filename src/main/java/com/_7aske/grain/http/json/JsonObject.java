@@ -26,6 +26,14 @@ public class JsonObject {
 		}
 	}
 
+	public <T> T get(String key, Class<T> clazz) {
+		return clazz.cast(data.get(key));
+	}
+
+	public Object get(String key) {
+		return data.get(key);
+	}
+
 	public JsonObject getObject(String key) {
 		return (JsonObject) data.get(key);
 	}
@@ -54,12 +62,12 @@ public class JsonObject {
 		return (JsonArray) data.put(key, new JsonArray(list));
 	}
 
-	public Float getNumber(String key) {
-		return (Float) data.get(key);
+	public Number getNumber(String key) {
+		return (Number) data.get(key);
 	}
 
-	public Float putNumber(String key, Number number) {
-		return (Float) data.put(key, number);
+	public Number putNumber(String key, Number number) {
+		return (Number) data.put(key, number);
 	}
 
 	public Boolean getBoolean(String key) {
