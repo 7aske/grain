@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 
 import static com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry.RESOURCES_PREFIX;
 import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
+import static com._7aske.grain.util.HttpPathUtil.join;
 
 public class StaticLocationHandler implements RequestHandler {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -35,7 +36,7 @@ public class StaticLocationHandler implements RequestHandler {
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
-		Path path = Paths.get(getLocation(), request.getPath());
+		Path path = Paths.get(getPath(), request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
 			response.setBody(new String(inputStream.readAllBytes()));
@@ -77,7 +78,7 @@ public class StaticLocationHandler implements RequestHandler {
 	@Override
 	public boolean canHandle(String path) {
 		if (isResource) {
-			URL url = classLoader.getResource(path);
+			URL url = classLoader.getResource(join(getPath(), path));
 			if (url == null) return false;
 			File file = new File(url.getPath());
 			if (file.isDirectory()) {
@@ -85,11 +86,12 @@ public class StaticLocationHandler implements RequestHandler {
 			}
 			return file.exists();
 		} else {
-			return new File(Paths.get(getLocation(), path).toAbsolutePath().toString()).exists();
+			return new File(Paths.get(getPath(), path).toAbsolutePath().toString()).exists();
 		}
 	}
 
-	public String getLocation() {
+	@Override
+	public String getPath() {
 		return location;
 	}
 }

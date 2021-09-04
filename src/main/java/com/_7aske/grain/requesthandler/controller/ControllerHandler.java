@@ -11,10 +11,7 @@ import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.lang.reflect.Parameter;
-import java.util.Arrays;
 import java.util.Map;
-
-import static com._7aske.grain.util.ArrayUtil.swap;
 
 public class ControllerHandler implements RequestHandler {
 	private final ControllerWrapper controller;
@@ -66,28 +63,8 @@ public class ControllerHandler implements RequestHandler {
 		return controller.getMethod(path).isPresent();
 	}
 
-	private Object[] sortedVarArgs(ControllerMethodWrapper method, Object... args) {
-		if (method.getParameterCount() == 0) return new Object[0];
-		Class<?>[] params = method.getParameterTypes();
-		Object[] retval = Arrays.copyOf(args, args.length);
-
-		for (int i = 0; i < params.length; i++) {
-			Class<?> clazz = params[i];
-			int index = findArgIndexByClass(clazz, retval);
-			if (index != -1 && i != index) {
-				swap(retval, i, index);
-			}
-		}
-
-		return Arrays.copyOfRange(retval, 0, method.getParameterCount());
-	}
-
-	public int findArgIndexByClass(Class<?> clazz, Object... args) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[i].getClass().equals(clazz)) {
-				return i;
-			}
-		}
-		return -1;
+	@Override
+	public String getPath() {
+		return controller.getPath();
 	}
 }
