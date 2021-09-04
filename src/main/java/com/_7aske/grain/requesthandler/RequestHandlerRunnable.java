@@ -8,7 +8,7 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpRequestParser;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.HttpStatus;
-import com._7aske.grain.http.json.JsonDeserializer;
+import com._7aske.grain.http.json.JsonParser;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
@@ -36,7 +36,7 @@ public class RequestHandlerRunnable implements Runnable {
 
 		middlewareRegistry.addHandler((req, res) -> {
 			if (req.hasHeader(CONTENT_TYPE) && req.getHeader(CONTENT_TYPE).equals("application/json")) {
-				JsonDeserializer deserializer = new JsonDeserializer((String) req.getBody());
+				JsonParser deserializer = new JsonParser((String) req.getBody());
 				req.setBody(deserializer.parse());
 			}
 			return false;

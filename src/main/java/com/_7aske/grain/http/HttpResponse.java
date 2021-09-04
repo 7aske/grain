@@ -77,8 +77,9 @@ public class HttpResponse {
 		return headers;
 	}
 
-	public HttpResponse setHeaders(Map<String, String> headers) {
-		this.headers = headers;
+	public HttpResponse addHeaders(Map<String, String> headers) {
+		if (headers != null)
+			this.headers.putAll(headers);
 		return this;
 	}
 

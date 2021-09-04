@@ -48,7 +48,7 @@ class JsonSerializerTest {
 	@Test
 	void test_serialize() {
 		String json = "{\"list\":[{\"nested\":\"ohyes\"}], \"field\":\"field\", \"bool\":true, \"num\":1, \"nullable\":null, \"test\": {\"nested\": \"yes\"}, \"flt\":3.3}";
-		JsonObject object = new JsonDeserializer(json).parse();
+		JsonObject object = new JsonParser(json).parse();
 		JsonSerializer<TestClass> serializer = new JsonSerializer<>(TestClass.class);
 		TestClass test = serializer.serialize(object);
 		assertEquals(1, test.list.size());

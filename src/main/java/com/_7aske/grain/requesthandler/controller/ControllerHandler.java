@@ -7,6 +7,7 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.json.JsonBody;
 import com._7aske.grain.http.json.JsonObject;
+import com._7aske.grain.http.json.JsonResponse;
 import com._7aske.grain.http.json.JsonSerializer;
 import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
@@ -46,6 +47,10 @@ public class ControllerHandler implements RequestHandler {
 		if (result instanceof AbstractView) {
 			response.setBody(((AbstractView) result).getContent());
 			response.setHeader(HttpHeaders.CONTENT_TYPE, ((AbstractView) result).getContentType());
+		} else if (result instanceof JsonResponse) {
+			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());
+			response.addHeaders(((JsonResponse<?>) result).getHeaders());
+			response.setStatus(((JsonResponse<?>) result).getStatus());
 		} else if (result instanceof JsonObject) {
 			response.setBody(((JsonObject) result).toJsonString());
 			response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");

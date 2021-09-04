@@ -44,6 +44,9 @@ public class JsonSerializer<T> {
 			Constructor<T> constructor = ReflectionUtil.getAnyConstructor(clazz);
 			T instance = constructor.newInstance();
 			for (Field field : clazz.getDeclaredFields()) {
+				if (field.isAnnotationPresent(JsonIgnore.class)){
+					continue;
+				}
 				field.setAccessible(true);
 				Class<?> type = field.getType();
 				String name = field.getName();
@@ -65,6 +68,7 @@ public class JsonSerializer<T> {
 						field.set(instance, val);
 					}
 				}
+				field.setAccessible(false);
 			}
 			return instance;
 

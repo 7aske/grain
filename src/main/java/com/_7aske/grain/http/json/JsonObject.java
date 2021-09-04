@@ -11,6 +11,11 @@ public class JsonObject {
 		this.data = new HashMap<>();
 	}
 
+	public static <T> JsonObject of(T object) {
+		JsonDeserializer<T> deserializer = new JsonDeserializer<T>((Class<T>) object.getClass());
+		return deserializer.deserialize(object);
+	}
+
 	public JsonObject(Map<String, Object> data) {
 		this();
 		for (Map.Entry<String, Object> kv : data.entrySet()) {
@@ -44,6 +49,10 @@ public class JsonObject {
 
 	public JsonObject putObject(String key, JsonObject object) {
 		return (JsonObject) data.put(key, object);
+	}
+
+	public Object putNull(String key) {
+		return (Object) data.put(key, null);
 	}
 
 	public String getString(String key) {

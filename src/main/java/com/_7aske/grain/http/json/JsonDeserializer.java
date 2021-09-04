@@ -1,145 +1,77 @@
 package com._7aske.grain.http.json;
 
-import com._7aske.grain.exception.json.JsonDeserializationException;
-import com._7aske.grain.util.Pair;
-import com._7aske.grain.util.iterator.IndexedStringIterator;
-
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
-import java.util.Map;
 
-public class JsonDeserializer {
-	private final IndexedStringIterator iterator;
+public class JsonDeserializer<T> {
+	private final Class<T> clazz;
 
-	public JsonDeserializer(String content) {
-		this.iterator = new IndexedStringIterator(content);
+	public JsonDeserializer(Class<T> clazz) {
+		this.clazz = clazz;
 	}
 
-	private Pair<String, Object> parseEntry() {
-		iterator.eatWhitespace();
-		if (!iterator.isPeek("\"")) {
-			throw new JsonDeserializationException("Expected '\"' " + iterator.getInfo());
+	public JsonArray deserialize(Class<?> type, List<Object> arr) {
+		JsonArray res = new JsonArray();
+		for (Object object : arr) {
+			if (Number.class.isAssignableFrom(type) ||
+					String.class.isAssignableFrom(type) ||
+					Boolean.class.isAssignableFrom(type)) {
+				res.add(object);
+			} else if (List.class.isAssignableFrom(type)) {
+				res.add(deserialize(type, (JsonArray) object));
+			} else {
+				if (object == null) {
+					res.add(null);
+				} else {
+					JsonDeserializer<?> deserializer = new JsonDeserializer<>(type);
+					Object val = deserializer.deserialize(object);
+					res.add(val);
+				}
+			}
 		}
-		String key = iterator.eatKey();
-		iterator.eatWhitespace();
-		if (!iterator.isPeek(":")) {
-			throw new JsonDeserializationException("Expected ':' " + iterator.getInfo());
-		} else {
-			iterator.next(); // skip ':'
-		}
-		iterator.eatWhitespace();
-		Object value = parseValue();
 
-		return Pair.of(key, value);
+		return res;
 	}
 
-	private Object parseValue() {
-		String token = iterator.peek();
-		switch (token) {
-			case "{":
-				return parseObject();
-			case "[":
-				return parseArray();
-			case "\"":
-				return parseString();
-			default:
-				return parseOther();
-		}
-	}
+	public JsonObject deserialize(Object instance) {
+		try {
+			JsonObject object = new JsonObject();
 
-	private Object parseOther() {
-		iterator.eatWhitespace();
-		String val = iterator.eatWhile(ch -> !ch.isBlank() && !ch.equals(",") && !ch.equals("}") && !ch.equals("]"));
-		if (val.equals("true")) {
-			return Boolean.TRUE;
-		}
-		if (val.equals("false")) {
-			return Boolean.FALSE;
-		}
-		if (val.equals("null")) {
+			for (Field field : clazz.getDeclaredFields()) {
+				if (field.isAnnotationPresent(JsonIgnore.class)){
+					continue;
+				}
+				field.setAccessible(true);
+				Class<?> fieldType = field.getType();
+				String fieldName = field.getName();
+				if (Number.class.isAssignableFrom(fieldType)) {
+					object.putNumber(fieldName, (Number) field.get(instance));
+				} else if (String.class.isAssignableFrom(fieldType)) {
+					object.putString(fieldName, (String) field.get(instance));
+				} else if (Boolean.class.isAssignableFrom(fieldType)) {
+					object.putBoolean(fieldName, (Boolean) field.get(instance));
+				} else if (List.class.isAssignableFrom(fieldType)) {
+					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+					JsonArray list = deserialize(genericType, (List<Object>) field.get(instance));
+					object.putArray(fieldName, list);
+				} else {
+					if (field.get(instance) == null) {
+						object.putNull(fieldName);
+					} else {
+						JsonDeserializer<?> deserializer = new JsonDeserializer<>(field.getType());
+						JsonObject val = deserializer.deserialize(field.get(instance));
+						object.putObject(fieldName, val);
+					}
+				}
+				field.setAccessible(false);
+			}
+			return object;
+
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
 			return null;
 		}
-		try {
-			float parsed = Float.parseFloat(val);
-			if (parsed == (int) parsed) {
-				return (int) parsed;
-			} else {
-				return parsed;
-			}
-		} catch (NumberFormatException ex) {
-			throw new JsonDeserializationException("Unexpected token '" + val + "' " + iterator.getInfo());
-		}
+
 	}
-
-	private Object parseString() {
-		return iterator.eatKey();
-	}
-
-	private Object parseArray() {
-		List<Object> list = new ArrayList<>();
-		iterator.next(); // skip [
-		while (!iterator.isPeek("]")) {
-
-			iterator.eatWhitespace();
-			Object val = parseValue();
-			iterator.eatWhitespace();
-			list.add(val);
-			if (iterator.isPeek(",")) {
-				iterator.next();
-				iterator.eatWhitespace();
-			}
-		}
-		iterator.next();
-		iterator.eatWhitespace();
-
-		return list;
-	}
-
-	private Object parseObject() {
-		Map<String, Object> obj = new HashMap<>();
-		iterator.next(); // skip '{'
-		while (!iterator.isPeek("}")) {
-			Pair<String, Object> kv = parseEntry();
-			obj.put(kv.getFirst(), kv.getSecond());
-			if (iterator.isPeek(","))
-				iterator.next();
-		}
-		iterator.eatWhitespace();
-		if (iterator.isPeek("}")) {
-			iterator.next(); // skip '}'
-			iterator.eatWhitespace();
-			return obj;
-		}
-
-		throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
-	}
-
-	public JsonObject parse() {
-		Map<String, Object> json = new HashMap<>();
-		iterator.eatWhitespace();
-		if (iterator.peek().equals("{")) {
-			iterator.next(); // skip '{'
-		} else {
-			throw new JsonDeserializationException("Expected '{' " + iterator.getInfo());
-		}
-
-		while (iterator.hasNext()) {
-			Pair<String, Object> kv = parseEntry();
-			json.put(kv.getFirst(), kv.getSecond());
-
-			iterator.eatWhitespace();
-
-			if (iterator.isPeek(",")) {
-				iterator.next();
-			} else if (iterator.isPeek("}")) {
-				break;
-			} else {
-				throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
-			}
-		}
-
-		return new JsonObject(json);
-	}
-
 }
