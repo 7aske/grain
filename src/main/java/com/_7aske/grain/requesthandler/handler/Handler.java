@@ -1,8 +1,8 @@
-package com._7aske.grain.requesthandler;
+package com._7aske.grain.requesthandler.handler;
 
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 
 public interface Handler {
-	void handle(HttpRequest request, HttpResponse response);
+	boolean handle(HttpRequest request, HttpResponse response);
 }

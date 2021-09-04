@@ -10,6 +10,7 @@ import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.HttpStatus;
 import com._7aske.grain.http.json.JsonDeserializer;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
+import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
@@ -38,6 +39,7 @@ public class RequestHandlerRunnable implements Runnable {
 				JsonDeserializer deserializer = new JsonDeserializer((String) req.getBody());
 				req.setBody(deserializer.parse());
 			}
+			return false;
 		});
 	}
 
@@ -50,30 +52,29 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpResponse response = new HttpResponse();
 
 			try {
-				middlewareRegistry.getHandlers(request.getPath(), request.getMethod())
-						.forEach(handler -> handler.handle(request, response));
-				controllerRegistry.getHandler(request.getPath(), request.getMethod())
-						.ifPresent(handler -> handler.handle(request, response));
-				staticHandlerRegistry.getHandler(request.getPath(), request.getMethod())
-						.ifPresent(handler -> handler.handle(request, response));
+				HandlerRunnerFactory.getRunner()
+						.addRegistry(middlewareRegistry)
+						.addRegistry(controllerRegistry)
+						.addRegistry(staticHandlerRegistry)
+						.run(request, response);
 
 			} catch (HttpException ex) {
 				ex.printStackTrace();
 				response.setStatus(ex.getStatus());
 				if (response.getBody() == null) {
-					response.setHeader(CONTENT_TYPE, "text/html");
-					response.setBody(ex.getHtmlMessage());
+					response.setHeader(CONTENT_TYPE, "text/html")
+							.setBody(ex.getHtmlMessage());
 				}
 			} catch (GrainRuntimeException ex) {
 				ex.printStackTrace();
-				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-				response.setHeader(CONTENT_TYPE, "text/html");
-				response.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
+				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+						.setHeader(CONTENT_TYPE, "text/html")
+						.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
-				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-				response.setHeader(CONTENT_TYPE, "text/html");
-				response.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
+				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+						.setHeader(CONTENT_TYPE, "text/html")
+						.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
 			} finally {
 				writer.write(response.getHttpString());
 			}

@@ -50,32 +50,36 @@ public class HttpResponse {
 		return version;
 	}
 
-	public void setVersion(String version) {
+	public HttpResponse setVersion(String version) {
 		this.version = version;
+		return this;
 	}
 
 	public HttpStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(HttpStatus status) {
+	public HttpResponse setStatus(HttpStatus status) {
 		this.status = status;
+		return this;
 	}
 
 	public String getHeader(String header) {
 		return headers.get(header);
 	}
 
-	public void setHeader(String header, String value) {
+	public HttpResponse setHeader(String header, String value) {
 		headers.put(header, value);
+		return this;
 	}
 
 	public Map<String, String> getHeaders() {
 		return headers;
 	}
 
-	public void setHeaders(Map<String, String> headers) {
+	public HttpResponse setHeaders(Map<String, String> headers) {
 		this.headers = headers;
+		return this;
 	}
 
 	public String getBody() {

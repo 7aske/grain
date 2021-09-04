@@ -2,7 +2,7 @@ package com._7aske.grain.requesthandler.staticlocation;
 
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
-import com._7aske.grain.requesthandler.RequestHandler;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,12 +33,13 @@ public class StaticLocationHandler implements RequestHandler {
 
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) {
+	public boolean handle(HttpRequest request, HttpResponse response) {
 		Path path = Paths.get(getPath(), request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
 			response.setBody(new String(inputStream.readAllBytes()));
 			response.setStatus(HttpStatus.OK);
+			return true;
 		} catch (IOException ex) {
 			throw new HttpException.NotFound(request.getPath());
 		}

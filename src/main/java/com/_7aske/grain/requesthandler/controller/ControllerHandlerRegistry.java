@@ -2,11 +2,11 @@ package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.http.HttpMethod;
-import com._7aske.grain.requesthandler.HandlerRegistry;
-import com._7aske.grain.requesthandler.RequestHandler;
+import com._7aske.grain.requesthandler.handler.Handler;
+import com._7aske.grain.requesthandler.handler.HandlerRegistry;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ControllerHandlerRegistry implements HandlerRegistry {
@@ -20,15 +20,16 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 				.collect(Collectors.toList());
 	}
 
-	public Optional<RequestHandler> getHandler(String path, HttpMethod method) {
+	public List<Handler> getHandlers(String path, HttpMethod method) {
 		return controllers
 				.stream()
 				.filter(c -> c.canHandle(path, method))
-				.findFirst();
+				.map(Handler.class::cast)
+				.collect(Collectors.toList());
 	}
 
 	@Override
 	public boolean canHandle(String path, HttpMethod method) {
-		return getHandler(path, method).isPresent();
+		return !getHandlers(path, method).isEmpty();
 	}
 }

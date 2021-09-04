@@ -9,7 +9,7 @@ import com._7aske.grain.http.json.JsonBody;
 import com._7aske.grain.http.json.JsonObject;
 import com._7aske.grain.http.json.JsonSerializer;
 import com._7aske.grain.http.view.AbstractView;
-import com._7aske.grain.requesthandler.RequestHandler;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class ControllerHandler implements RequestHandler {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
+	public boolean handle(HttpRequest request, HttpResponse response) throws HttpException {
 		ControllerMethodWrapper method = controller.getMethod(request.getPath(), request.getMethod())
 				.orElseThrow(() -> new HttpException.NotFound(request.getPath()));
 
@@ -57,6 +57,7 @@ public class ControllerHandler implements RequestHandler {
 			response.setBody(result.toString());
 			response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
 		}
+		return true;
 	}
 
 	@Override

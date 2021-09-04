@@ -112,7 +112,7 @@ public class JsonDeserializer {
 			return obj;
 		}
 
-		throw new JsonDeserializationException("Expected '}' at " + iterator.getInfo());
+		throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
 	}
 
 	public JsonObject parse() {
@@ -135,7 +135,7 @@ public class JsonDeserializer {
 			} else if (iterator.isPeek("}")) {
 				break;
 			} else {
-				throw new JsonDeserializationException("Expected '}' at " + iterator.getInfo());
+				throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
 			}
 		}
 
