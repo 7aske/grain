@@ -6,6 +6,7 @@ import com._7aske.grain.http.HttpMethod;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 
 public class ControllerMethodWrapper {
 	private final Method method;
@@ -33,6 +34,10 @@ public class ControllerMethodWrapper {
 
 	public Class<?>[] getParameterTypes() {
 		return method.getParameterTypes();
+	}
+
+	public Parameter[] getParameters() {
+		return method.getParameters();
 	}
 
 	public Class<?> getReturnType() {

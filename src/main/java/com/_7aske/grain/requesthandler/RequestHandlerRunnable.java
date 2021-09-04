@@ -3,8 +3,10 @@ package com._7aske.grain.requesthandler;
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.exception.json.JsonDeserializationException;
-import com._7aske.grain.http.*;
+import com._7aske.grain.http.HttpRequest;
+import com._7aske.grain.http.HttpRequestParser;
+import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.http.HttpStatus;
 import com._7aske.grain.http.json.JsonDeserializer;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
@@ -55,10 +57,12 @@ public class RequestHandlerRunnable implements Runnable {
 						.ifPresent(handler -> handler.handle(request, response));
 
 			} catch (HttpException ex) {
+				ex.printStackTrace();
 				response.setHeader(CONTENT_TYPE, "text/html");
 				response.setStatus(ex.getStatus());
 				response.setBody(ex.getMessage());
 			} catch (GrainRuntimeException ex) {
+				ex.printStackTrace();
 				response.setHeader(CONTENT_TYPE, "text/html");
 				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 				response.setBody(ex.getMessage());
