@@ -1,10 +1,8 @@
 package com._7aske.grain.requesthandler;
 
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.http.HttpMethod;
 
-public interface RequestHandler {
+public interface RequestHandler extends Handler {
 	String getPath();
-	void handle(HttpRequest request, HttpResponse response);
-	boolean canHandle(String path);
+	boolean canHandle(String path, HttpMethod method);
 }

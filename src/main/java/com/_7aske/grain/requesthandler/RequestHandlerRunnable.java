@@ -1,6 +1,7 @@
 package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.component.GrainRegistry;
+import com._7aske.grain.exception.ErrorPageBuilder;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpRequest;
@@ -49,23 +50,30 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpResponse response = new HttpResponse();
 
 			try {
-				middlewareRegistry.getHandlers(request.getPath())
+				middlewareRegistry.getHandlers(request.getPath(), request.getMethod())
 						.forEach(handler -> handler.handle(request, response));
-				controllerRegistry.getHandler(request.getPath())
+				controllerRegistry.getHandler(request.getPath(), request.getMethod())
 						.ifPresent(handler -> handler.handle(request, response));
-				staticHandlerRegistry.getHandler(request.getPath())
+				staticHandlerRegistry.getHandler(request.getPath(), request.getMethod())
 						.ifPresent(handler -> handler.handle(request, response));
 
 			} catch (HttpException ex) {
 				ex.printStackTrace();
-				response.setHeader(CONTENT_TYPE, "text/html");
 				response.setStatus(ex.getStatus());
-				response.setBody(ex.getMessage());
+				if (response.getBody() == null) {
+					response.setHeader(CONTENT_TYPE, "text/html");
+					response.setBody(ex.getHtmlMessage());
+				}
 			} catch (GrainRuntimeException ex) {
 				ex.printStackTrace();
-				response.setHeader(CONTENT_TYPE, "text/html");
 				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-				response.setBody(ex.getMessage());
+				response.setHeader(CONTENT_TYPE, "text/html");
+				response.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
+			} catch (RuntimeException ex) {
+				ex.printStackTrace();
+				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+				response.setHeader(CONTENT_TYPE, "text/html");
+				response.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
 			} finally {
 				writer.write(response.getHttpString());
 			}

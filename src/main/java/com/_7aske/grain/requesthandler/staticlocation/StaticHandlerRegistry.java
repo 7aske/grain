@@ -1,5 +1,6 @@
 package com._7aske.grain.requesthandler.staticlocation;
 
+import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.requesthandler.HandlerRegistry;
 import com._7aske.grain.requesthandler.RequestHandler;
 
@@ -18,14 +19,14 @@ public class StaticHandlerRegistry implements HandlerRegistry {
 	}
 
 	@Override
-	public boolean canHandle(String path) {
-		return getHandler(path).isPresent();
+	public boolean canHandle(String path, HttpMethod method) {
+		return getHandler(path, method).isPresent();
 	}
 
 	@Override
-	public Optional<RequestHandler> getHandler(String path) {
+	public Optional<RequestHandler> getHandler(String path, HttpMethod method) {
 		return handlers.stream()
-				.filter(handler -> handler.canHandle(path))
+				.filter(handler -> handler.canHandle(path, method))
 				.findFirst();
 	}
 }

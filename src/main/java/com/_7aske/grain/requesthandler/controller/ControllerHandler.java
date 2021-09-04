@@ -2,6 +2,7 @@ package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpHeaders;
+import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.json.JsonBody;
@@ -23,7 +24,7 @@ public class ControllerHandler implements RequestHandler {
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
 		ControllerMethodWrapper method = controller.getMethod(request.getPath(), request.getMethod())
-				.orElseThrow(HttpException.NotFound::new);
+				.orElseThrow(() -> new HttpException.NotFound(request.getPath()));
 
 		Parameter[] declaredParams = method.getParameters();
 		Object[] params = new Object[declaredParams.length];
@@ -59,8 +60,8 @@ public class ControllerHandler implements RequestHandler {
 	}
 
 	@Override
-	public boolean canHandle(String path) {
-		return controller.getMethod(path).isPresent();
+	public boolean canHandle(String path, HttpMethod method) {
+		return controller.getMethod(path, method).isPresent();
 	}
 
 	@Override

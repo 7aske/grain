@@ -24,7 +24,7 @@ public class ControllerMethodWrapper {
 		try {
 			return method.invoke(instance, args);
 		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new HttpException.InternalServerError(e);
+			throw new HttpException.InternalServerError(e, path);
 		}
 	}
 

@@ -1,9 +1,7 @@
 package com._7aske.grain.requesthandler.staticlocation;
 
-import com._7aske.grain.http.HttpHeaders;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.HttpStatus;
+import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.http.*;
 import com._7aske.grain.requesthandler.RequestHandler;
 
 import java.io.File;
@@ -42,11 +40,11 @@ public class StaticLocationHandler implements RequestHandler {
 			response.setBody(new String(inputStream.readAllBytes()));
 			response.setStatus(HttpStatus.OK);
 		} catch (IOException ex) {
-			response.setStatus(HttpStatus.NOT_FOUND);
+			throw new HttpException.NotFound(request.getPath());
 		}
 	}
 
-	private InputStream getInputStream(Path path) throws IOException{
+	private InputStream getInputStream(Path path) throws IOException {
 		if (isResource) {
 			URL url = classLoader.getResource(path.toString());
 			if (url == null)
@@ -76,7 +74,9 @@ public class StaticLocationHandler implements RequestHandler {
 	}
 
 	@Override
-	public boolean canHandle(String path) {
+	public boolean canHandle(String path, HttpMethod method) {
+		// we allow only GET http methods
+		if (!method.equals(HttpMethod.GET)) return false;
 		if (isResource) {
 			URL url = classLoader.getResource(join(getPath(), path));
 			if (url == null) return false;
