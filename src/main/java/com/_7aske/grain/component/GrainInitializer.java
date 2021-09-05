@@ -74,7 +74,13 @@ public class GrainInitializer {
 	}
 
 	private Optional<Dependency> findDependencyByClass(Class<?> clazz) {
-		return dependencies.stream().filter(d -> d.clazz.equals(clazz)).findFirst();
+		return dependencies.stream().filter(d -> {
+			if (clazz.isInterface()) {
+				return Arrays.asList(d.clazz.getInterfaces()).contains(clazz);
+			} else {
+				return d.clazz.equals(clazz);
+			}
+		}).findFirst();
 	}
 
 	private void lazyInitialize(Dependency dep) {

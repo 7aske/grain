@@ -1,6 +1,6 @@
 package com._7aske.grain.requesthandler;
 
-import com._7aske.grain.component.GrainRegistry;
+import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.exception.ErrorPageBuilder;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
@@ -13,7 +13,6 @@ import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
-import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -28,11 +27,11 @@ public class RequestHandlerRunnable implements Runnable {
 	private final ControllerHandlerRegistry controllerRegistry;
 	private final MiddlewareHandlerRegistry middlewareRegistry;
 
-	public RequestHandlerRunnable(GrainRegistry grainRegistry, StaticLocationsRegistry staticLocationsRegistry, Socket socket) {
+	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
-		this.controllerRegistry = new ControllerHandlerRegistry(grainRegistry);
-		this.staticHandlerRegistry = new StaticHandlerRegistry(staticLocationsRegistry);
-		this.middlewareRegistry = new MiddlewareHandlerRegistry(grainRegistry);
+		this.controllerRegistry = new ControllerHandlerRegistry(context.getGrainRegistry());
+		this.staticHandlerRegistry = new StaticHandlerRegistry(context.getStaticLocationsRegistry());
+		this.middlewareRegistry = new MiddlewareHandlerRegistry(context.getGrainRegistry());
 
 		middlewareRegistry.addHandler((req, res) -> {
 			if (req.hasHeader(CONTENT_TYPE) && req.getHeader(CONTENT_TYPE).equals("application/json")) {

@@ -49,7 +49,7 @@ public class ReflectionUtil {
 		if (constructors.length == 1)
 			return constructors[0];
 		Arrays.sort(constructors, (Comparator.comparingInt(Constructor::getParameterCount)));
-		return clazz.getConstructor(constructors[constructors.length - 1].getParameterTypes());
+		return constructors[constructors.length - 1];
 	}
 
 

@@ -24,6 +24,10 @@ class GrainAppTest {
 	}
 
 	static class TestApp extends GrainApp {
+		@Override
+		protected void configure(ConfigurationBuilder builder) {
+			builder.port(7070);
+		}
 	}
 
 	@Test

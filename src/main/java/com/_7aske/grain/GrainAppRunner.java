@@ -9,13 +9,12 @@ import java.lang.reflect.InvocationTargetException;
 public class GrainAppRunner {
 	private GrainAppRunner(){}
 
-	public static <T extends GrainApp> GrainApp run(Class<T> clazz){
+	public static <T extends GrainApp> void run(Class<T> clazz){
 		Constructor<T> constructor = getAnyConstructor(clazz);
 		try {
 			T app = constructor.newInstance();
 			app.setBasePackage(clazz.getPackageName());
 			app.run();
-			return app;
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new AppInitializationException("Failed to initialize Grain App", e);
 		}

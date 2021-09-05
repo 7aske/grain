@@ -1,8 +1,10 @@
 package com._7aske.grain;
 
-import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.config.ConfigurationBuilder;
+import com._7aske.grain.config.GrainApplication;
+import com._7aske.grain.context.ApplicationContext;
+import com._7aske.grain.context.ApplicationContextImpl;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.requesthandler.RequestHandlerRunnable;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
@@ -15,20 +17,19 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@GrainApplication
 public abstract class GrainApp {
 	private Configuration configuration;
 	private String basePackage;
 	private boolean running = true;
+	private ApplicationContext context;
 
 	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-	private GrainRegistry grainRegistry;
-	private StaticLocationsRegistry staticLocationsRegistry;
 
 	protected GrainApp() {
 	}
 
 	final void run() {
-		doInitializeComponents();
 		doConfigure();
 		doRun();
 	}
@@ -43,7 +44,7 @@ public abstract class GrainApp {
 
 			while (running) {
 				Socket socket = serverSocket.accept();
-				executor.execute(new RequestHandlerRunnable(grainRegistry, staticLocationsRegistry, socket));
+				executor.execute(new RequestHandlerRunnable(context, socket));
 			}
 
 		} catch (UnknownHostException e) {
@@ -53,15 +54,10 @@ public abstract class GrainApp {
 		}
 	}
 
-	private void doInitializeComponents() {
-		grainRegistry = new GrainRegistry(GrainApp.class.getPackageName(), basePackage);
-		staticLocationsRegistry = new StaticLocationsRegistry();
-	}
-
 	private void doConfigure() {
 		this.configure(configurationBuilder);
 		this.configuration = configurationBuilder.build();
-		this.staticLocationRegistry(staticLocationsRegistry);
+		this.staticLocationRegistry(context.getStaticLocationsRegistry());
 	}
 
 	protected void configure(ConfigurationBuilder builder) {
@@ -70,11 +66,9 @@ public abstract class GrainApp {
 	protected void staticLocationRegistry(StaticLocationsRegistry registry) {
 	}
 
-	public final String getBasePackage() {
-		return basePackage;
-	}
-
 	final void setBasePackage(String basePackage) {
 		this.basePackage = basePackage;
+		// reload context
+		this.context = new ApplicationContextImpl(basePackage);
 	}
 }
