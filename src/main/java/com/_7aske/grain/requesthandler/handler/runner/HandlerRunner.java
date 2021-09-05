@@ -7,6 +7,7 @@ import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HandlerRunner<T extends HandlerRegistry> {
 	private final List<T> handlerRegistries;
@@ -24,8 +25,13 @@ public class HandlerRunner<T extends HandlerRegistry> {
 		for(T registry : handlerRegistries) {
 			List<Handler> handlers = registry.getHandlers(request.getPath(), request.getMethod());
 			if (!handlers.isEmpty()) {
-				boolean handled = handlers.get(0).handle(request, response);
-				if (handled)
+				AtomicBoolean handled = new AtomicBoolean(false);
+				handlers.forEach(handler -> {
+					if (handled.get()) return;
+					boolean res = handler.handle(request, response);
+					if (res) handled.set(true);
+				});
+				if (handled.get())
 					return;
 			}
 		}
