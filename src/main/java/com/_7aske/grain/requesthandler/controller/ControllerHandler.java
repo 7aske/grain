@@ -1,19 +1,17 @@
 package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpHeaders;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.json.JsonBody;
-import com._7aske.grain.http.json.JsonObject;
-import com._7aske.grain.http.json.JsonResponse;
-import com._7aske.grain.http.json.JsonSerializer;
+import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
+
+import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class ControllerHandler implements RequestHandler {
 	private final ControllerWrapper controller;
@@ -44,23 +42,28 @@ public class ControllerHandler implements RequestHandler {
 
 		Object result = method.invoke(controller.getInstance(), params);
 
-		if (result instanceof AbstractView) {
+		if (result == null) {
+			response.setBody(null);
+			response.setHeader(CONTENT_TYPE, "text/plain");
+		} else if (result instanceof AbstractView) {
 			response.setBody(((AbstractView) result).getContent());
-			response.setHeader(HttpHeaders.CONTENT_TYPE, ((AbstractView) result).getContentType());
+			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
 		} else if (result instanceof JsonResponse) {
+			response.setStatus(((JsonResponse<?>) result).getStatus());
 			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());
 			response.addHeaders(((JsonResponse<?>) result).getHeaders());
-			response.setStatus(((JsonResponse<?>) result).getStatus());
 		} else if (result instanceof JsonObject) {
 			response.setBody(((JsonObject) result).toJsonString());
-			response.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+			response.setHeader(CONTENT_TYPE, "application/json");
+		} else if (result instanceof Object[]) {
+			response.setBody(new JsonArray((Object[]) result).toJsonString());
+			response.setHeader(CONTENT_TYPE, "application/json");
 		} else if (result instanceof String) {
 			response.setBody((String) result);
-			response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
-
+			response.setHeader(CONTENT_TYPE, "text/plain");
 		} else {
 			response.setBody(result.toString());
-			response.setHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
+			response.setHeader(CONTENT_TYPE, "text/plain");
 		}
 		return true;
 	}

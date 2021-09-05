@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import static com._7aske.grain.http.HttpConstants.CRLF;
 import static com._7aske.grain.http.HttpConstants.CRLF_LEN;
+import static com._7aske.grain.http.HttpHeaders.*;
 
 public class HttpRequestParser {
 	private final HttpRequest request = new HttpRequest();
@@ -66,8 +67,13 @@ public class HttpRequestParser {
 
 		if (lastIndex == crlfIndex - CRLF_LEN) {
 			String contentLength;
-			if ((contentLength = request.getHeader(HttpHeaders.CONTENT_LENGTH)) != null) {
-				request.setBody(buffer.substring(crlfIndex + CRLF_LEN, Math.min(buffer.length(), crlfIndex + CRLF_LEN + Integer.parseInt(contentLength))));
+			if ((contentLength = request.getHeader(CONTENT_LENGTH)) != null) {
+				String body = buffer.substring(crlfIndex + CRLF_LEN, Math.min(buffer.length(), crlfIndex + CRLF_LEN + Integer.parseInt(contentLength)));
+				if (request.hasHeader(CONTENT_TYPE) && request.getHeader(CONTENT_TYPE).equals("application/x-www-form-urlencoded")) {
+					request.putParameters(body);
+				} else {
+					request.setBody(body);
+				}
 			}
 		}
 

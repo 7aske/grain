@@ -9,6 +9,10 @@ public class JsonArray implements List<Object> {
 		this.data = new ArrayList<>();
 	}
 
+	public JsonArray(Object[] objects) {
+		this(Arrays.asList(objects));
+	}
+
 	public JsonArray(List<Object> objectList) {
 		this();
 		for (Object value : objectList) {
@@ -21,8 +25,6 @@ public class JsonArray implements List<Object> {
 			}
 		}
 	}
-
-
 
 	@Override
 	public int size() {

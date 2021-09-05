@@ -7,43 +7,49 @@ import static com._7aske.grain.http.HttpConstants.CRLF;
 import static com._7aske.grain.http.HttpConstants.HTTP_V1;
 
 public class HttpResponse {
+	private final Map<String, String> headers;
 	private String version = HTTP_V1;
-	private HttpStatus status = HttpStatus.OK;
-	private Map<String, String> headers = new HashMap<>();
-	private String body = null;
-	private String generatedString = null;
+	private HttpStatus status;
+	private String body;
+	private String cachedHttpString;
 
 	public HttpResponse() {
+		this(HttpStatus.OK, null);
 	}
+
 	public HttpResponse(HttpStatus status) {
-		this.status = status;
+		this(status, null);
 	}
 
 	public HttpResponse(HttpStatus status, String body) {
 		this.status = status;
 		this.body = body;
+		this.headers = new HashMap<>();
+		this.body = null;
+		this.cachedHttpString = null;
 	}
 
 	public String getHttpString() {
-		if (generatedString == null) {
+		if (cachedHttpString == null) {
 			StringBuilder builder = new StringBuilder();
-			builder
-					.append(version)
+			builder.append(version)
 					.append(" ")
 					.append(status.getValue())
 					.append(" ")
 					.append(status.getReason())
 					.append(CRLF);
+
 			for (Map.Entry<String, String> kv : headers.entrySet()) {
 				builder.append(kv.getKey()).append(": ").append(kv.getValue()).append(CRLF);
 			}
+
 			builder.append(CRLF);
 			if (body != null) {
 				builder.append(body);
 			}
-			generatedString = builder.toString();
+			cachedHttpString = builder.toString();
 		}
-		return generatedString;
+		return cachedHttpString;
 	}
 
 	public String getVersion() {
@@ -73,6 +79,11 @@ public class HttpResponse {
 		return this;
 	}
 
+	public HttpResponse removeHeader(String header) {
+		headers.remove(header);
+		return this;
+	}
+
 	public Map<String, String> getHeaders() {
 		return headers;
 	}
@@ -88,10 +99,12 @@ public class HttpResponse {
 	}
 
 	public void setBody(String body) {
-		if (body == null)
-			return;
+		if (body == null) {
+			this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(0));
+		} else {
+			this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(body.length()));
+		}
 		this.body = body;
-		this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(body.length()));
 	}
 
 	public int length() {

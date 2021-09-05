@@ -1,17 +1,26 @@
 package com._7aske.grain.http;
 
+import com._7aske.grain.util.ArrayUtil;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: provide interface to hide utility methods
 public class HttpRequest {
 	private String version;
 	private String path;
 	private HttpMethod method;
 	private Map<String, String> headers;
+	private Map<String, Object> parameters;
+	private String queryString;
 	private Object body;
 
 	public HttpRequest() {
 		this.headers = new HashMap<>();
+		this.parameters = new HashMap<>();
 	}
 
 	public HttpRequest(HttpRequest other) {
@@ -19,6 +28,7 @@ public class HttpRequest {
 		this.path = other.path;
 		this.method = other.method;
 		this.headers = other.headers;
+		this.parameters = other.parameters;
 		this.body = other.body;
 	}
 
@@ -35,7 +45,38 @@ public class HttpRequest {
 	}
 
 	public void setPath(String path) {
-		this.path = path;
+		String[] parts = path.split("\\?");
+		this.path = parts[0];
+		if (parts.length == 2) {
+			try {
+				// TODO: get charset from request?
+				this.queryString = URLDecoder.decode(parts[1], StandardCharsets.UTF_8.toString());
+				putParameters(this.queryString);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void putParameters(Map<String, Object> parameters) {
+		this.parameters.putAll(parameters);
+	}
+
+	public void putParameters(String queryString){
+		String[] parameters = queryString.split("&");
+		for (String parameter : parameters) {
+			String[] kv = parameter.split("=");
+			if (kv.length == 2) {
+				String[] values = kv[1].split(",");
+				if (this.parameters.containsKey(kv[0])) {
+					String[] existing = (String[]) this.parameters.get(kv[0]);
+					String[] updated = ArrayUtil.join(existing, values);
+					this.parameters.put(kv[0], updated);
+				} else {
+					this.parameters.put(kv[0], values);
+				}
+			}
+		}
 	}
 
 	public HttpMethod getMethod() {
@@ -70,6 +111,14 @@ public class HttpRequest {
 		return headers;
 	}
 
+	public String getStringParameter(String key) {
+		return (String) this.parameters.get(key);
+	}
+
+	public String[] getArrayParameter(String key) {
+		return (String[]) this.parameters.get(key);
+	}
+
 	@Override
 	public String toString() {
 		return "HttpRequest{" +
@@ -77,6 +126,7 @@ public class HttpRequest {
 				", path='" + path + '\'' +
 				", method=" + method +
 				", headers=" + headers +
+				", parameters=" + parameters +
 				", body=" + body +
 				'}';
 	}
