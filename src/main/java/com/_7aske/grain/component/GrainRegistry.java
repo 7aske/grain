@@ -6,19 +6,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GrainRegistry {
-	private Map<Class<?>, Object> grains = new HashMap<>();
+	private final Map<Class<?>, Object> grains = new HashMap<>();
 	private final String basePackage;
+	private final String userBasePackage;
 
-	public GrainRegistry(String pkg) {
-		if (pkg == null)
+	public GrainRegistry(String basePackage, String userBasePackage) {
+		if (basePackage == null)
 			throw new IllegalArgumentException("Base package must not be null");
-		this.basePackage = pkg;
+		this.basePackage = basePackage;
+		this.userBasePackage = userBasePackage;
 		doInitializeGrains();
 	}
 
 	private void doInitializeGrains() {
 		Set<Class<?>> grainClasses = new GrainLoader(basePackage).loadGrains();
-		grains = new GrainInitializer(grainClasses).getLoaded();
+		grains.putAll(new GrainInitializer(grainClasses).getLoaded());
+
+		Set<Class<?>> userGrainClasses = new GrainLoader(userBasePackage).loadGrains();
+		grains.putAll(new GrainInitializer(userGrainClasses).getLoaded());
 	}
 
 	public Set<Object> getControllers() {
@@ -29,6 +34,10 @@ public class GrainRegistry {
 
 	public Set<Object> getGrains() {
 		return new HashSet<>(grains.values());
+	}
+
+	public <T> T getGrain(Class<T> clazz) {
+		return clazz.cast(grains.get(clazz));
 	}
 
 	public Set<Middleware> getMiddlewares() {

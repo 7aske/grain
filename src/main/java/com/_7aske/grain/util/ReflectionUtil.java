@@ -2,6 +2,7 @@ package com._7aske.grain.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -38,9 +39,17 @@ public class ReflectionUtil {
 	}
 
 	public static <T> Constructor<T> getBestConstructor(Class<T> clazz) throws NoSuchMethodException {
-		Constructor<?>[] constructors = clazz.getConstructors();
+		Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
+		if (constructors.length == 0)
+			constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
+		if (constructors.length == 0)
+			return getAnyConstructor(clazz);
+		for (Constructor<T> c : constructors)
+			c.setAccessible(true);
+		if (constructors.length == 1)
+			return constructors[0];
 		Arrays.sort(constructors, (Comparator.comparingInt(Constructor::getParameterCount)));
-			return clazz.getConstructor(constructors[constructors.length-1].getParameterTypes());
+		return clazz.getConstructor(constructors[constructors.length - 1].getParameterTypes());
 	}
 
 
@@ -57,5 +66,9 @@ public class ReflectionUtil {
 		if (clazz.isAnnotationPresent(annotation)) return true;
 		// check if annotation is inherited
 		return Arrays.stream(clazz.getAnnotations()).anyMatch(a -> a.annotationType().isAnnotationPresent(annotation));
+	}
+
+	public static boolean isAnnotationPresent(Field field, Class<? extends Annotation> annotation) {
+		return field.isAnnotationPresent(annotation);
 	}
 }

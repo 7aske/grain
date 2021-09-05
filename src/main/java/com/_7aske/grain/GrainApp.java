@@ -54,7 +54,7 @@ public abstract class GrainApp {
 	}
 
 	private void doInitializeComponents() {
-		grainRegistry = new GrainRegistry(basePackage);
+		grainRegistry = new GrainRegistry(GrainApp.class.getPackageName(), basePackage);
 		staticLocationsRegistry = new StaticLocationsRegistry();
 	}
 
