@@ -62,7 +62,7 @@ public class HttpRequest {
 		this.parameters.putAll(parameters);
 	}
 
-	public void putParameters(String queryString){
+	public void putParameters(String queryString) {
 		String[] parameters = queryString.split("&");
 		for (String parameter : parameters) {
 			String[] kv = parameter.split("=");
@@ -112,7 +112,7 @@ public class HttpRequest {
 	}
 
 	public String getStringParameter(String key) {
-		return (String) this.parameters.get(key);
+		return (String) ((Object[]) this.parameters.get(key))[0];
 	}
 
 	public String[] getArrayParameter(String key) {
