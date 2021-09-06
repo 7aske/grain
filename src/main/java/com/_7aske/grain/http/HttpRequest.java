@@ -13,8 +13,8 @@ public class HttpRequest {
 	private String version;
 	private String path;
 	private HttpMethod method;
-	private Map<String, String> headers;
-	private Map<String, Object> parameters;
+	private final Map<String, String> headers;
+	private final Map<String, Object> parameters;
 	private String queryString;
 	private Object body;
 
@@ -29,6 +29,7 @@ public class HttpRequest {
 		this.method = other.method;
 		this.headers = other.headers;
 		this.parameters = other.parameters;
+		this.queryString = other.queryString;
 		this.body = other.body;
 	}
 
@@ -117,6 +118,14 @@ public class HttpRequest {
 
 	public String[] getArrayParameter(String key) {
 		return (String[]) this.parameters.get(key);
+	}
+
+	public Map<String, Object> getParameters() {
+		return parameters;
+	}
+
+	public String getQueryString() {
+		return queryString;
 	}
 
 	@Override
