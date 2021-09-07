@@ -2,7 +2,6 @@ package com._7aske.grain.http.json;
 
 import com._7aske.grain.exception.json.JsonDeserializationException;
 import com._7aske.grain.util.Pair;
-import com._7aske.grain.util.iterator.IndexedStringIterator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public class JsonParser {
-	private final IndexedStringIterator iterator;
+	private final JsonParserIterator iterator;
 
 	public JsonParser(String content) {
-		this.iterator = new IndexedStringIterator(content);
+		this.iterator = new JsonParserIterator(content);
 	}
 
 	private Pair<String, Object> parseEntry() {

@@ -5,9 +5,9 @@ import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class StringIterator implements Iterator<String> {
-	private final String content;
-	private final int endIndex;
-	private int index = 0;
+	protected final String content;
+	protected final int endIndex;
+	protected int index = 0;
 
 	public StringIterator(String content) {
 		this.content = content;
@@ -26,6 +26,23 @@ public class StringIterator implements Iterator<String> {
 		throw new NoSuchElementException();
 	}
 
+	public void rewind() {
+		rewind(1);
+	}
+
+	public void rewind(int num) {
+		if (this.index - num < 0)
+			throw new IndexOutOfBoundsException();
+
+		this.index -= num;
+	}
+
+	public String prev() {
+		if (index > 0)
+			return String.valueOf(content.charAt(index-1));
+		throw new NoSuchElementException();
+	}
+
 	public String peek() {
 		if (hasNext())
 			return String.valueOf(content.charAt(index));
@@ -36,6 +53,10 @@ public class StringIterator implements Iterator<String> {
 		if (hasNext())
 			return String.valueOf(content.charAt(index)).equals(val);
 		return false;
+	}
+
+	public int getIndex() {
+		return index;
 	}
 
 	public String eatWhile(Predicate<String> predicate) {
@@ -52,26 +73,19 @@ public class StringIterator implements Iterator<String> {
 	}
 
 	public String eatWord() {
-		return eatWhile(ch -> !ch.isBlank());
+		return eatWhile(ch -> ch.matches("[a-zA-Z0-9]+"));
 	}
 
-	public String eatKey() {
+	public String eatFloat() {
 		StringBuilder builder = new StringBuilder();
-		String ch;
-		if (peek().equals("\""))
-			next();
-		while (hasNext() && !(ch = next()).equals("\"")) {
-			if (ch.equals("\\")) {
-				String peek = peek();
-				if (peek.equals("\t") || peek.equals("\n") || peek.equals("\\") || peek.equals("\"")) {
-					builder.append(next());
-				} else {
-					// TODO: handle error
-				}
-			} else {
-				builder.append(ch);
-			}
-		}
+		do {
+			if (hasNext())
+				builder.append(next());
+			else
+				return builder.toString();
+		} while(builder.toString().matches("^([+-]?\\d+\\.?\\d*)$"));
+		rewind();
+		builder.setLength(builder.length()-1);
 		return builder.toString();
 	}
 }
