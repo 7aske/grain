@@ -1,11 +1,10 @@
 package com._7aske.grain.http.view.ast.parser;
 
-import com._7aske.grain.http.view.ast.AstBinaryNode;
-import com._7aske.grain.http.view.ast.AstNode;
-import com._7aske.grain.http.view.ast.AstTernaryNode;
-import com._7aske.grain.http.view.ast.AstUnaryNode;
+import com._7aske.grain.http.view.ast.*;
 import com._7aske.grain.http.view.ast.lexer.Lexer;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 class ParserTest {
 
@@ -16,22 +15,20 @@ class ParserTest {
 		lexer.onEmit(System.out::println);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		AstNode ast = parser.parse();
+		List<AstNode> asts = parser.parse();
 
-		System.out.println(ast);
-		System.out.println();
-		printAst(ast, 0);
+		printAst(asts, 0);
 	}
 
 	@Test
 	void test_parseBlock() {
-		String code = "if ('username' == null) { a = 1 }";
+		String code = "{username = 'test' password = 'test';} {test = 1}";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		AstNode ast = parser.parse();
+		List<AstNode> asts = parser.parse();
 
-		printAst(ast, 0);
+		printAst(asts, 0);
 	}
 
 	@Test
@@ -40,9 +37,42 @@ class ParserTest {
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		AstNode ast = parser.parse();
+		List<AstNode> asts = parser.parse();
 
-		printAst(ast, 0);
+		printAst(asts, 0);
+	}
+
+
+	@Test
+	void test_if() {
+		String code = "if (test == true) { test == false } else if (test == false) { printf } else { testf }";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		List<AstNode> asts = parser.parse();
+
+		printAst(asts, 0);
+	}
+
+	@Test
+	void test_while() {
+		String code = "while (true) { test = 1 }";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		List<AstNode> asts = parser.parse();
+
+		printAst(asts, 0);
+	}
+
+	void printAst(List<AstNode> asts, int depth) {
+		for (AstNode ast : asts) {
+			for (int i = 0; i < depth; ++i) System.out.print("    ");
+			System.out.println("{ BLOCK START");
+			printAst(ast, depth);
+			for (int i = 0; i < depth; ++i) System.out.print("    ");
+			System.out.println("} BLOCK END");
+		}
 	}
 
 	void printAst(AstNode node, int depth) {
@@ -59,9 +89,14 @@ class ParserTest {
 		}
 
 		for (int i = 0; i < depth; ++i) System.out.print("    ");
-		System.out.print(node);
-		if (node instanceof AstUnaryNode) {
-			System.out.printf(" -> %s", ((AstUnaryNode) node).getNode());
+		if (node instanceof AstBlockNode) {
+			System.out.println(node);
+			printAst(((AstBlockNode) node).getNodes(), depth + 1);
+		} else {
+			System.out.print(node);
+			if (node instanceof AstUnaryNode) {
+				System.out.printf(" -> %s", ((AstUnaryNode) node).getNode());
+			}
 		}
 		System.out.println();
 

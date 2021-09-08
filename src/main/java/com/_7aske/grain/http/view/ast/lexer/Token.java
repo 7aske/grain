@@ -1,5 +1,6 @@
 package com._7aske.grain.http.view.ast.lexer;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 public class Token {
@@ -72,5 +73,9 @@ public class Token {
 	@Override
 	public String toString() {
 		return String.format("%s('%s')@%d:%d-%d", type, value, row, range[0], range[1]);
+	}
+
+	public boolean isOfType(TokenType... types) {
+		return Arrays.asList(types).contains(type);
 	}
 }
