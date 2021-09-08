@@ -2,7 +2,7 @@ package com._7aske.grain.http.view.ast;
 
 import com._7aske.grain.http.view.ast.types.AstBooleanOperator;
 
-public class AstBooleanNode extends AstNode {
+public class AstBooleanNode extends AstBinaryNode {
 	private AstBooleanOperator operator;
 
 	public AstBooleanNode() {
@@ -42,8 +42,6 @@ public class AstBooleanNode extends AstNode {
 	public String toString() {
 		return "AstBooleanNode{" +
 				"operator=" + operator +
-				", left=" + left +
-				", right=" + right +
 				'}';
 	}
 }

@@ -88,4 +88,8 @@ public class StringIterator implements Iterator<String> {
 		builder.setLength(builder.length()-1);
 		return builder.toString();
 	}
+
+	public String getContent() {
+		return content;
+	}
 }

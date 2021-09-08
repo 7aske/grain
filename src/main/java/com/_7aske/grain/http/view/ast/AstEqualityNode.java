@@ -2,7 +2,7 @@ package com._7aske.grain.http.view.ast;
 
 import com._7aske.grain.http.view.ast.types.AstEqualityOperator;
 
-public class AstEqualityNode extends AstNode {
+public class AstEqualityNode extends AstBinaryNode {
 	private AstEqualityOperator operator;
 
 	public AstEqualityNode() {

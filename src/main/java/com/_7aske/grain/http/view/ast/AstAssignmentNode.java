@@ -1,6 +1,6 @@
 package com._7aske.grain.http.view.ast;
 
-public class AstAssignmentNode extends AstNode {
+public class AstAssignmentNode extends AstBinaryNode {
 
 	public AstAssignmentNode() {
 	}
@@ -29,8 +29,6 @@ public class AstAssignmentNode extends AstNode {
 	@Override
 	public String toString() {
 		return "AstAssignmentNode{" +
-				"left=" + left +
-				", right=" + right +
 				'}';
 	}
 }

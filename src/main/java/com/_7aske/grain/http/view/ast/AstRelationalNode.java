@@ -2,7 +2,7 @@ package com._7aske.grain.http.view.ast;
 
 import com._7aske.grain.http.view.ast.types.AstRelationalOperator;
 
-public class AstRelationalNode extends AstNode {
+public class AstRelationalNode extends AstBinaryNode {
 	private AstRelationalOperator operator;
 
 	public AstRelationalNode(AstRelationalOperator operator, AstNode left, AstNode right) {
@@ -38,9 +38,7 @@ public class AstRelationalNode extends AstNode {
 	@Override
 	public String toString() {
 		return "AstRelationalNode{" +
-				"left=" + left +
-				", right=" + right +
-				", operator=" + operator +
+				"operator=" + operator +
 				'}';
 	}
 }

@@ -1,7 +1,6 @@
 package com._7aske.grain.http.view.ast;
 
-public class AstIfNode extends AstNode {
-	private AstNode condition;
+public class AstIfNode extends AstTernaryNode {
 
 	public AstIfNode() {
 	}
@@ -40,8 +39,6 @@ public class AstIfNode extends AstNode {
 	public String toString() {
 		return "AstIfNode{" +
 				"condition=" + condition +
-				// ", left=" + left +
-				// ", right=" + right +
 				'}';
 	}
 }

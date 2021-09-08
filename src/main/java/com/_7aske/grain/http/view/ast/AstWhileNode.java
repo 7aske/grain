@@ -1,6 +1,6 @@
 package com._7aske.grain.http.view.ast;
 
-public class AstWhileNode extends AstNode {
+public class AstWhileNode extends AstBinaryNode {
 
 	public AstWhileNode(AstNode condition, AstNode body) {
 		this.left = condition;

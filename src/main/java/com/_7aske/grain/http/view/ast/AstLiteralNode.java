@@ -2,9 +2,12 @@ package com._7aske.grain.http.view.ast;
 
 import com._7aske.grain.http.view.ast.types.AstLiteralType;
 
-public class AstLiteralNode extends AstNode {
+public class AstLiteralNode extends AstUnaryNode {
 	private AstLiteralType type;
 	private Object value;
+
+	public AstLiteralNode() {
+	}
 
 	public AstLiteralNode(AstLiteralType type, Object value) {
 		this.type = type;

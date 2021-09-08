@@ -1,6 +1,7 @@
 package com._7aske.grain.http.view.ast.parser;
 
 import com._7aske.grain.http.view.ast.*;
+import com._7aske.grain.http.view.ast.lexer.Lexer;
 import com._7aske.grain.http.view.ast.lexer.Token;
 import com._7aske.grain.http.view.ast.parser.exception.ParserOperationNotSupportedException;
 import com._7aske.grain.http.view.ast.parser.exception.ParserSyntaxErrorException;
@@ -15,12 +16,14 @@ import java.util.Map;
 import static com._7aske.grain.http.view.ast.lexer.TokenType.*;
 
 public class Parser {
+	private final Lexer lexer;
 	private final List<Token> tokens;
 	private final TokenIterator iterator;
 	private final Map<String, AstSymbolNode> symbolTable;
 
-	public Parser(List<Token> tokens) {
-		this.tokens = tokens;
+	public Parser(Lexer lexer) {
+		this.lexer = lexer;
+		this.tokens = lexer.getTokens();
 		this.iterator = new TokenIterator(tokens);
 		this.symbolTable = new HashMap<>();
 	}
@@ -35,16 +38,22 @@ public class Parser {
 		AstNode node = null;
 
 		Token curr = iterator.next();
-		if (curr.getType().equals(RPAREN) || curr.getType().equals(RBRACE) || curr.getType().equals(LBRACE)) {
+		if (curr.getType().equals(LBRACE)) {
 			// TODO: not good
 			return parseExpression();
 		}
+
 		AstNode currNode = createNode(curr);
 
 
 		if (iterator.isPeekOfType(ASSN)) {
 			Token next = iterator.next();
 			AstAssignmentNode newNode = new AstAssignmentNode();
+			if (!(currNode instanceof AstSymbolNode)) {
+				Token error = curr;
+				printSourceCodeLocation(error);
+				throw new ParserSyntaxErrorException("Unable to assign to '%s'", error.getType());
+			}
 			newNode.setSymbol((AstSymbolNode) currNode);
 			newNode.setValue(parseExpression());
 			node = newNode;
@@ -56,18 +65,32 @@ public class Parser {
 			newNode.setRight(parseExpression());
 			node = newNode;
 		} else if (iterator.isPeekOfType(IF)) {
-			Token next = iterator.next();
+			iterator.next(); // move to IF
 			AstIfNode newNode = new AstIfNode();
-			if (!iterator.peek().getType().equals(LPAREN)) {
-				throw new ParserSyntaxErrorException("Unexpected token '" + iterator.peek().getType() + "' " + iterator.peek().getInfo());
+			if (!iterator.isPeekOfType(LPAREN)) {
+				printSourceCodeLocation(iterator.peek());
+				throw new ParserSyntaxErrorException("Unexpected token '%s' %s", iterator.peek().getType(), iterator.peek().getInfo());
 			}
-			iterator.next();
+
+			iterator.next(); // skip LPAREN
+
 			newNode.setCondition(parseExpression());
+			if (!iterator.isPeekOfType(RPAREN)) {
+				Token error = iterator.next();
+				printSourceCodeLocation(error);
+				throw new ParserSyntaxErrorException("Expected token ')' got '%s' %s", error.getType(), error.getInfo());
+			}
+
+			iterator.next(); // skip RPAREN
+
+			if (!iterator.isPeekOfType(LBRACE)){
+				Token error = iterator.next();
+				printSourceCodeLocation(error);
+				throw new ParserSyntaxErrorException("Expected token '{' got '%s' %s", error.getValue(), error.getInfo());
+			}
+
 			newNode.setIfTrue(parseExpression());
 
-			if (iterator.isPeekOfType(RBRACE)) {
-				iterator.next();
-			}
 			if (iterator.isPeekOfType(ELSE)) {
 				iterator.next();
 				newNode.setIfFalse(parseExpression());
@@ -177,5 +200,35 @@ public class Parser {
 				break;
 		}
 		throw new ParserOperationNotSupportedException("Token " + token.getType() + " not supported.");
+	}
+
+	private void printSourceCodeLocation(Token token) {
+		String content = lexer.getContent();
+		int index = 0;
+		for (int i = 0; i < token.getRow(); i++) {
+			index = content.indexOf("\n", index);
+		}
+		if (index == -1) {
+			index = 0;
+		}
+		int lastIndex = content.indexOf("\n", index);
+		if (lastIndex == -1) {
+			lastIndex = content.length();
+		}
+		String line = content.substring(index, lastIndex);
+		System.err.println(line);
+		for (int i = 1; i < token.getStartChar() - 1; i++) {
+			System.err.print(" ");
+		}
+		for (int i = 0; i < token.getValue().length(); i++) {
+			System.err.print("^");
+		}
+		System.err.println();
+		for (int i = 1; i < token.getStartChar() - 1; i++) {
+			System.err.print("─");
+		}
+		System.err.print("┘");
+
+		System.err.println();
 	}
 }
