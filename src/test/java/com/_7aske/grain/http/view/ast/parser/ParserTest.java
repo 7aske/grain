@@ -10,14 +10,14 @@ class ParserTest {
 
 	@Test
 	void test_parser() {
-		String code = "1 if ('username' == null) { a = 1 } else { b = 3 }";
+		String code = "if 'username' == null { a = 1 } else { b = 3 }";
 		Lexer lexer = new Lexer(code);
 		lexer.onEmit(System.out::println);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		List<AstNode> asts = parser.parse();
+		AstNode ast = parser.parse();
 
-		printAst(asts, 0);
+		printAst(ast, 0);
 	}
 
 	@Test
@@ -26,9 +26,9 @@ class ParserTest {
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		List<AstNode> asts = parser.parse();
+		AstNode ast = parser.parse();
 
-		printAst(asts, 0);
+		printAst(ast, 0);
 	}
 
 	@Test
@@ -37,21 +37,29 @@ class ParserTest {
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		List<AstNode> asts = parser.parse();
+		AstNode ast = parser.parse();
 
-		printAst(asts, 0);
+		printAst(ast, 0);
 	}
 
-
 	@Test
-	void test_if() {
-		String code = "if (test == true) { test == false } else if (test == false) { printf } else { testf }";
+	void test_bool() {
+		String code = "a == 1 && b == 2 && c == 3";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		List<AstNode> asts = parser.parse();
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
+	}
 
-		printAst(asts, 0);
+	@Test
+	void test_if() {
+		String code = "if username == null && test == 1 { print }";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
 	}
 
 	@Test
@@ -60,9 +68,8 @@ class ParserTest {
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
-		List<AstNode> asts = parser.parse();
-
-		printAst(asts, 0);
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
 	}
 
 	void printAst(List<AstNode> asts, int depth) {
@@ -94,7 +101,10 @@ class ParserTest {
 			printAst(((AstBlockNode) node).getNodes(), depth + 1);
 		} else {
 			System.out.print(node);
-			if (node instanceof AstUnaryNode) {
+			if (node instanceof AstRootNode) {
+				System.out.println();
+				printAst(((AstRootNode) node).getNode(), depth + 1);
+			} else if (node instanceof AstUnaryNode) {
 				System.out.printf(" -> %s", ((AstUnaryNode) node).getNode());
 			}
 		}

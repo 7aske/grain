@@ -14,6 +14,10 @@ public class AstBooleanNode extends AstBinaryNode {
 		this.right = right;
 	}
 
+	public AstBooleanNode(AstBooleanOperator operator) {
+		this.operator = operator;
+	}
+
 	public AstNode getLeft() {
 		return left;
 	}

@@ -9,75 +9,82 @@ import com._7aske.grain.http.view.ast.types.AstBooleanOperator;
 import com._7aske.grain.http.view.ast.types.AstEqualityOperator;
 import com._7aske.grain.http.view.ast.types.AstLiteralType;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static com._7aske.grain.http.view.ast.lexer.TokenType.*;
 
 public class Parser {
 	private final Lexer lexer;
 	private final List<Token> tokens;
-	private final List<AstNode> parsed;
 	private final TokenIterator iterator;
 	private AstNode prevNode;
-	private Token prevToken;
+	private AstRootNode currentRoot;
 
 	public Parser(Lexer lexer) {
 		this.lexer = lexer;
 		this.tokens = lexer.getTokens();
 		this.iterator = new TokenIterator(tokens);
-		this.parsed = new ArrayList<>();
 	}
 
-	public List<AstNode> parse() {
-		while(iterator.hasNext()) {
-			AstNode node = parseExpression();
-			parsed.add(node);
+	public AstNode parse() {
+		AstBlockNode blockNode = new AstBlockNode();
+		while (iterator.hasNext()) {
+			currentRoot = new AstRootNode();
+			prevNode = currentRoot;
+			parseExpression();
+			blockNode.addNode(currentRoot);
 		}
-		return parsed;
+		return blockNode;
 	}
 
 	private AstNode parseExpression() {
-		if (!iterator.hasNext())
-			return null;
 		AstNode node = null;
-
 		Token curr = iterator.next();
 		AstNode currNode = createNode(curr);
+		if (currentRoot.getNode() == null)
+			currentRoot.setNode(currNode);
 
 		if (iterator.isPeekOfType(ASSN)) {
-			iterator.next(); // move to ASSN
-			AstAssignmentNode newNode = new AstAssignmentNode();
+			Token next = iterator.next(); // move to ASSN
+			AstAssignmentNode newNode = (AstAssignmentNode) createNode(next);
 			if (!(currNode instanceof AstSymbolNode)) {
 				Token error = curr;
 				printSourceCodeLocation(error);
 				throw new ParserSyntaxErrorException("Unable to assign to '%s'", error.getType());
 			}
 			newNode.setSymbol((AstSymbolNode) currNode);
+			prevNode = newNode;
 			newNode.setValue(parseExpression());
 			node = newNode;
 		} else if (iterator.isPeekOfType(AND, OR)) {
 			Token next = iterator.next();
-			AstBooleanNode newNode = new AstBooleanNode();
+			AstBooleanNode newNode = (AstBooleanNode) createNode(next);
 			newNode.setOperator(AstBooleanOperator.from(next.getType()));
 			newNode.setLeft(currNode);
+			prevNode = newNode;
 			newNode.setRight(parseExpression());
-			node = newNode;
+			if (prevNode instanceof AstBinaryNode) {
+				node = rotate(newNode);
+			} else {
+				node = newNode;
+			}
 		} else if (iterator.isPeekOfType(IF)) {
-			iterator.next(); // move to IF
-			node = getAstIfNode();
+			Token next = iterator.next(); // move to IF
+			node = getAstIfNode(next);
 		} else if (iterator.isPeekOfType(EQ)) {
 			Token next = iterator.next();
-			AstEqualityNode newNode = new AstEqualityNode();
+			AstEqualityNode newNode = (AstEqualityNode) createNode(next);
 			newNode.setOperator(AstEqualityOperator.from(next.getType()));
 			newNode.setLeft(currNode);
+			prevNode = newNode;
 			newNode.setRight(parseExpression());
 			node = newNode;
 		}  else {
 			if (curr.isOfType(IF)) {
-				node = getAstIfNode();
+				node = getAstIfNode(curr);
 			} else if (curr.isOfType(SCOL)) {
-				return currNode;
+				node = currNode;
 			} else if (curr.isOfType(LBRACE)) {
 				while(!iterator.isPeekOfType(RBRACE)) {
 					((AstBlockNode)currNode).addNode(parseExpression());
@@ -89,47 +96,86 @@ public class Parser {
 			}
 		}
 
+		prevNode = node;
 		return node;
 	}
 
-	private AstIfNode getAstIfNode() {
-		AstIfNode newNode = new AstIfNode();
-		if (!iterator.isPeekOfType(LPAREN)) {
-			printSourceCodeLocation(iterator.peek());
-			throw new ParserSyntaxErrorException("Unexpected token '%s' %s", iterator.peek().getType(), iterator.peek().getInfo());
-		}
+	private AstIfNode getAstIfNode(Token token) {
+		AstIfNode newNode = (AstIfNode) createNode(token);
+		// if (!iterator.isPeekOfType(LPAREN)) {
+		// 	printSourceCodeLocation(iterator.peek());
+		// 	throw new ParserSyntaxErrorException("Unexpected token '%s' %s", iterator.peek().getType(), iterator.peek().getInfo());
+		// }
+		//
+		// iterator.next(); // skip LPAREN
 
-		iterator.next(); // skip LPAREN
-
+		prevNode = newNode;
 		newNode.setCondition(parseExpression());
-		if (!iterator.isPeekOfType(RPAREN)) {
-			Token error = iterator.next();
-			printSourceCodeLocation(error);
-			throw new ParserSyntaxErrorException("Expected token ')' got '%s' %s", error.getType(), error.getInfo());
+		// if (!iterator.isPeekOfType(RPAREN)) {
+		// 	Token error = iterator.next();
+		// 	printSourceCodeLocation(error);
+		// 	throw new ParserSyntaxErrorException("Expected token ')' got '%s' %s", error.getType(), error.getInfo());
+		// }
+
+		// iterator.next(); // skip RPAREN
+
+		// if (!iterator.isPeekOfType(LBRACE)){
+		// 	Token error = iterator.next();
+		// 	printSourceCodeLocation(error);
+		// 	throw new ParserSyntaxErrorException("Expected token '{' got '%s' %s", error.getValue(), error.getInfo());
+		// }
+
+		AstBlockNode ifBlock = new AstBlockNode();
+		ifBlock.setParent(newNode);
+
+		while (!iterator.isPeekOfType(ELSE, ENDIF)) {
+			try {
+				AstNode node = parseExpression();
+				ifBlock.addNode(node);
+			} catch (NoSuchElementException ex) {
+				break;
+			}
 		}
+		newNode.setIfTrue(ifBlock);
 
-		iterator.next(); // skip RPAREN
-
-		if (!iterator.isPeekOfType(LBRACE)){
-			Token error = iterator.next();
-			printSourceCodeLocation(error);
-			throw new ParserSyntaxErrorException("Expected token '{' got '%s' %s", error.getValue(), error.getInfo());
+		if (iterator.isPeekOfType(ENDIF)) {
+			iterator.next();
+			return newNode;
 		}
-
-		newNode.setIfTrue(parseExpression());
 
 		if (iterator.isPeekOfType(ELSE)) {
 			iterator.next();
 			newNode.setIfFalse(parseExpression());
 		}
+
 		return newNode;
 	}
 
+	private AstNode rotate(AstBinaryNode child) {
+		AstNode parentParent = child.getParent().getParent();
+		AstNode parent = child.getParent();
+		if (parentParent instanceof AstRootNode) {
+			((AstRootNode) parentParent).setNode(child);
+			child.setParent(parentParent);
+			((AstBinaryNode)parent).setRight(child.getLeft());
+			child.setLeft(parent);
+			parent.setParent(child);
+			// return ((AstBinaryNode) parent).getRight();
+		} else if (parentParent instanceof AstBinaryNode) {
+			((AstBinaryNode) parentParent).setLeft(child);
+			child.setParent(parentParent);
+			((AstBinaryNode)parent).setRight(child.getLeft());
+			child.setLeft(parent);
+			parent.setParent(child);
+			return ((AstBinaryNode) parent).getRight();
+		}
+		return child;
+	}
+
 	private AstNode createNode(Token token) {
-		AstNode created = doCreateNode(token);
-		prevNode = created;
-		prevToken = token;
-		return created;
+		AstNode astNode = doCreateNode(token);
+		astNode.setParent(prevNode);
+		return astNode;
 	}
 
 	private AstNode doCreateNode(Token token) {
@@ -172,9 +218,8 @@ public class Parser {
 			case MOD:
 				break;
 			case AND:
-				break;
 			case OR:
-				break;
+				return new AstBooleanNode(AstBooleanOperator.from(token.getType()));
 			case NOT:
 				break;
 			case EQ:
@@ -238,14 +283,14 @@ public class Parser {
 		}
 		String line = content.substring(index, lastIndex);
 		System.err.println(line);
-		for (int i = 1; i < token.getStartChar() - 1; i++) {
+		for (int i = 0; i < token.getStartChar() - 1; i++) {
 			System.err.print(" ");
 		}
 		for (int i = 0; i < token.getValue().length(); i++) {
 			System.err.print("^");
 		}
 		System.err.println();
-		for (int i = 1; i < token.getStartChar() - 1; i++) {
+		for (int i = 0; i < token.getStartChar() - 1; i++) {
 			System.err.print("─");
 		}
 		System.err.print("┘");
