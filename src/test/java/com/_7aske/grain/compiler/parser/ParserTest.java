@@ -54,7 +54,7 @@ class ParserTest {
 
 	@Test
 	void test_if() {
-		String code = "if username == null && test == 1 then print elif test3 == 3 then print3 else print2 endif";
+		String code = "if ! username == null && test == 1 then print elif test3 == 3 then print3 else print2 endif";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);

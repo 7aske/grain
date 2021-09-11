@@ -10,21 +10,18 @@ import com._7aske.grain.compiler.types.AstBooleanOperator;
 import com._7aske.grain.compiler.types.AstEqualityOperator;
 import com._7aske.grain.compiler.types.AstLiteralType;
 
-import java.util.List;
 import java.util.Stack;
 
 import static com._7aske.grain.compiler.lexer.TokenType.*;
 
 public class Parser {
 	private final Lexer lexer;
-	private final List<Token> tokens;
 	private final TokenIterator iter;
-	private Stack<AstNode> parentStack = new Stack<>();
+	private final Stack<AstNode> parentStack = new Stack<>();
 
 	public Parser(Lexer lexer) {
 		this.lexer = lexer;
-		this.tokens = lexer.getTokens();
-		this.iter = new TokenIterator(tokens);
+		this.iter = new TokenIterator(lexer.getTokens());
 	}
 
 	public AstNode parse() {
@@ -78,6 +75,7 @@ public class Parser {
 		AstNode condition = parseSubExpression(indexOfThen);
 		iter.next(); // skip then
 		ifNode.setCondition(condition);
+
 		AstBlockNode trueBlock = new AstBlockNode();
 		parentStack.push(trueBlock);
 		while (iter.hasNext() && !iter.isPeekOfType(ELSE, ELIF, ENDIF)) {
@@ -155,7 +153,14 @@ public class Parser {
 			}
 			parentStack.pop();
 		} else {
-			node = createNode(curr);
+			if (curr.isOfType(NOT)) {
+				AstNotNode notNode = (AstNotNode) createNode(curr);
+				AstNode astNode = parseSubExpression(end);
+				notNode.setNode(astNode);
+				node = notNode;
+			} else {
+				node = createNode(curr);
+			}
 		}
 
 		return node;
@@ -209,7 +214,7 @@ public class Parser {
 			case OR:
 				return new AstBooleanNode(AstBooleanOperator.from(token.getType()));
 			case NOT:
-				break;
+				return new AstNotNode();
 			case EQ:
 				return new AstEqualityNode(AstEqualityOperator.from(token.getType()));
 			case NE:
