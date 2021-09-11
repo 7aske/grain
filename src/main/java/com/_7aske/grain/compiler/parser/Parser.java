@@ -188,7 +188,10 @@ public class Parser {
 			parentStack.pop();
 			node = astAssignmentNode;
 		}else {
-			if (curr.isOfType(NOT)) {
+			if (curr.isOfType(IF)) {
+				iter.rewind();
+				node = parseIf();
+			} else if (curr.isOfType(NOT)) {
 				AstNotNode notNode = (AstNotNode) createNode(curr);
 				AstNode astNode = parseSubExpression(end);
 				notNode.setNode(astNode);

@@ -30,6 +30,15 @@ public class AstLiteralNode extends AstUnaryNode {
 
 	@Override
 	public Object value() {
+		if (type == AstLiteralType.BOOLEAN) {
+			return Boolean.parseBoolean((String) value);
+		} else if (type == AstLiteralType.FLOAT) {
+			return Float.parseFloat((String) value);
+		} else if (type == AstLiteralType.INTEGER) {
+			return Integer.parseInt((String) value);
+		} else if (type == AstLiteralType.NULL) {
+			return null;
+		}
 		return value;
 	}
 

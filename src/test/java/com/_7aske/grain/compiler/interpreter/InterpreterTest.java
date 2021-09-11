@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 class InterpreterTest {
 	@Test
 	void test_testInterpreter() {
-		String code = "if username == 'test' then username = 'test2' endif if 3 > 2 then test = 1 endif";
+		String code = "val =10 if val > 9 then username = 'test' if true then username='test2' endif endif";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
