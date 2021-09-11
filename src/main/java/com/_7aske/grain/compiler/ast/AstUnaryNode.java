@@ -1,6 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
-public class AstUnaryNode extends AstNode {
+public abstract class AstUnaryNode extends AstNode {
 	protected AstNode node;
 
 	protected AstUnaryNode() {

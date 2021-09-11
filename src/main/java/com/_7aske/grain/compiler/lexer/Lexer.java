@@ -52,8 +52,11 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private void doLex() {
-		while (hasNext()) {
+		while (true) {
 			eatWhitespace();
+			if (!hasNext())
+				break;
+
 			start = getCharacter();
 
 

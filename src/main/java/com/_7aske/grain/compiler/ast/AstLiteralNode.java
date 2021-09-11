@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.types.AstLiteralType;
 
 public class AstLiteralNode extends AstUnaryNode {
@@ -20,6 +21,16 @@ public class AstLiteralNode extends AstUnaryNode {
 
 	public void setValue(Object value) {
 		this.value = value;
+	}
+
+	@Override
+	public void run(Interpreter interpreter) {
+
+	}
+
+	@Override
+	public Object value() {
+		return value;
 	}
 
 	@Override

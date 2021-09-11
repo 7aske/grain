@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
+
 public class AstAssignmentNode extends AstBinaryNode {
 
 	public AstAssignmentNode() {
@@ -30,5 +32,16 @@ public class AstAssignmentNode extends AstBinaryNode {
 	public String toString() {
 		return "AstAssignmentNode{" +
 				'}';
+	}
+
+	@Override
+	public void run(Interpreter interpreter) {
+		right.run(interpreter);
+		interpreter.putSymbol(((AstSymbolNode) left).getName(), right.value());
+	}
+
+	@Override
+	public Object value() {
+		return this.right.value();
 	}
 }

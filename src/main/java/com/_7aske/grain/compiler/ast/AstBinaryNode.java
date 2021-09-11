@@ -1,6 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
-public class AstBinaryNode extends AstNode {
+public abstract class AstBinaryNode extends AstNode {
 	protected AstNode left;
 	protected AstNode right;
 

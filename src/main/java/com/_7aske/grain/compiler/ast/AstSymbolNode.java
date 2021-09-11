@@ -1,7 +1,10 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
+
 public class AstSymbolNode extends AstNode {
 	String name;
+	Object value;
 
 	public AstSymbolNode() {
 	}
@@ -24,5 +27,15 @@ public class AstSymbolNode extends AstNode {
 		return "AstSymbolNode{" +
 				"name='" + name + '\'' +
 				'}';
+	}
+
+	@Override
+	public void run(Interpreter interpreter) {
+		value = interpreter.getSymbolValue(name);
+	}
+
+	@Override
+	public Object value() {
+		return value;
 	}
 }

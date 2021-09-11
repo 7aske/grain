@@ -2,6 +2,7 @@ package com._7aske.grain.compiler.parser;
 
 import com._7aske.grain.compiler.ast.*;
 import com._7aske.grain.compiler.lexer.Lexer;
+import com._7aske.grain.http.view.DataView;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -60,6 +61,14 @@ class ParserTest {
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
 		printAst(ast, 0);
+	}
+
+	@Test
+	void test_dataView() {
+		DataView dataView = new DataView("index.html");
+		dataView.setData("username", "user1");
+		String content = dataView.getContent();
+		System.out.println(content);
 	}
 
 	@Test

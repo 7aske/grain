@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,5 +34,17 @@ public class AstBlockNode extends AstNode {
 		return "AstBlockNode{" +
 				"nodes=" + nodes.size() +
 				'}';
+	}
+
+	@Override
+	public void run(Interpreter interpreter) {
+		for (AstNode node: this.getNodes()) {
+			node.run(interpreter);
+		}
+	}
+
+	@Override
+	public Object value() {
+		throw new RuntimeException("Called 'value()' on " + this.getClass());
 	}
 }

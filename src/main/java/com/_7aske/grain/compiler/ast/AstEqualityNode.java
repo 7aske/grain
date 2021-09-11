@@ -1,6 +1,9 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.types.AstEqualityOperator;
+
+import java.util.Objects;
 
 public class AstEqualityNode extends AstBinaryNode {
 	private AstEqualityOperator operator;
@@ -49,5 +52,23 @@ public class AstEqualityNode extends AstBinaryNode {
 				", left=" + left +
 				", right=" + right +
 				'}';
+	}
+
+	@Override
+	public void run(Interpreter interpreter) {
+		left.run(interpreter);
+		right.run(interpreter);
+	}
+
+	@Override
+	public Object value() {
+		switch (this.operator) {
+			case EQ:
+				return Objects.equals(left.value(),right.value());
+			case NE:
+				return !Objects.equals(left.value(),right.value());
+
+		}
+		throw new IllegalStateException("Unknown operator value " + operator);
 	}
 }
