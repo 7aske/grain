@@ -3,6 +3,7 @@ package com._7aske.grain.compiler.interpreter;
 import com._7aske.grain.compiler.ast.AstBlockNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.AstNode;
+import com._7aske.grain.compiler.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,11 @@ public class Interpreter {
 		this.symbols = new HashMap<>();
 		this.nodes = new ArrayList<>();
 		this.symbols.put("print", (AstFunctionCallNode.AstFunctionCallback) args -> args[0].value());
+	}
+
+	public Interpreter(Parser parser) {
+		this();
+		this.nodes.add(parser.parse());
 	}
 
 	public void addNode(AstNode node) {

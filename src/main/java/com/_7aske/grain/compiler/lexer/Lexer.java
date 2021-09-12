@@ -14,6 +14,7 @@ public class Lexer extends IndexedStringIterator {
 	private int start;
 	protected Consumer<Token> callback;
 	protected List<Token> tokens;
+	private boolean isDone = false;
 
 	public Lexer(String code) {
 		super(code);
@@ -72,6 +73,7 @@ public class Lexer extends IndexedStringIterator {
 				String val = eatFloat();
 				TokenType type = getNumberType(val);
 				if (type.equals(INVALID)) {
+					printSourceCodeLocation();
 					throw new LexerException("Invalid number literal " + getInfo());
 				}
 				Token token = createToken(type, val);
@@ -82,7 +84,8 @@ public class Lexer extends IndexedStringIterator {
 			if (isStartOfStringLiteral()) {
 				String val = eatStringLiteral();
 				if (val == null) {
-					throw new LexerException("Invalid number literal " + getInfo());
+					printSourceCodeLocation();
+					throw new LexerException("Invalid string literal " + getInfo());
 				}
 				Token token = new Token(LIT_STR, val);
 				emit(token);
@@ -96,15 +99,22 @@ public class Lexer extends IndexedStringIterator {
 				token.setRow(getRow());
 				emit(token);
 			} else {
+				printSourceCodeLocation();
 				throw new LexerException("Invalid token '" + peek() + "' " + getInfo());
 			}
 		}
 	}
 
 	public void begin() {
+		if (isDone) return;
 		emit(createToken(_START, null));
 		doLex();
 		emit(createToken(_END, null));
+		isDone = true;
+	}
+
+	public boolean isDone() {
+		return isDone;
 	}
 
 	private boolean isStartOfIdentifier() {
@@ -247,4 +257,30 @@ public class Lexer extends IndexedStringIterator {
 		}
 	}
 
+	private void printSourceCodeLocation() {
+		int index = 0;
+		for (int i = 0; i < getRow() - 1; i++) {
+			index = content.indexOf("\n", index);
+		}
+		if (index == -1) {
+			index = 0;
+		}
+		int lastIndex = content.indexOf("\n", index);
+		if (lastIndex == -1) {
+			lastIndex = content.length();
+		}
+		String line = content.substring(index, lastIndex);
+		System.err.println(line);
+		for (int i = 0; i < getCharacter() - 2; i++) {
+			System.err.print(" ");
+		}
+		System.err.print("^");
+		System.err.println();
+		for (int i = 0; i < getCharacter() - 2; i++) {
+			System.err.print("─");
+		}
+		System.err.print("┘");
+
+		System.err.println();
+	}
 }

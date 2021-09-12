@@ -19,15 +19,19 @@ import static com._7aske.grain.compiler.lexer.TokenType.*;
 
 public class Parser {
 	private final Lexer lexer;
-	private final TokenIterator iter;
+	private TokenIterator iter;
 	private final Stack<AstNode> parentStack = new Stack<>();
 
 	public Parser(Lexer lexer) {
 		this.lexer = lexer;
-		this.iter = new TokenIterator(lexer.getTokens());
 	}
 
 	public AstNode parse() {
+		if (!lexer.isDone())
+			lexer.begin();
+		this.iter = new TokenIterator(lexer.getTokens());
+		this.parentStack.clear();
+
 		AstBlockNode blockNode = new AstBlockNode();
 		if (!iter.isPeekOfType(_START))
 			throw new ParserSyntaxErrorException("Token _START missing at the beginning of code block");
