@@ -1,6 +1,7 @@
 package com._7aske.grain.compiler.parser;
 
 import com._7aske.grain.compiler.ast.*;
+import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.http.view.DataView;
 import org.junit.jupiter.api.Test;
@@ -62,6 +63,20 @@ class ParserTest {
 		AstNode ast = parser.parse();
 		printAst(ast, 0);
 	}
+
+	@Test
+	void test_functionCall() {
+		String code = "a = print('login')";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		AstNode ast = parser.parse();
+		Interpreter interpreter = new Interpreter();
+		interpreter.addNode(ast);
+		interpreter.run();
+		System.out.println(interpreter.getSymbols());
+	}
+
 
 	@Test
 	void test_dataView() {
