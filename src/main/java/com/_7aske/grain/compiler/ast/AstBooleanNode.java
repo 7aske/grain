@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.types.AstBooleanOperator;
 
@@ -61,9 +63,7 @@ public class AstBooleanNode extends AstBinaryNode {
 	}
 
 	@Override
-	public String toString() {
-		return "AstBooleanNode{" +
-				"operator=" + operator +
-				'}';
+	public int getPrecedence() {
+		return 100;
 	}
 }

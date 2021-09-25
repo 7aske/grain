@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 import java.util.ArrayList;
@@ -27,13 +28,6 @@ public class AstBlockNode extends AstNode {
 
 	public void setNodes(List<AstNode> nodes) {
 		this.nodes = nodes;
-	}
-
-	@Override
-	public String toString() {
-		return "AstBlockNode{" +
-				"nodes=" + nodes.size() +
-				'}';
 	}
 
 	@Override

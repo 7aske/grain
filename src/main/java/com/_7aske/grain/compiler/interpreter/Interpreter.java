@@ -2,7 +2,7 @@ package com._7aske.grain.compiler.interpreter;
 
 import com._7aske.grain.compiler.ast.AstBlockNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
-import com._7aske.grain.compiler.ast.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.parser.Parser;
 
 import java.util.ArrayList;

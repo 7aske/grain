@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstTernaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstIfNode extends AstTernaryNode {
@@ -52,10 +54,4 @@ public class AstIfNode extends AstTernaryNode {
 		return this.condition.value();
 	}
 
-	@Override
-	public String toString() {
-		return "AstIfNode{" +
-				"condition=" + condition +
-				'}';
-	}
 }

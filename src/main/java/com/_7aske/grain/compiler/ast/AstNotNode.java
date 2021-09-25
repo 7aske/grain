@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstNotNode extends AstUnaryNode {
@@ -15,9 +16,7 @@ public class AstNotNode extends AstUnaryNode {
 	}
 
 	@Override
-	public String toString() {
-		return "AstNotNode{" +
-				"node=" + getNode() +
-				'}';
+	public int getPrecedence() {
+		return 1000;
 	}
 }

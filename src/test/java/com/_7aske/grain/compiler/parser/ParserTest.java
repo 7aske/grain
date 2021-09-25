@@ -1,6 +1,10 @@
 package com._7aske.grain.compiler.parser;
 
 import com._7aske.grain.compiler.ast.*;
+import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstTernaryNode;
+import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.http.view.DataView;
@@ -12,7 +16,7 @@ class ParserTest {
 
 	@Test
 	void test_parser() {
-		String code = "if 'username' == null { a = 1 } else { b = 3 }";
+		String code = "if ('username' == null) { a = 1 } else if (true) { b = 3 }";
 		Lexer lexer = new Lexer(code);
 		lexer.onEmit(System.out::println);
 		lexer.begin();
@@ -24,7 +28,7 @@ class ParserTest {
 
 	@Test
 	void test_parseBlock() {
-		String code = "{username = 'test' password = 'test';} {test = 1}";
+		String code = "{username = 'test'; password = 'test';} {test = 1;}";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
@@ -46,7 +50,7 @@ class ParserTest {
 
 	@Test
 	void test_bool() {
-		String code = "a == 1 && b == 2 && c == 3";
+		String code = "a == 1 && b == 2 || c == 3";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
@@ -56,7 +60,7 @@ class ParserTest {
 
 	@Test
 	void test_if() {
-		String code = "if ! username == null && test == 1 then print elif test3 == 3 then print3 else print2 endif";
+		String code = "if (!(username == null) && test == null) { test3; } else { print3; }";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);

@@ -1,6 +1,8 @@
 package com._7aske.grain.compiler.parser;
 
 import com._7aske.grain.compiler.ast.*;
+import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.Token;
 import com._7aske.grain.compiler.lexer.TokenType;
@@ -11,8 +13,6 @@ import com._7aske.grain.compiler.types.AstEqualityOperator;
 import com._7aske.grain.compiler.types.AstLiteralType;
 import com._7aske.grain.compiler.types.AstRelationalOperator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Stack;
 
 import static com._7aske.grain.compiler.lexer.TokenType.*;
@@ -21,6 +21,7 @@ public class Parser {
 	private final Lexer lexer;
 	private TokenIterator iter;
 	private final Stack<AstNode> parentStack = new Stack<>();
+	private final Stack<AstNode> parsedStack = new Stack<>();
 
 	public Parser(Lexer lexer) {
 		this.lexer = lexer;
@@ -32,127 +33,53 @@ public class Parser {
 		this.iter = new TokenIterator(lexer.getTokens());
 		this.parentStack.clear();
 
-		AstBlockNode blockNode = new AstBlockNode();
 		if (!iter.isPeekOfType(_START))
 			throw new ParserSyntaxErrorException("Token _START missing at the beginning of code block");
 		iter.next();
+
+		AstBlockNode program = new AstBlockNode();
+		parentStack.push(program);
 		while (iter.hasNext() && !iter.isPeekOfType(_END)) {
-			AstRootNode root = new AstRootNode();
-			AstNode node = parseExpression(root);
-			root.setNode(node);
-			blockNode.addNode(root);
+			AstNode node = parseStatement();
+			if (node != null)
+				program.addNode(node);
 		}
-		return blockNode;
+		return program;
 	}
 
-	private AstNode parseExpression(AstNode parent) {
+	private AstNode parseExpression() {
 		AstNode node = null;
-		if (iter.isPeekOfType(IF, ELIF)) {
-			node = parseIf();
-		} else {
-			if (iter.isPeekOfType(_START))
-				iter.next();
-			node = parseSubExpression();
-		}
-		if (node != null)
-			node.setParent(parent);
-
+		node = parseSubExpression();
 		return node;
 	}
 
-	private AstNode parseIf() {
-		Token token = iter.next();
-		if (token.isOfType(ELIF) && !(parentStack.peek() instanceof AstIfNode)) {
-			printSourceCodeLocation(token);
-			throw new ParserSyntaxErrorException("No matching '%s' token found for '%s'", IF.getValue(), token.getValue());
-		}
-
-		int indexOfThen = findNextOf(THEN);
-		if (indexOfThen == -1) {
-			printSourceCodeLocation(token);
-			throw new ParserSyntaxErrorException("No matching '%s' token found for '%s'", THEN.getValue(), token.getValue());
-		}
-
-		int indexOfEndif = findNextOf(ENDIF);
-		if (indexOfEndif == -1) {
-			printSourceCodeLocation(token);
-			throw new ParserSyntaxErrorException("No matching '%s' token found for '%s'", ENDIF.getValue(), token.getValue());
-		}
-
-		AstIfNode ifNode = (AstIfNode) createNode(token);
-		parentStack.push(ifNode);
-		AstNode condition = parseSubExpression(indexOfThen);
-		iter.next(); // skip then
-		ifNode.setCondition(condition);
-
-		AstBlockNode trueBlock = new AstBlockNode();
-		parentStack.push(trueBlock);
-		while (iter.hasNext() && !iter.isPeekOfType(ELSE, ELIF, ENDIF)) {
-			trueBlock.addNode(parseSubExpression(indexOfEndif));
-		}
-		parentStack.pop();
-		ifNode.setIfTrue(trueBlock);
-
-		// ELSE OR ELIF
-		int indexOfElif = findNextOf(ELIF);
-		int indexOfElse = findNextOf(ELSE);
-		AstNode elseBlock = null;
-		if (indexOfElif != -1) {
-			elseBlock = parseIf();
-		} else if (indexOfElse != -1) {
-			elseBlock = new AstBlockNode();
-			parentStack.push(elseBlock);
-			iter.next(); // skip else
-			while (iter.hasNext() && !iter.isPeekOfType(ELSE, ELIF, ENDIF)) {
-				((AstBlockNode) elseBlock).addNode(parseSubExpression(indexOfEndif));
-			}
-		}
-		ifNode.setIfFalse(elseBlock);
-		parentStack.pop();
-		iter.next(); // skip endif
-
-		return ifNode;
-	}
-
 	private AstNode parseSubExpression() {
-		return parseSubExpression(Integer.MAX_VALUE);
-	}
-
-	private AstNode parseSubExpression(int end) {
-		int start = iter.getIndex();
-
-		if (start >= end)
-			return null;
-		if (iter.isPeekOfType(_END))
-			return null;
-
 		Token curr = iter.next();
-		if (curr.isOfType(_START))
-			curr = iter.next();
-
 		AstNode node = null;
+
+		if (curr.isOfType(LPAREN)) {
+			node = parseSubExpression();
+			return node;
+		}
 
 
 		if (iter.isPeekOfType(AND, OR)) {
 			node = createNode(curr);
 			Token token = iter.next();
 			AstBooleanNode booleanNode = (AstBooleanNode) createNode(token);
-			parentStack.push(booleanNode);
 			booleanNode.setLeft(node);
 			booleanNode.setOperator(AstBooleanOperator.from(token.getType()));
-			booleanNode.setRight(parseSubExpression(end));
-			parentStack.pop();
+			booleanNode.setRight(parseSubExpression());
 			node = booleanNode;
 		} else if (iter.isPeekOfType(EQ, NE)) {
 			node = createNode(curr);
 			Token token = iter.next();
 			AstEqualityNode equalityNode = (AstEqualityNode) createNode(token);
-			parentStack.push(equalityNode);
 			equalityNode.setLeft(node);
 			equalityNode.setOperator(AstEqualityOperator.from(token.getType()));
-			equalityNode.setRight(parseSubExpression(end));
-			if (equalityNode.getRight() instanceof AstBooleanNode) {
-				AstBooleanNode booleanNode = (AstBooleanNode) equalityNode.getRight();
+			equalityNode.setRight(parseSubExpression());
+			if (equalityNode.getRight().getPrecedence() > equalityNode.getPrecedence()) {
+				AstBinaryNode booleanNode = (AstBinaryNode) equalityNode.getRight();
 				AstNode booleanLeft = booleanNode.getLeft();
 				booleanNode.setLeft(equalityNode);
 				equalityNode.setRight(booleanLeft);
@@ -160,17 +87,15 @@ public class Parser {
 			} else {
 				node = equalityNode;
 			}
-			parentStack.pop();
 		} else if (iter.isPeekOfType(GT, LT, GE, LE)) {
 			node = createNode(curr);
 			Token token = iter.next();
 			AstRelationalNode relationalNode = (AstRelationalNode) createNode(token);
-			parentStack.push(relationalNode);
 			relationalNode.setLeft(node);
 			relationalNode.setOperator(AstRelationalOperator.from(token.getType()));
-			relationalNode.setRight(parseSubExpression(end));
-			if (relationalNode.getRight() instanceof AstBooleanNode) {
-				AstBooleanNode booleanNode = (AstBooleanNode) relationalNode.getRight();
+			relationalNode.setRight(parseSubExpression());
+			if (relationalNode.getRight().getPrecedence() > relationalNode.getPrecedence()) {
+				AstBinaryNode booleanNode = (AstBinaryNode) relationalNode.getRight();
 				AstNode booleanLeft = booleanNode.getLeft();
 				booleanNode.setLeft(relationalNode);
 				relationalNode.setRight(booleanLeft);
@@ -178,62 +103,100 @@ public class Parser {
 			} else {
 				node = relationalNode;
 			}
-			parentStack.pop();
 		} else if (iter.isPeekOfType(ASSN)) {
-			if (!curr.isOfType(IDEN)) {
-				printSourceCodeLocation(curr);
-				throw new ParserSyntaxErrorException("Cannot assign to '%s'", curr.getType());
-			}
+			if (!curr.isOfType(IDEN))
+				throw new ParserSyntaxErrorException(getSourceCodeLocation(curr),
+						"Cannot assign to '%s'", curr.getType());
+
 			AstAssignmentNode astAssignmentNode = (AstAssignmentNode) createNode(iter.peek());
-			parentStack.push(astAssignmentNode);
 			AstSymbolNode symbolNode = (AstSymbolNode) createNode(curr);
 			astAssignmentNode.setSymbol(symbolNode);
 			iter.next(); // skip assn
 			AstNode value = parseSubExpression();
 			astAssignmentNode.setValue(value);
-			parentStack.pop();
 			node = astAssignmentNode;
+		} else if (iter.isPeekOfType(SCOL)) {
+			node = createNode(curr);
+			iter.next();
 		} else {
-			if (curr.isOfType(IF)) {
-				iter.rewind();
-				node = parseIf();
-			} else if (curr.isOfType(NOT)) {
-				AstNotNode notNode = (AstNotNode) createNode(curr);
-				AstNode astNode = parseSubExpression(end);
-				notNode.setNode(astNode);
-				node = notNode;
-			} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
-				AstFunctionCallNode functionCallNode = new AstFunctionCallNode();
-				node = createNode(curr);
-				functionCallNode.setParent(parentStack.size() == 0 ? null : parentStack.peek());
-				parentStack.push(functionCallNode);
-				functionCallNode.setName((AstSymbolNode) node);
-				iter.next(); // skip lparen
-				List<AstNode> arguments = new ArrayList<>();
-				while (!iter.isPeekOfType(RPAREN)) {
-					AstNode arg = parseSubExpression();
-					if (arg != null)
-						arguments.add(arg);
-					if (iter.peek().getType() != COMMA) {
-						break;
-					}
-				}
-				if (iter.peek().getType() == RPAREN)
-					iter.next();
-				functionCallNode.setArguments(arguments);
-				node = functionCallNode;
+			if (curr.isOfType(NOT)) {
+				AstNotNode astNotNode = (AstNotNode) createNode(curr);
+				AstNode parsed = parseExpression();
+				astNotNode.setNode(parsed);
+				node = astNotNode;
 			} else {
 				node = createNode(curr);
+				System.err.println(curr);
 			}
+		}
+
+		if (parsedStack.empty() || parsedStack.peek() != node)
+			parsedStack.push(node);
+		if (iter.isPeekOfType(RPAREN)) {
+			node = parseSubExpression();
 		}
 
 		return node;
 	}
 
+	private AstNode parseStatement() {
+		AstNode node = null;
+		if (iter.isPeekOfType(LBRACE)) {
+			node = parseBlockStatement();
+		} else if (iter.isPeekOfType(IF)) {
+			node = parseIfStatement();
+		} else if (iter.isPeekOfType(FOR)) {
+			node = parseForStatement();
+			// } else if (iter.isPeekOfType(ELSE)) {
+			// 	throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Unexpected token '%s'", ELSE.getValue());
+		} else {
+			node = parseExpression();
+		}
+		return node;
+	}
+
+	private AstNode parseForStatement() {
+		iter.next();
+		return null;
+	}
+
+	private AstNode parseIfStatement() {
+		Token ifToken = iter.next();
+		if (!iter.isPeekOfType(LPAREN)) {
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(ifToken), "Expected '%s'", LPAREN.getValue());
+		}
+		AstIfNode ifNode = (AstIfNode) createNode(ifToken);
+		AstNode condition = parseExpression();
+		ifNode.setCondition(condition);
+		AstNode ifTrueNode = parseStatement();
+		ifNode.setIfTrue(ifTrueNode);
+		if (iter.isPeekOfType(ELSE)) {
+			iter.next();
+			AstNode ifFalseNode = parseStatement();
+			ifNode.setIfFalse(ifFalseNode);
+		}
+
+		return ifNode;
+	}
+
+	private AstNode parseBlockStatement() {
+		AstBlockNode blockNode = (AstBlockNode) createNode(iter.next());
+
+		while (!iter.isPeekOfType(RBRACE)) {
+			AstNode node = parseStatement();
+			if (node != null)
+				blockNode.addNode(node);
+		}
+		iter.next(); // skip RBRACE
+
+		return blockNode;
+	}
+
 	private AstNode createNode(Token token) {
-		AstNode astNode = doCreateNode(token);
-		astNode.setParent(parentStack.size() == 0 ? null : parentStack.peek());
-		return astNode;
+		if (token.isOfType(RPAREN)) {
+			return parsedStack.pop();
+		}
+		return doCreateNode(token);
 	}
 
 	private AstNode doCreateNode(Token token) {
@@ -321,34 +284,29 @@ public class Parser {
 		throw new ParserOperationNotSupportedException("Token " + token.getType() + " not supported.");
 	}
 
-	private void printSourceCodeLocation(Token token) {
+	private String getSourceCodeLocation(Token token) {
+		StringBuilder out = new StringBuilder();
 		String content = lexer.getContent();
 		int index = 0;
 		for (int i = 0; i < token.getRow(); i++) {
 			index = content.indexOf("\n", index);
 		}
-		if (index == -1) {
-			index = 0;
-		}
 		int lastIndex = content.indexOf("\n", index);
-		if (lastIndex == -1) {
-			lastIndex = content.length();
-		}
-		String line = content.substring(index, lastIndex);
-		System.err.println(line);
-		for (int i = 0; i < token.getStartChar() - 2; i++) {
-			System.err.print(" ");
-		}
-		for (int i = 0; i < token.getValue().length(); i++) {
-			System.err.print("^");
-		}
-		System.err.println();
-		for (int i = 0; i < token.getStartChar() - 2; i++) {
-			System.err.print("─");
-		}
-		System.err.print("┘");
 
-		System.err.println();
+		if (index == -1)
+			index = 0;
+		if (lastIndex == -1)
+			lastIndex = content.length();
+
+		String line = content.substring(index, lastIndex);
+		out.append(line);
+		out.append(" ".repeat(Math.max(0, token.getStartChar() - 2)));
+		out.append("^".repeat(token.getValue().length()));
+		out.append("\n");
+		out.append("─".repeat(Math.max(0, token.getStartChar() - 2)));
+		out.append("┘");
+		out.append("\n");
+		return out.toString();
 	}
 
 	private int findNextOf(TokenType... types) {

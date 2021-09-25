@@ -1,6 +1,6 @@
 package com._7aske.grain.compiler.interpreter;
 
-import com._7aske.grain.compiler.ast.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import org.junit.jupiter.api.Test;

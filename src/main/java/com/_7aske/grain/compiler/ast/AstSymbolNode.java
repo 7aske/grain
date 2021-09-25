@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstSymbolNode extends AstNode {
@@ -19,14 +20,6 @@ public class AstSymbolNode extends AstNode {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-
-	@Override
-	public String toString() {
-		return "AstSymbolNode{" +
-				"name='" + name + '\'' +
-				'}';
 	}
 
 	@Override

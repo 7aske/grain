@@ -68,7 +68,10 @@ public class TokenIterator implements Iterator<Token> {
 		return eaten;
 	}
 
-	public boolean isPeekOfType(TokenType... typ) {
-		return hasNext() && Arrays.asList(typ).contains(peek().getType());
+	public boolean isPeekOfType(TokenType type, TokenType... types) {
+		List<TokenType> typeList = new ArrayList<>();
+		typeList.add(type);
+		typeList.addAll(List.of(types));
+		return hasNext() && typeList.contains(peek().getType());
 	}
 }

@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstWhileNode extends AstBinaryNode {

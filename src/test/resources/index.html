@@ -10,17 +10,17 @@
 </head>
 <body>
 
-<% if username == null then %>
+<% if (username == null) { %>
 	<a href="">Log in</a>
-<% else  %>
+<% } else {  %>
 	<a href="">Logout</a>
-<% endif %>
+<% } %>
 
-<% if username == "test" then %>
+<% if (username == "test") { %>
 <h1>Hello <%=username%></h1>
-<% else %>
+<% } else { %>
 <h1>Welcome</h1>
-<% endif %>
+<% } %>
 
 <!--<% if username != null then %>-->
 <div>Commented</div>

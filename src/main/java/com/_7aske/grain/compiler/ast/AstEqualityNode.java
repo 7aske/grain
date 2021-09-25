@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.types.AstEqualityOperator;
 
@@ -43,15 +45,6 @@ public class AstEqualityNode extends AstBinaryNode {
 
 	public void setOperator(AstEqualityOperator operator) {
 		this.operator = operator;
-	}
-
-	@Override
-	public String toString() {
-		return "AstEqualityNode{" +
-				"operator=" + operator +
-				", left=" + left +
-				", right=" + right +
-				'}';
 	}
 
 	@Override

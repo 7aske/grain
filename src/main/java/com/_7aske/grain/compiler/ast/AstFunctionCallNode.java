@@ -1,5 +1,7 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 import java.util.List;
@@ -55,11 +57,4 @@ public class AstFunctionCallNode extends AstUnaryNode {
 		return callback.call(arguments.toArray(AstNode[]::new));
 	}
 
-	@Override
-	public String toString() {
-		return "AstFunctionCallNode{" +
-				"name=" + name +
-				", arguments=" + arguments +
-				'}';
-	}
 }
