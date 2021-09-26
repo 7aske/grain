@@ -99,8 +99,8 @@ public class DataView extends AbstractView {
 		while (matcher.find()) {
 			String key = matcher.group(1);
 			if (key != null) {
-				String value = (String) interpreter.getSymbolValueOrDefault(key, "");
-				matcher.appendReplacement(result, substituteValues(value, interpreter));
+				Object value = interpreter.getSymbolValueOrDefault(key, "");
+				matcher.appendReplacement(result, substituteValues(value == null ? "null" : value.toString(), interpreter));
 			}
 		}
 
