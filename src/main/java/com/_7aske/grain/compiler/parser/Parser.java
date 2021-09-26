@@ -20,7 +20,6 @@ import static com._7aske.grain.compiler.lexer.TokenType.*;
 public class Parser {
 	private final Lexer lexer;
 	private TokenIterator iter;
-	private final Stack<AstNode> parentStack = new Stack<>();
 	private final Stack<AstNode> parsedStack = new Stack<>();
 
 	public Parser(Lexer lexer) {
@@ -31,14 +30,12 @@ public class Parser {
 		if (!lexer.isDone())
 			lexer.begin();
 		this.iter = new TokenIterator(lexer.getTokens());
-		this.parentStack.clear();
 
 		if (!iter.isPeekOfType(_START))
 			throw new ParserSyntaxErrorException("Token _START missing at the beginning of code block");
 		iter.next();
 
 		AstBlockNode program = new AstBlockNode();
-		parentStack.push(program);
 		while (iter.hasNext() && !iter.isPeekOfType(_END)) {
 			AstNode node = parseStatement();
 			if (node != null)
@@ -126,7 +123,6 @@ public class Parser {
 				node = astNotNode;
 			} else {
 				node = createNode(curr);
-				System.err.println(curr);
 			}
 		}
 

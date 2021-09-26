@@ -12,8 +12,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com._7aske.grain.compiler.lexer.TokenType.*;
-
 public class DataView extends AbstractView {
 	private final String START_TAG = "<%";
 	private final String OUT_TAG = "<%=";
@@ -58,7 +56,7 @@ public class DataView extends AbstractView {
 					String html = content.substring(codeSegments.end(), codeSegments.end() + nextSegment.start());
 					int identifier = (int) Math.abs(Math.random() * html.hashCode()); // can produce collisions
 					String varName = "r" + identifier;
-					code.append(varName).append("=").append("'").append(html).append("'");
+					code.append(varName).append("=").append("'").append(html).append("'").append(";");
 					result.append(OUT_TAG).append(varName).append(END_TAG);
 				}
 			}
@@ -86,11 +84,10 @@ public class DataView extends AbstractView {
 		return cachedContent;
 	}
 
+	// lexing the found block to see if there are any valid code tokens
 	private boolean isBlock(String code) {
 		try {
-			Lexer lexer = new Lexer(code);
-			lexer.begin();
-			return lexer.getTokens().size() > 0 && (lexer.getTokens().get(1).isOfType(IF, ELSE, ELIF));
+			return new Lexer(code).getTokens().size() > 2; // two tokens that are always there are _START and _END
 		} catch (LexerException | NoSuchElementException ex) {
 			return false;
 		}

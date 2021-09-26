@@ -68,6 +68,21 @@ class ParserTest {
 		printAst(ast, 0);
 	}
 
+
+	@Test
+	void test_multipleIf() {
+		String code = " if (username == null) {  r691634304='\n" +
+				"\t<a href=\"\">Log in</a>\n" +
+				"'; } else {    }   if (username == \"test\") {  r103406026='\n" +
+				"<h1>Hello <%=username%></h1>\n" +
+				"'; } else {   }";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
+	}
+
 	@Test
 	void test_functionCall() {
 		String code = "a = print('login')";

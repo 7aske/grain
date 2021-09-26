@@ -106,7 +106,7 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	public void begin() {
-		if (isDone) return;
+		if (isDone) throw new IllegalStateException("Lexer already finished lexing provided code");
 		emit(createToken(_START, null));
 		doLex();
 		emit(createToken(_END, null));
@@ -241,6 +241,8 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	public List<Token> getTokens() {
+		if (!isDone)
+			begin();
 		return tokens;
 	}
 
