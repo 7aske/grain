@@ -20,6 +20,7 @@ public class ErrorPageBuilder {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<html>");
 		builder.append("<head>");
+		builder.append("<meta charset='utf8'>");
 		builder.append(getStyle());
 		builder.append("<title>").append(getTitle()).append("</title>");
 		builder.append("</head>");

@@ -12,6 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class ParserTest {
 
 	@Test
@@ -71,11 +73,19 @@ class ParserTest {
 
 	@Test
 	void test_multipleIf() {
-		String code = " if (username == null) {  r691634304='\n" +
-				"\t<a href=\"\">Log in</a>\n" +
-				"'; } else {    }   if (username == \"test\") {  r103406026='\n" +
-				"<h1>Hello <%=username%></h1>\n" +
-				"'; } else {   }";
+		String code = "if (username == null)     { r691634304='<a href=\"\">Log in</a>'; } else {}" +
+				"if (username == \"test\") { r103406026='<h1>Hello <%=username%></h1>'; } else {}";
+		Lexer lexer = new Lexer(code);
+		lexer.begin();
+		Parser parser = new Parser(lexer);
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
+	}
+
+	@Test
+	void test_elseIf() {
+		String code = "if (username == null)     { r691634304='<a href=\"\">Log in</a>'; } else if (test == false) {}" +
+				"if (username == \"test\") { r103406026='<h1>Hello <%=username%></h1>'; } else if (test == true) {}";
 		Lexer lexer = new Lexer(code);
 		lexer.begin();
 		Parser parser = new Parser(lexer);
@@ -91,9 +101,11 @@ class ParserTest {
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
 		Interpreter interpreter = new Interpreter();
+		AstFunctionCallNode.AstFunctionCallback print = (args) -> args[0];
+		interpreter.putSymbol("print", print);
 		interpreter.addNode(ast);
 		interpreter.run();
-		System.out.println(interpreter.getSymbols());
+		assertEquals("login", interpreter.getSymbolValue("a"));
 	}
 
 
@@ -103,16 +115,6 @@ class ParserTest {
 		dataView.setData("username", "user1");
 		String content = dataView.getContent();
 		System.out.println(content);
-	}
-
-	@Test
-	void test_while() {
-		String code = "while (true) { test = 1 }";
-		Lexer lexer = new Lexer(code);
-		lexer.begin();
-		Parser parser = new Parser(lexer);
-		AstNode ast = parser.parse();
-		printAst(ast, 0);
 	}
 
 	void printAst(List<AstNode> asts, int depth) {

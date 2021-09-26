@@ -13,6 +13,8 @@ import com._7aske.grain.compiler.types.AstEqualityOperator;
 import com._7aske.grain.compiler.types.AstLiteralType;
 import com._7aske.grain.compiler.types.AstRelationalOperator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import static com._7aske.grain.compiler.lexer.TokenType.*;
@@ -54,7 +56,7 @@ public class Parser {
 		Token curr = iter.next();
 		AstNode node = null;
 
-		if (curr.isOfType(LPAREN)) {
+		if (curr.isOfType(LPAREN, COMMA)) {
 			node = parseSubExpression();
 			return node;
 		}
@@ -112,7 +114,10 @@ public class Parser {
 			AstNode value = parseSubExpression();
 			astAssignmentNode.setValue(value);
 			node = astAssignmentNode;
-		} else if (iter.isPeekOfType(SCOL)) {
+		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
+			iter.rewind();
+			node = parseFunctionCall();
+		} else if (iter.isPeekOfType(SCOL, COMMA)) {
 			node = createNode(curr);
 			iter.next();
 		} else {
@@ -129,10 +134,33 @@ public class Parser {
 		if (parsedStack.empty() || parsedStack.peek() != node)
 			parsedStack.push(node);
 		if (iter.isPeekOfType(RPAREN)) {
-			node = parseSubExpression();
+			iter.next();
+			// FIXME: some magic happening here
+			if (!iter.isPeekOfType(SCOL)) {
+				iter.rewind();
+				node = parseSubExpression();
+			} else {
+				iter.rewind();
+			}
 		}
 
 		return node;
+	}
+
+	private AstNode parseFunctionCall() {
+		Token token = iter.next();
+		iter.next(); // skip LPAREN
+		AstFunctionCallNode functionCallNode = new AstFunctionCallNode();
+		functionCallNode.setName((AstSymbolNode) createNode(token));
+		List<AstNode> arguments = new ArrayList<>();
+		while (!iter.isPeekOfType(RPAREN) && !iter.isPeekOfType(SCOL) && !iter.isPeekOfType(_END)) {
+			AstNode node = parseExpression();
+			arguments.add(node);
+		}
+		if (iter.isPeekOfType(RPAREN))
+			iter.next();
+		functionCallNode.setArguments(arguments);
+		return functionCallNode;
 	}
 
 	private AstNode parseStatement() {

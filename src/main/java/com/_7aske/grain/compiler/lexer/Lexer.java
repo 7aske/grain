@@ -62,7 +62,7 @@ public class Lexer extends IndexedStringIterator {
 
 
 			if (isStartOfIdentifier()) {
-				String val = eatWord();
+				String val = eatIdentifier();
 				TokenType kwOrIden = classifyToken(val);
 				Token token = createToken(kwOrIden, val);
 				emit(token);
@@ -105,6 +105,11 @@ public class Lexer extends IndexedStringIterator {
 		}
 	}
 
+	private String eatIdentifier() {
+		// FIXME: dont parse DOT
+		return eatWhile(ch -> ch.matches("[a-zA-Z0-9_$.]+"));
+	}
+
 	public void begin() {
 		if (isDone) throw new IllegalStateException("Lexer already finished lexing provided code");
 		emit(createToken(_START, null));
@@ -118,7 +123,7 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private boolean isStartOfIdentifier() {
-		return peek().matches("[a-zA-Z$]");
+		return peek().matches("[a-zA-Z$_]");
 	}
 
 	private boolean isStartOfNumberLiteral() {

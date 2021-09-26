@@ -9,7 +9,7 @@ import java.util.List;
 public class AstFunctionCallNode extends AstUnaryNode {
 	@FunctionalInterface
 	public interface AstFunctionCallback {
-		Object call(AstNode... args);
+		Object call(Object... args);
 	}
 
 	private AstSymbolNode name;
@@ -49,12 +49,11 @@ public class AstFunctionCallNode extends AstUnaryNode {
 			arg.run(interpreter);
 		}
 		this.callback = (AstFunctionCallback) interpreter.getSymbolValue(this.name.name);
-
 	}
 
 	@Override
 	public Object value() {
-		return callback.call(arguments.toArray(AstNode[]::new));
+		return callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
 	}
 
 }

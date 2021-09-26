@@ -5,10 +5,9 @@ import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.parser.Parser;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 public class Interpreter {
 	private final Map<String, Object> symbols;
@@ -17,7 +16,6 @@ public class Interpreter {
 	public Interpreter() {
 		this.symbols = new HashMap<>();
 		this.nodes = new ArrayList<>();
-		this.symbols.put("print", (AstFunctionCallNode.AstFunctionCallback) args -> args[0].value());
 	}
 
 	public Interpreter(Parser parser) {
@@ -42,7 +40,28 @@ public class Interpreter {
 	}
 
 	public Object getSymbolValue(String symbolName) {
-		return symbols.get(symbolName);
+		Object o = symbols.get(symbolName);
+		if (o == null) {
+			String[] parts = symbolName.split("\\.");
+			String className = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 1));
+			String methodName = parts[parts.length - 1];
+			try {
+				Class<?> clazz = getClass().getClassLoader().loadClass(className);
+				AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
+					try {
+						Method method = clazz.getMethod(methodName, Arrays.stream(args).map(Object::getClass).toArray(Class[]::new));
+						return method.invoke(null, args);
+					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+						throw new IllegalArgumentException();
+					}
+				};
+				symbols.put(symbolName, callback);
+				return callback;
+			} catch (ClassNotFoundException ex) {
+				return null;
+			}
+		}
+		return o;
 	}
 
 	public Object getSymbolValueOrDefault(String symbolName, Object def) {

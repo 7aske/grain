@@ -3,7 +3,10 @@ package com._7aske.grain.compiler.parser;
 import com._7aske.grain.compiler.lexer.Token;
 import com._7aske.grain.compiler.lexer.TokenType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
 public class TokenIterator implements Iterator<Token> {
