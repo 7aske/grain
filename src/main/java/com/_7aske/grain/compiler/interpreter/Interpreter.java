@@ -3,6 +3,7 @@ package com._7aske.grain.compiler.interpreter;
 import com._7aske.grain.compiler.ast.AstBlockNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 
 import java.lang.reflect.InvocationTargetException;
@@ -16,6 +17,15 @@ public class Interpreter {
 	public Interpreter() {
 		this.symbols = new HashMap<>();
 		this.nodes = new ArrayList<>();
+	}
+
+	public Interpreter(String code, Map<String, Object> symbols) {
+		this();
+		Lexer lexer = new Lexer(code);
+		Parser parser = new Parser(lexer);
+		if (symbols != null)
+			putSymbols(symbols);
+		addNode(parser.parse());
 	}
 
 	public Interpreter(Parser parser) {
@@ -62,10 +72,6 @@ public class Interpreter {
 			}
 		}
 		return o;
-	}
-
-	public Object getSymbolValueOrDefault(String symbolName, Object def) {
-		return symbols.getOrDefault(symbolName, def);
 	}
 
 	public void run() {

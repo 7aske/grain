@@ -3,7 +3,6 @@ package com._7aske.grain.http.view;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.LexerException;
-import com._7aske.grain.compiler.parser.Parser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,16 +67,7 @@ public class DataView extends AbstractView {
 			// if we had any code segments then it makes sense to run the interpreter
 			if (hasCodeSegments) {
 				result.append(content, matchResult.end(), content.length());
-				Lexer lexer = new Lexer(code.toString());
-				Parser parser = new Parser(lexer);
-				Interpreter interpreter = new Interpreter(parser);
-
-				if (data != null) {
-					for (Map.Entry<String, Object> kv : data.entrySet()) {
-						interpreter.putSymbol(kv.getKey(), kv.getValue());
-					}
-				}
-
+				Interpreter interpreter = new Interpreter(code.toString(), data);
 				interpreter.run();
 
 				cachedContent = substituteValues(result, interpreter.getSymbols());
