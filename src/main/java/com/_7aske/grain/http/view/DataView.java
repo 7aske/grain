@@ -16,9 +16,9 @@ public class DataView extends AbstractView {
 	private final String START_TAG = "<%";
 	private final String OUT_TAG = "<%=";
 	private final String END_TAG = "%>";
-	private final Pattern VARIABLE_PATTERN = Pattern.compile("<%=([A-Za-z0-9-_$]+)%>");
-	private final Pattern CODE_SEGMENT = Pattern.compile("(?!(<!--).*?)<%[^=](.*?)%>(?!.*?(-->))");
-	private Map<String, String> data = null;
+	private final Pattern VARIABLE_PATTERN = Pattern.compile("(?!(<!--).*?)<%=\\s*?([A-Za-z0-9-_$]+)\\s*?%>(?!.*?(-->))");
+	private final Pattern CODE_SEGMENT = Pattern.compile("(?!(<!--).*?)<%[^=]\\s*?(.*?)\\s*?%>(?!.*?(-->))");
+	private Map<String, Object> data = null;
 	private String cachedContent = null;
 
 	public DataView(String path) {
@@ -36,20 +36,23 @@ public class DataView extends AbstractView {
 		if (cachedContent == null) {
 			String content = super.getContent();
 
+			boolean hasCodeSegments = false;
+
 			StringBuilder code = new StringBuilder();
 			StringBuilder result = new StringBuilder();
 			Matcher codeSegments = CODE_SEGMENT.matcher(content);
 
 			MatchResult matchResult = null;
 			while (codeSegments.find()) {
+				hasCodeSegments = true;
 				matchResult = codeSegments.toMatchResult();
 				if (result.length() == 0)
 					result.append(content, 0, codeSegments.start());
 
 				String segment = codeSegments.group(2);
-				code.append(" ").append(segment).append(" ");
 
 				if (isBlock(segment)) {
+					code.append(" ").append(segment).append(" ");
 					Matcher nextSegment = CODE_SEGMENT.matcher(content.substring(codeSegments.end()));
 					if (!nextSegment.find())
 						continue;
@@ -61,24 +64,29 @@ public class DataView extends AbstractView {
 				}
 			}
 
-			if (matchResult == null)
-				result.append(content);
-			else
+
+			// if we had any code segments then it makes sense to run the interpreter
+			if (hasCodeSegments) {
 				result.append(content, matchResult.end(), content.length());
+				Lexer lexer = new Lexer(code.toString());
+				Parser parser = new Parser(lexer);
+				Interpreter interpreter = new Interpreter(parser);
 
-			Lexer lexer = new Lexer(code.toString());
-			Parser parser = new Parser(lexer);
-			Interpreter interpreter = new Interpreter(parser);
-
-			if (data != null) {
-				for (Map.Entry<String, String> kv : data.entrySet()) {
-					interpreter.putSymbol(kv.getKey(), kv.getValue());
+				if (data != null) {
+					for (Map.Entry<String, Object> kv : data.entrySet()) {
+						interpreter.putSymbol(kv.getKey(), kv.getValue());
+					}
 				}
+
+				interpreter.run();
+
+				cachedContent = substituteValues(result, interpreter.getSymbols());
+			} else {
+				// otherwise, we just substitute regular variables
+				codeSegments.appendTail(result);
+				cachedContent = substituteValues(result, data);
 			}
 
-			interpreter.run();
-
-			cachedContent = substituteValues(result, interpreter);
 		}
 
 		return cachedContent;
@@ -93,20 +101,19 @@ public class DataView extends AbstractView {
 		}
 	}
 
-	private String substituteValues(CharSequence content, Interpreter interpreter) {
+	private String substituteValues(CharSequence content, Map<String, Object> data) {
 		StringBuilder result = new StringBuilder();
 		Matcher matcher = VARIABLE_PATTERN.matcher(content);
 		while (matcher.find()) {
-			String key = matcher.group(1);
+			String key = matcher.group(2);
 			if (key != null) {
-				Object value = interpreter.getSymbolValueOrDefault(key, "");
-				matcher.appendReplacement(result, substituteValues(value == null ? "null" : value.toString(), interpreter));
+				Object value = data.getOrDefault(key, "");
+				matcher.appendReplacement(result, substituteValues(value == null ? "null" : value.toString(), data));
 			}
 		}
 
 		matcher.appendTail(result);
 
 		return result.toString();
-
 	}
 }
