@@ -23,6 +23,11 @@ public class Interpreter {
 			write(args[0].toString());
 			return null;
 		});
+		this.symbols.put("println", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+			write(args[0].toString());
+			write("<br/>");
+			return null;
+		});
 	}
 
 	public Interpreter(String code, Map<String, Object> symbols) {
