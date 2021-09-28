@@ -20,6 +20,11 @@ public class AstArithmeticNode extends AstBinaryNode {
 	}
 
 	@Override
+	public int getPrecedence() {
+		return operator.getPrecedance();
+	}
+
+	@Override
 	public void run(Interpreter interpreter) {
 		this.left.run(interpreter);
 		this.right.run(interpreter);
@@ -38,6 +43,7 @@ public class AstArithmeticNode extends AstBinaryNode {
 				case SUB:
 				case DIV:
 				case MUL:
+					return left.value().toString().repeat(Integer.parseInt(right.value().toString()));
 				case MOD:
 				default:
 					throw new RuntimeException("Unsupported operation for:\nleft:" + leftValue.getClass() + "\nright: " + rightValue.getClass());

@@ -29,6 +29,11 @@ public class AstBooleanNode extends AstBinaryNode {
 	}
 
 	@Override
+	public int getPrecedence() {
+		return operator.getPrecedence();
+	}
+
+	@Override
 	public void run(Interpreter interpreter) {
 		left.run(interpreter);
 		right.run(interpreter);

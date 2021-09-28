@@ -66,7 +66,7 @@ public class Parser {
 			node = createNode(curr);
 			iter.next();
 		} else if (curr.isOfType(LPAREN, COMMA)) {
-			node = parseSubExpression(10000);
+			node = parseExpression();
 		} else if (iter.isPeekOfType(AND, OR)) {
 			node = createNode(curr);
 			node = parseBooleanNode(iter.next(), node);
@@ -93,7 +93,7 @@ public class Parser {
 		} else {
 			if (curr.isOfType(NOT)) {
 				AstNotNode astNotNode = (AstNotNode) createNode(curr);
-				AstNode parsed = parseSubExpression(5000);
+				AstNode parsed = parseSubExpression(AstNotNode.PRECEDENCE);
 				astNotNode.setNode(parsed);
 				node = astNotNode;
 			} else {
@@ -101,20 +101,21 @@ public class Parser {
 			}
 		}
 
-		// if (parsedStack.empty() || parsedStack.peek() != node)
-		// 	parsedStack.push(node);
-		// if (iter.isPeekOfType(RPAREN)) {
-		// 	iter.next();
-		// 	// FIXME: some magic happening here
-		// 	if (!iter.isPeekOfType(SCOL)) {
-		// 		iter.rewind();
-		// 		node = parseSubExpression();
-		// 	} else {
-		// 		iter.rewind();
-		// 	}
-		// }
-
 		return node;
+	}
+
+	private AstNode fixPrecedence(AstNode start, AstNode right) {
+		if (start.getPrecedence() > right.getPrecedence() && start instanceof AstBinaryNode && right instanceof AstBinaryNode) {
+			AstBinaryNode startBinary = (AstBinaryNode) start;
+			AstBinaryNode rightBinary = (AstBinaryNode) right;
+
+			AstNode temp = rightBinary.getLeft();
+			rightBinary.setLeft(startBinary);
+			startBinary.setRight(temp);
+
+			return rightBinary;
+		}
+		return start;
 	}
 
 	private AstNode parseAssignmentNode(Token token) {
@@ -122,7 +123,7 @@ public class Parser {
 		AstSymbolNode symbolNode = (AstSymbolNode) createNode(token);
 		astAssignmentNode.setSymbol(symbolNode);
 		iter.next(); // skip assn
-		AstNode value = parseSubExpression(100);
+		AstNode value = parseSubExpression(AstAssignmentNode.PRECEDENCE);
 		astAssignmentNode.setValue(value);
 		return astAssignmentNode;
 	}
@@ -170,14 +171,14 @@ public class Parser {
 		AstBooleanNode booleanNode = (AstBooleanNode) createNode(token);
 		booleanNode.setLeft(left);
 		booleanNode.setRight(parseSubExpression(booleanNode.getOperator().getPrecedence()));
-		return booleanNode;
+		return fixPrecedence(booleanNode, booleanNode.getRight());
 	}
 
 	private AstNode parseEqualityNode(Token token, AstNode left){
 		AstEqualityNode equalityNode = (AstEqualityNode) createNode(token);
 		equalityNode.setLeft(left);
 		equalityNode.setRight(parseSubExpression(equalityNode.getOperator().getPrecedance()));
-		return equalityNode;
+		return fixPrecedence(equalityNode, equalityNode.getRight());
 	}
 
 	private AstNode parseRelationalNode(Token token, AstNode left) {

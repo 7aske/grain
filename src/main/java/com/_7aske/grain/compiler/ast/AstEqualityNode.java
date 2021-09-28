@@ -32,6 +32,11 @@ public class AstEqualityNode extends AstBinaryNode {
 	}
 
 	@Override
+	public int getPrecedence() {
+		return operator.getPrecedance();
+	}
+
+	@Override
 	public void run(Interpreter interpreter) {
 		left.run(interpreter);
 		right.run(interpreter);

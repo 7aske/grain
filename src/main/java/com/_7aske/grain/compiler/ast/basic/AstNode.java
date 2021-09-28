@@ -15,5 +15,9 @@ public abstract class AstNode {
 
 	public abstract void run(Interpreter interpreter);
 
+	public int getPrecedence() {
+		return Integer.MIN_VALUE;
+	}
+
 	public abstract Object value();
 }

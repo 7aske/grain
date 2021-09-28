@@ -250,7 +250,7 @@ public class Lexer extends IndexedStringIterator {
 	public static TokenType getNumberType(String val) {
 		try {
 			float parsed = Float.parseFloat(val);
-			if (parsed == (int) parsed) {
+			if (parsed == (int) parsed && !val.contains(".")) {
 				return LIT_INT;
 			} else {
 				return LIT_FLT;

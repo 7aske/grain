@@ -74,6 +74,24 @@ class InterpreterTest {
 	}
 
 	@Test
+	void test_boolean() {
+		String code = "a = false; b = !(a || true) && true";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("b");
+		assertEquals(false, val);
+	}
+
+	@Test
+	void test_booleanPrecedence() {
+		String code = "a = 1; b = 2; c = a == 1 && b == 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("c");
+		assertEquals(true, val);
+	}
+
+	@Test
 	void test_plusOperation() {
 		String code = "a = 1 + 2";
 		Interpreter interpreter = new Interpreter(code, null);
@@ -83,11 +101,56 @@ class InterpreterTest {
 	}
 
 	@Test
+	void test_plusWithFloatDotZeroAndInteger() {
+		String code = "a = 1.0 + 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals(3.0, (float)val, 0.001);
+	}
+
+	@Test
+	void test_plusWithFloatAndInteger() {
+		String code = "a = 1.1 + 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals(3.1, (float)val, 0.001);
+	}
+
+	@Test
 	void test_plusOperationWithParenthesis() {
 		String code = "a = (1 + 2) * 10";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		Object val = interpreter.getSymbolValue("a");
 		assertEquals(30, val);
+	}
+
+	@Test
+	void test_divWithZero() {
+		String code = "a = 1 / 0";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals(Double.POSITIVE_INFINITY, val);
+	}
+
+	@Test
+	void test_plusStrings() {
+		String code = "str = 'abc'; a = str + 'b'";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals("abcb", val);
+	}
+
+	@Test
+	void test_repeatString() {
+		String code = "str = 'abc'; a = str * 10";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals("abcabcabcabcabcabcabcabcabcabc", val);
 	}
 }

@@ -5,6 +5,7 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstAssignmentNode extends AstBinaryNode {
+	public static final int PRECEDENCE = 100;
 
 	public AstAssignmentNode() {
 	}
@@ -13,6 +14,7 @@ public class AstAssignmentNode extends AstBinaryNode {
 		this.left = symbol;
 		this.right = value;
 	}
+
 
 	public AstSymbolNode getSymbol() {
 		return (AstSymbolNode) left;
@@ -28,6 +30,11 @@ public class AstAssignmentNode extends AstBinaryNode {
 
 	public void setValue(AstNode value) {
 		this.right = value;
+	}
+
+	@Override
+	public int getPrecedence() {
+		return PRECEDENCE;
 	}
 
 	@Override
