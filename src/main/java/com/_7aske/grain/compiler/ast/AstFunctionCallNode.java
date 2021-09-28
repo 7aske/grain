@@ -7,6 +7,7 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import java.util.List;
 
 public class AstFunctionCallNode extends AstUnaryNode {
+	private Object returnValue;
 	@FunctionalInterface
 	public interface AstFunctionCallback {
 		Object call(Object... args);
@@ -49,11 +50,12 @@ public class AstFunctionCallNode extends AstUnaryNode {
 			arg.run(interpreter);
 		}
 		this.callback = (AstFunctionCallback) interpreter.getSymbolValue(this.name.name);
+		this.returnValue = callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
 	}
 
 	@Override
 	public Object value() {
-		return callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
+		return returnValue;
 	}
 
 }
