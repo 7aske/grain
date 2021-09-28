@@ -11,12 +11,12 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.util.regex.Pattern.*;
+
 public class DataView extends AbstractView {
-	private final String START_TAG = "<%";
-	private final String OUT_TAG = "<%=";
-	private final String END_TAG = "%>";
-	private final Pattern VARIABLE_PATTERN = Pattern.compile("(?!(<!--).*?)<%=\\s*?([A-Za-z0-9-_$]+)\\s*?%>(?!.*?(-->))");
-	private final Pattern CODE_SEGMENT = Pattern.compile("(?!(<!--).*?)<%[^=]\\s*?(.*?)\\s*?%>(?!.*?(-->))");
+	private final Pattern VARIABLE_PATTERN = compile("<%=\\s*?([A-Za-z0-9-_$]+)\\s*?%>");
+	private final Pattern CODE_SEGMENT = compile("<%[^=]\\s*?(.*?)\\s*?%>");
+	private final Pattern COMMENT_PATTERN = compile("((<!--).*?(-->))");
 	private Map<String, Object> data = null;
 	private String cachedContent = null;
 
@@ -33,53 +33,50 @@ public class DataView extends AbstractView {
 	@Override
 	public String getContent() {
 		if (cachedContent == null) {
-			String content = super.getContent();
-
-			boolean hasCodeSegments = false;
+			String content = super.getContent()
+					.replaceAll("\n", "")
+					.replaceAll(COMMENT_PATTERN.pattern(), "");
 
 			StringBuilder code = new StringBuilder();
-			StringBuilder result = new StringBuilder();
 			Matcher codeSegments = CODE_SEGMENT.matcher(content);
 
 			MatchResult matchResult = null;
 			while (codeSegments.find()) {
-				hasCodeSegments = true;
 				matchResult = codeSegments.toMatchResult();
-				if (result.length() == 0)
-					result.append(content, 0, codeSegments.start());
+				if (code.length() == 0)
+					code.append(createPrintStatement(content, 0, codeSegments.start()));
 
-				String segment = codeSegments.group(2);
+				String segment = codeSegments.group(1);
 
 				if (isBlock(segment)) {
 					code.append(" ").append(segment).append(" ");
 					Matcher nextSegment = CODE_SEGMENT.matcher(content.substring(codeSegments.end()));
 					if (!nextSegment.find())
 						continue;
-					String html = content.substring(codeSegments.end(), codeSegments.end() + nextSegment.start());
-					int identifier = (int) Math.abs(Math.random() * html.hashCode()); // can produce collisions
-					String varName = "r" + identifier;
-					code.append(varName).append("=").append("'").append(html).append("'").append(";");
-					result.append(OUT_TAG).append(varName).append(END_TAG);
+					code.append(createPrintStatement(content, codeSegments.end(), codeSegments.end() + nextSegment.start()));
 				}
 			}
 
-
-			// if we had any code segments then it makes sense to run the interpreter
-			if (hasCodeSegments) {
-				result.append(content, matchResult.end(), content.length());
-				Interpreter interpreter = new Interpreter(code.toString(), data);
-				interpreter.run();
-
-				cachedContent = substituteValues(result, interpreter.getSymbols());
+			if (matchResult == null) {
+				code.append(createPrintStatement(content));
 			} else {
-				// otherwise, we just substitute regular variables
-				codeSegments.appendTail(result);
-				cachedContent = substituteValues(result, data);
+				code.append(createPrintStatement(content, matchResult.end(), content.length()));
 			}
 
+			Interpreter interpreter = new Interpreter(code.toString(), data);
+			interpreter.run();
+			cachedContent = substituteValues(interpreter.getContent(), interpreter.getSymbols());
 		}
 
 		return cachedContent;
+	}
+
+	private String createPrintStatement(String content, int start, int end) {
+		return String.format("print('%s');", content.substring(start, end).replaceAll("'", "\\\\'"));
+	}
+
+	private String createPrintStatement(String content) {
+		return String.format("print('%s');", content.replaceAll("'", "\\\\'"));
 	}
 
 	// lexing the found block to see if there are any valid code tokens
@@ -95,7 +92,7 @@ public class DataView extends AbstractView {
 		StringBuilder result = new StringBuilder();
 		Matcher matcher = VARIABLE_PATTERN.matcher(content);
 		while (matcher.find()) {
-			String key = matcher.group(2);
+			String key = matcher.group(1);
 			if (key != null) {
 				Object value = data.getOrDefault(key, "");
 				matcher.appendReplacement(result, substituteValues(value == null ? "null" : value.toString(), data));

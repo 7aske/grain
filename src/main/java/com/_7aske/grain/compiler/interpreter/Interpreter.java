@@ -13,10 +13,16 @@ import java.util.*;
 public class Interpreter {
 	private final Map<String, Object> symbols;
 	private final List<AstNode> nodes;
+	private final InterpreterOutput output;
 
 	public Interpreter() {
 		this.symbols = new HashMap<>();
 		this.nodes = new ArrayList<>();
+		this.output = new InterpreterOutput();
+		this.symbols.put("print", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+			write(args[0].toString());
+			return null;
+		});
 	}
 
 	public Interpreter(String code, Map<String, Object> symbols) {
@@ -39,6 +45,10 @@ public class Interpreter {
 		} else {
 			this.nodes.add(node);
 		}
+	}
+
+	public void write(CharSequence text) {
+		output.write(text);
 	}
 
 	public void putSymbols(Map<String, Object> data) {
@@ -72,6 +82,10 @@ public class Interpreter {
 			}
 		}
 		return o;
+	}
+
+	public String getContent() {
+		return output.getContent();
 	}
 
 	public void run() {

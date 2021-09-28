@@ -24,7 +24,7 @@ class DataViewTest {
 		String content = dataView.getContent();
 		assertTrue(content.contains("Log in"));
 		assertTrue(content.contains("Logout"));
-		assertTrue(content.contains("Commented"));
+		assertFalse(content.contains("Commented"));
 	}
 
 	@Test
