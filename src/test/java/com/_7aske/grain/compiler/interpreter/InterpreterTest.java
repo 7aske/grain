@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class InterpreterTest {
 	@Test
@@ -131,9 +130,7 @@ class InterpreterTest {
 	void test_divWithZero() {
 		String code = "a = 1 / 0";
 		Interpreter interpreter = new Interpreter(code, null);
-		interpreter.run();
-		Object val = interpreter.getSymbolValue("a");
-		assertEquals(Double.POSITIVE_INFINITY, val);
+		assertThrows(ArithmeticException.class, interpreter::run);
 	}
 
 	@Test

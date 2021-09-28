@@ -164,7 +164,7 @@ public class Parser {
 		AstArithmeticNode arithmeticNode = (AstArithmeticNode) createNode(token);
 		arithmeticNode.setLeft(left);
 		arithmeticNode.setRight(parseSubExpression(arithmeticNode.getOperator().getPrecedance()));
-		return arithmeticNode;
+		return fixPrecedence(arithmeticNode, arithmeticNode.getRight());
 	}
 
 	private AstNode parseBooleanNode(Token token, AstNode left) {
@@ -185,7 +185,7 @@ public class Parser {
 		AstRelationalNode relationalNode = (AstRelationalNode) createNode(token);
 		relationalNode.setLeft(left);
 		relationalNode.setRight(parseSubExpression(relationalNode.getOperator().getPrecedence()));
-		return relationalNode;
+		return fixPrecedence(relationalNode, relationalNode.getRight());
 	}
 
 	private AstNode parseForStatement() {

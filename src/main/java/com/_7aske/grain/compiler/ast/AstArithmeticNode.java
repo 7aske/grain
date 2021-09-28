@@ -37,40 +37,63 @@ public class AstArithmeticNode extends AstBinaryNode {
 		boolean stringOperation = leftValue instanceof String || rightValue instanceof String;
 
 		if (stringOperation) {
-			switch (operator) {
-				case ADD:
-					return left.value().toString() + right.value().toString();
-				case SUB:
-				case DIV:
-				case MUL:
-					return left.value().toString().repeat(Integer.parseInt(right.value().toString()));
-				case MOD:
-				default:
-					throw new RuntimeException("Unsupported operation for:\nleft:" + leftValue.getClass() + "\nright: " + rightValue.getClass());
-			}
+			return getStringOperation(leftValue, rightValue);
 		} else {
-			try {
-				Float leftAsFloat = Float.parseFloat(String.valueOf(leftValue));
-				Float rightAsFloat = Float.parseFloat(String.valueOf(rightValue));
-
-				switch (operator) {
-					case ADD:
-						return leftAsFloat + rightAsFloat;
-					case SUB:
-						return leftAsFloat - rightAsFloat;
-					case DIV:
-						return leftAsFloat / rightAsFloat;
-					case MUL:
-						return leftAsFloat * rightAsFloat;
-					case MOD:
-						return leftAsFloat % rightAsFloat;
-					default:
-						throw new RuntimeException("Unsupported operation for:\nleft:" + leftValue.getClass() + "\nright: " + rightValue.getClass());
-				}
-			} catch (NumberFormatException ex) {
-				ex.printStackTrace();
-				throw ex;
+			boolean isFloatOperation = leftValue instanceof Float || rightValue instanceof Float;
+			if (isFloatOperation) {
+				Float leftAsNumber = Float.parseFloat(String.valueOf(leftValue));
+				Float rightAsNumber = Float.parseFloat(String.valueOf(rightValue));
+				return getNumberOperation(leftAsNumber, rightAsNumber);
+			} else {
+				Integer leftAsNumber = Integer.parseInt(String.valueOf(leftValue));
+				Integer rightAsNumber = Integer.parseInt(String.valueOf(rightValue));
+				return getNumberOperation(leftAsNumber, rightAsNumber);
 			}
+		}
+	}
+
+	private String getStringOperation(Object left, Object right) {
+		switch (operator) {
+			case ADD:
+				return left.toString() + right.toString();
+			case MUL:
+				return left.toString().repeat(Integer.parseInt(right.toString()));
+			default:
+				throw new RuntimeException("Unsupported operation for:\nleft:" + left.getClass() + "\nright: " + right.getClass());
+		}
+	}
+
+	private Float getNumberOperation(Float left, Float right) {
+		switch (operator) {
+			case ADD:
+				return left + right;
+			case SUB:
+				return left - right;
+			case DIV:
+				return left / right;
+			case MUL:
+				return left * right;
+			case MOD:
+				return left % right;
+			default:
+				throw new RuntimeException("Unsupported operation for:\nleft:" + left.getClass() + "\nright: " + right.getClass());
+		}
+	}
+
+	private Integer getNumberOperation(Integer left, Integer right) {
+		switch (operator) {
+			case ADD:
+				return left + right;
+			case SUB:
+				return left - right;
+			case DIV:
+				return left / right;
+			case MUL:
+				return left * right;
+			case MOD:
+				return left % right;
+			default:
+				throw new RuntimeException("Unsupported operation for:\nleft:" + left.getClass() + "\nright: " + right.getClass());
 		}
 	}
 }
