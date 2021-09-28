@@ -3,15 +3,12 @@ package com._7aske.grain.compiler.parser;
 import com._7aske.grain.compiler.ast.*;
 import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.types.*;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.Token;
 import com._7aske.grain.compiler.lexer.TokenType;
 import com._7aske.grain.compiler.parser.exception.ParserOperationNotSupportedException;
 import com._7aske.grain.compiler.parser.exception.ParserSyntaxErrorException;
-import com._7aske.grain.compiler.types.AstBooleanOperator;
-import com._7aske.grain.compiler.types.AstEqualityOperator;
-import com._7aske.grain.compiler.types.AstLiteralType;
-import com._7aske.grain.compiler.types.AstRelationalOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,73 +44,46 @@ public class Parser {
 	}
 
 	private AstNode parseExpression() {
-		AstNode node = null;
-		node = parseSubExpression();
+		AstNode node = parseSubExpression(Integer.MIN_VALUE);
+
+		if (iter.isPeekOfType(AND, OR)) {
+			node = parseBooleanNode(iter.next(), node);
+		} else if (iter.isPeekOfType(EQ, NE)) {
+			node = parseEqualityNode(iter.next(), node);
+		} else if (iter.isPeekOfType(GT, LT, GE, LE)) {
+			node = parseRelationalNode(iter.next(), node);
+		} else if (iter.isPeekOfType(ADD, SUB, DIV, DIV, MUL)) {
+			node = parseArithmeticNode(iter.next(), node);
+		}
 		return node;
 	}
 
-	private AstNode parseSubExpression() {
+	private AstNode parseSubExpression(int precedance) {
 		Token curr = iter.next();
 		AstNode node = null;
 
-		if (curr.isOfType(LPAREN, COMMA)) {
-			node = parseSubExpression();
-			return node;
-		}
-
-
-		if (iter.isPeekOfType(AND, OR)) {
+		if (iter.isPeekOfType(RPAREN)) {
 			node = createNode(curr);
-			Token token = iter.next();
-			AstBooleanNode booleanNode = (AstBooleanNode) createNode(token);
-			booleanNode.setLeft(node);
-			booleanNode.setOperator(AstBooleanOperator.from(token.getType()));
-			booleanNode.setRight(parseSubExpression());
-			node = booleanNode;
+			iter.next();
+		} else if (curr.isOfType(LPAREN, COMMA)) {
+			node = parseSubExpression(10000);
+		} else if (iter.isPeekOfType(AND, OR)) {
+			node = createNode(curr);
+			node = parseBooleanNode(iter.next(), node);
 		} else if (iter.isPeekOfType(EQ, NE)) {
 			node = createNode(curr);
-			Token token = iter.next();
-			AstEqualityNode equalityNode = (AstEqualityNode) createNode(token);
-			equalityNode.setLeft(node);
-			equalityNode.setOperator(AstEqualityOperator.from(token.getType()));
-			equalityNode.setRight(parseSubExpression());
-			if (equalityNode.getRight().getPrecedence() > equalityNode.getPrecedence()) {
-				AstBinaryNode booleanNode = (AstBinaryNode) equalityNode.getRight();
-				AstNode booleanLeft = booleanNode.getLeft();
-				booleanNode.setLeft(equalityNode);
-				equalityNode.setRight(booleanLeft);
-				node = booleanNode;
-			} else {
-				node = equalityNode;
-			}
+			node = parseEqualityNode(iter.next(), node);
 		} else if (iter.isPeekOfType(GT, LT, GE, LE)) {
 			node = createNode(curr);
-			Token token = iter.next();
-			AstRelationalNode relationalNode = (AstRelationalNode) createNode(token);
-			relationalNode.setLeft(node);
-			relationalNode.setOperator(AstRelationalOperator.from(token.getType()));
-			relationalNode.setRight(parseSubExpression());
-			if (relationalNode.getRight().getPrecedence() > relationalNode.getPrecedence()) {
-				AstBinaryNode booleanNode = (AstBinaryNode) relationalNode.getRight();
-				AstNode booleanLeft = booleanNode.getLeft();
-				booleanNode.setLeft(relationalNode);
-				relationalNode.setRight(booleanLeft);
-				node = booleanNode;
-			} else {
-				node = relationalNode;
-			}
+			node = parseRelationalNode(iter.next(), node);
+		} else if (iter.isPeekOfType(ADD, SUB, DIV, DIV, MUL)) {
+			node = createNode(curr);
+			node = parseArithmeticNode(iter.next(), node);
 		} else if (iter.isPeekOfType(ASSN)) {
 			if (!curr.isOfType(IDEN))
 				throw new ParserSyntaxErrorException(getSourceCodeLocation(curr),
 						"Cannot assign to '%s'", curr.getType());
-
-			AstAssignmentNode astAssignmentNode = (AstAssignmentNode) createNode(iter.peek());
-			AstSymbolNode symbolNode = (AstSymbolNode) createNode(curr);
-			astAssignmentNode.setSymbol(symbolNode);
-			iter.next(); // skip assn
-			AstNode value = parseSubExpression();
-			astAssignmentNode.setValue(value);
-			node = astAssignmentNode;
+			node = parseAssignmentNode(curr);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
 			iter.rewind();
 			node = parseFunctionCall();
@@ -123,7 +93,7 @@ public class Parser {
 		} else {
 			if (curr.isOfType(NOT)) {
 				AstNotNode astNotNode = (AstNotNode) createNode(curr);
-				AstNode parsed = parseExpression();
+				AstNode parsed = parseSubExpression(5000);
 				astNotNode.setNode(parsed);
 				node = astNotNode;
 			} else {
@@ -131,20 +101,30 @@ public class Parser {
 			}
 		}
 
-		if (parsedStack.empty() || parsedStack.peek() != node)
-			parsedStack.push(node);
-		if (iter.isPeekOfType(RPAREN)) {
-			iter.next();
-			// FIXME: some magic happening here
-			if (!iter.isPeekOfType(SCOL)) {
-				iter.rewind();
-				node = parseSubExpression();
-			} else {
-				iter.rewind();
-			}
-		}
+		// if (parsedStack.empty() || parsedStack.peek() != node)
+		// 	parsedStack.push(node);
+		// if (iter.isPeekOfType(RPAREN)) {
+		// 	iter.next();
+		// 	// FIXME: some magic happening here
+		// 	if (!iter.isPeekOfType(SCOL)) {
+		// 		iter.rewind();
+		// 		node = parseSubExpression();
+		// 	} else {
+		// 		iter.rewind();
+		// 	}
+		// }
 
 		return node;
+	}
+
+	private AstNode parseAssignmentNode(Token token) {
+		AstAssignmentNode astAssignmentNode = (AstAssignmentNode) createNode(iter.peek());
+		AstSymbolNode symbolNode = (AstSymbolNode) createNode(token);
+		astAssignmentNode.setSymbol(symbolNode);
+		iter.next(); // skip assn
+		AstNode value = parseSubExpression(100);
+		astAssignmentNode.setValue(value);
+		return astAssignmentNode;
 	}
 
 	private AstNode parseFunctionCall() {
@@ -177,6 +157,34 @@ public class Parser {
 			node = parseExpression();
 		}
 		return node;
+	}
+
+	private AstNode parseArithmeticNode(Token token, AstNode left) {
+		AstArithmeticNode arithmeticNode = (AstArithmeticNode) createNode(token);
+		arithmeticNode.setLeft(left);
+		arithmeticNode.setRight(parseSubExpression(arithmeticNode.getOperator().getPrecedance()));
+		return arithmeticNode;
+	}
+
+	private AstNode parseBooleanNode(Token token, AstNode left) {
+		AstBooleanNode booleanNode = (AstBooleanNode) createNode(token);
+		booleanNode.setLeft(left);
+		booleanNode.setRight(parseSubExpression(booleanNode.getOperator().getPrecedence()));
+		return booleanNode;
+	}
+
+	private AstNode parseEqualityNode(Token token, AstNode left){
+		AstEqualityNode equalityNode = (AstEqualityNode) createNode(token);
+		equalityNode.setLeft(left);
+		equalityNode.setRight(parseSubExpression(equalityNode.getOperator().getPrecedance()));
+		return equalityNode;
+	}
+
+	private AstNode parseRelationalNode(Token token, AstNode left) {
+		AstRelationalNode relationalNode = (AstRelationalNode) createNode(token);
+		relationalNode.setLeft(left);
+		relationalNode.setRight(parseSubExpression(relationalNode.getOperator().getPrecedence()));
+		return relationalNode;
 	}
 
 	private AstNode parseForStatement() {
@@ -217,9 +225,6 @@ public class Parser {
 	}
 
 	private AstNode createNode(Token token) {
-		if (token.isOfType(RPAREN)) {
-			return parsedStack.pop();
-		}
 		return doCreateNode(token);
 	}
 
@@ -252,15 +257,11 @@ public class Parser {
 			case ASSN:
 				return new AstAssignmentNode();
 			case ADD:
-				break;
 			case SUB:
-				break;
 			case DIV:
-				break;
 			case MUL:
-				break;
 			case MOD:
-				break;
+				return new AstArithmeticNode(AstArithmeticOperator.from(token.getType()));
 			case AND:
 			case OR:
 				return new AstBooleanNode(AstBooleanOperator.from(token.getType()));

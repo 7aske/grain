@@ -1,4 +1,4 @@
-package com._7aske.grain.compiler.types;
+package com._7aske.grain.compiler.ast.types;
 
 import com._7aske.grain.compiler.lexer.TokenType;
 

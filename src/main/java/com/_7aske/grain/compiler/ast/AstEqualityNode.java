@@ -3,7 +3,7 @@ package com._7aske.grain.compiler.ast;
 import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
-import com._7aske.grain.compiler.types.AstEqualityOperator;
+import com._7aske.grain.compiler.ast.types.AstEqualityOperator;
 
 import java.util.Objects;
 
@@ -20,22 +20,6 @@ public class AstEqualityNode extends AstBinaryNode {
 	public AstEqualityNode(AstEqualityOperator operator, AstNode left, AstNode right) {
 		this.operator = operator;
 		this.left = left;
-		this.right = right;
-	}
-
-	public AstNode getLeft() {
-		return left;
-	}
-
-	public void setLeft(AstNode left) {
-		this.left = left;
-	}
-
-	public AstNode getRight() {
-		return right;
-	}
-
-	public void setRight(AstNode right) {
 		this.right = right;
 	}
 

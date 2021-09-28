@@ -3,7 +3,7 @@ package com._7aske.grain.compiler.ast;
 import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
-import com._7aske.grain.compiler.types.AstBooleanOperator;
+import com._7aske.grain.compiler.ast.types.AstBooleanOperator;
 
 public class AstBooleanNode extends AstBinaryNode {
 	private AstBooleanOperator operator;
@@ -20,23 +20,6 @@ public class AstBooleanNode extends AstBinaryNode {
 	public AstBooleanNode(AstBooleanOperator operator) {
 		this.operator = operator;
 	}
-
-	public AstNode getLeft() {
-		return left;
-	}
-
-	public void setLeft(AstNode left) {
-		this.left = left;
-	}
-
-	public AstNode getRight() {
-		return right;
-	}
-
-	public void setRight(AstNode right) {
-		this.right = right;
-	}
-
 	public AstBooleanOperator getOperator() {
 		return operator;
 	}
@@ -60,10 +43,5 @@ public class AstBooleanNode extends AstBinaryNode {
 				return Boolean.parseBoolean(String.valueOf(left.value())) || Boolean.parseBoolean(String.valueOf(right.value()));
 		}
 		throw new IllegalStateException("Unknown operator value " + operator);
-	}
-
-	@Override
-	public int getPrecedence() {
-		return 100;
 	}
 }

@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.interpreter;
 
+import com._7aske.grain.compiler.ast.AstArithmeticNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class InterpreterTest {
@@ -26,7 +28,7 @@ class InterpreterTest {
 	}
 
 	@Test
-	void test_dbgln(){
+	void test_dbgln() {
 		String code = "a = dbgln(dbgln('45'))";
 		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
@@ -40,7 +42,7 @@ class InterpreterTest {
 	}
 
 	@Test
-	void test_now(){
+	void test_now() {
 		String code = "a = date; a = a('2020-10-10')";
 		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
@@ -61,7 +63,7 @@ class InterpreterTest {
 
 
 	@Test
-	void test_callStaticMethod(){
+	void test_callStaticMethod() {
 		String code = "a = com._7aske.grain.util.NumberUtil.getNumberOrFloat('10')";
 		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
@@ -71,4 +73,21 @@ class InterpreterTest {
 		assertNotNull(interpreter.getSymbolValue("a"));
 	}
 
+	@Test
+	void test_plusOperation() {
+		String code = "a = 1 + 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals(3, val);
+	}
+
+	@Test
+	void test_plusOperationWithParenthesis() {
+		String code = "a = (1 + 2) * 10";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		Object val = interpreter.getSymbolValue("a");
+		assertEquals(30, val);
+	}
 }

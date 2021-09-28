@@ -14,9 +14,4 @@ public class AstNotNode extends AstUnaryNode {
 	public Object value() {
 		return !(Boolean) getNode().value();
 	}
-
-	@Override
-	public int getPrecedence() {
-		return 1000;
-	}
 }

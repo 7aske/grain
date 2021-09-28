@@ -2,7 +2,7 @@ package com._7aske.grain.compiler.ast;
 
 import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
-import com._7aske.grain.compiler.types.AstLiteralType;
+import com._7aske.grain.compiler.ast.types.AstLiteralType;
 
 public class AstLiteralNode extends AstUnaryNode {
 	private AstLiteralType type;

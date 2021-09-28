@@ -1,12 +1,22 @@
-package com._7aske.grain.compiler.types;
+package com._7aske.grain.compiler.ast.types;
 
 import com._7aske.grain.compiler.lexer.TokenType;
 
 public enum AstRelationalOperator {
-	GT,
-	LT,
-	GE,
-	LE;
+	GT(700),
+	LT(700),
+	GE(700),
+	LE(700);
+
+	private final int precedence;
+
+	AstRelationalOperator(int precedence) {
+		this.precedence = precedence;
+	}
+
+	public int getPrecedence() {
+		return precedence;
+	}
 
 	public static AstRelationalOperator from(TokenType type) {
 		switch (type) {

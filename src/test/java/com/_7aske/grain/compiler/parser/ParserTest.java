@@ -32,10 +32,8 @@ class ParserTest {
 	void test_parseBlock() {
 		String code = "{username = 'test'; password = 'test';} {test = 1;}";
 		Lexer lexer = new Lexer(code);
-		lexer.begin();
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
-
 		printAst(ast, 0);
 	}
 
@@ -43,10 +41,8 @@ class ParserTest {
 	void test_assign() {
 		String code = "num = 2";
 		Lexer lexer = new Lexer(code);
-		lexer.begin();
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
-
 		printAst(ast, 0);
 	}
 
@@ -54,7 +50,15 @@ class ParserTest {
 	void test_bool() {
 		String code = "a == 1 && b == 2 || c == 3";
 		Lexer lexer = new Lexer(code);
-		lexer.begin();
+		Parser parser = new Parser(lexer);
+		AstNode ast = parser.parse();
+		printAst(ast, 0);
+	}
+
+	@Test
+	void test_plusOperation(){
+		String code = "(1 + 2) * 10";
+		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
 		printAst(ast, 0);
@@ -64,7 +68,6 @@ class ParserTest {
 	void test_if() {
 		String code = "if (!(username == null) && test == null) { test3; } else { print3; }";
 		Lexer lexer = new Lexer(code);
-		lexer.begin();
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
 		printAst(ast, 0);
