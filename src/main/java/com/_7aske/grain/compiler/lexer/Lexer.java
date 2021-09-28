@@ -39,8 +39,9 @@ public class Lexer extends IndexedStringIterator {
 		String quoteType = next();
 		String curr = null;
 		while (hasNext()) {
+			String prev = prev();
 			curr = next();
-			if (curr.equals(quoteType) && !prev().equals("\\")) break;
+			if (curr.equals(quoteType) && !prev.equals("\\")) break;
 			builder.append(curr);
 		}
 
@@ -240,11 +241,6 @@ public class Lexer extends IndexedStringIterator {
 		return values.getOrDefault(tokenString, IDEN);
 	}
 
-	public static boolean isStringLiteral(Token token) {
-		return (token.getValue().startsWith("\"") && token.getValue().endsWith("\"")) ||
-				(token.getValue().startsWith("'") && token.getValue().endsWith("'"));
-	}
-
 	public List<Token> getTokens() {
 		if (!isDone)
 			begin();
@@ -272,7 +268,7 @@ public class Lexer extends IndexedStringIterator {
 		if (index == -1) {
 			index = 0;
 		}
-		int lastIndex = content.indexOf("\n", index);
+		int lastIndex = content.indexOf("\n", index+1);
 		if (lastIndex == -1) {
 			lastIndex = content.length();
 		}
