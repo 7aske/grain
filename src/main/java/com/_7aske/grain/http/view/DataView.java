@@ -25,7 +25,7 @@ public class DataView extends AbstractView {
 		super(path);
 	}
 
-	public void setData(String key, String value) {
+	public void setData(String key, Object value) {
 		if (data == null)
 			data = new HashMap<>();
 		data.put(key, value);

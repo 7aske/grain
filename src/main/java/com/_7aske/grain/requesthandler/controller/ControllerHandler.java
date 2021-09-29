@@ -6,6 +6,7 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.view.AbstractView;
+import com._7aske.grain.http.view.DataView;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.lang.reflect.Parameter;
@@ -45,6 +46,11 @@ public class ControllerHandler implements RequestHandler {
 		if (result == null) {
 			response.setBody(null);
 			response.setHeader(CONTENT_TYPE, "text/plain");
+		} else if (result instanceof DataView) {
+			((DataView) result).setData("request", request);
+			((DataView) result).setData("response", response);
+			response.setBody(((AbstractView) result).getContent());
+			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
 		} else if (result instanceof AbstractView) {
 			response.setBody(((AbstractView) result).getContent());
 			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
