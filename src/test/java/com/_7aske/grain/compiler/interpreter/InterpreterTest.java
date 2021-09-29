@@ -1,8 +1,6 @@
 package com._7aske.grain.compiler.interpreter;
 
-import com._7aske.grain.compiler.ast.AstArithmeticNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
-import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import org.junit.jupiter.api.Disabled;
@@ -18,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class InterpreterTest {
 	private static Map<String, Object> debugSymbols = new HashMap<>();
 
-	static  {
-		debugSymbols.put("dbg", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+	static {
+		debugSymbols.put("dbg", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
 			System.err.println(Arrays.toString(args));
 			return args;
 		});
@@ -121,7 +119,7 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		Object val = interpreter.getSymbolValue("a");
-		assertEquals(3.0, (float)val, 0.001);
+		assertEquals(3.0, (float) val, 0.001);
 	}
 
 	@Test
@@ -130,7 +128,7 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		Object val = interpreter.getSymbolValue("a");
-		assertEquals(3.1, (float)val, 0.001);
+		assertEquals(3.1, (float) val, 0.001);
 	}
 
 	@Test
@@ -194,4 +192,25 @@ class InterpreterTest {
 		String content = interpreter.getContent();
 		assertEquals("0123456789", content);
 	}
+
+	@Test
+	void test_scope() {
+		String code = "{ a = 0; }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		Object content = interpreter.getSymbolValue("a");
+		assertNull(content);
+	}
+
+	@Test
+	void test_scopedVariable() {
+		String code = " a = 0; { a = 1; b = 0 }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		Object a = interpreter.getSymbolValue("a");
+		Object b = interpreter.getSymbolValue("b");
+		assertEquals(1, a);
+		assertNull(b);
+	}
+
 }

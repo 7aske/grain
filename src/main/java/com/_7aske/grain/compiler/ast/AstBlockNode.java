@@ -32,13 +32,16 @@ public class AstBlockNode extends AstNode {
 
 	@Override
 	public void run(Interpreter interpreter) {
+		interpreter.pushScope();
 		for (AstNode node: this.getNodes()) {
 			node.run(interpreter);
 		}
+		interpreter.popScope();
 	}
 
 	@Override
 	public Object value() {
-		throw new RuntimeException("Called 'value()' on " + this.getClass());
+		if (nodes.isEmpty()) return null;
+		return nodes.get(nodes.size() - 1).value();
 	}
 }

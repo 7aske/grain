@@ -34,7 +34,7 @@ public class Parser {
 			throw new ParserSyntaxErrorException("Token _START missing at the beginning of code block");
 		iter.next();
 
-		AstBlockNode program = new AstBlockNode();
+		AstRootNode program = new AstRootNode();
 		while (iter.hasNext() && !iter.isPeekOfType(_END)) {
 			AstNode node = parseStatement();
 			if (node != null)

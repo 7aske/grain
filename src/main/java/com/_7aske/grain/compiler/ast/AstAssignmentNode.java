@@ -40,7 +40,7 @@ public class AstAssignmentNode extends AstBinaryNode {
 	@Override
 	public void run(Interpreter interpreter) {
 		right.run(interpreter);
-		interpreter.putSymbol(((AstSymbolNode) left).getName(), right.value());
+		interpreter.putScopedSymbol(((AstSymbolNode) left).getName(), right.value());
 	}
 
 	@Override

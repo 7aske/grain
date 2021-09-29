@@ -1,7 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
 import com._7aske.grain.compiler.ast.basic.AstNode;
-import com._7aske.grain.compiler.ast.basic.AstTernaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstForNode extends AstNode {
@@ -54,6 +53,7 @@ public class AstForNode extends AstNode {
 
 	@Override
 	public void run(Interpreter interpreter) {
+		interpreter.pushScope();
 		if (this.getInitialization() != null)
 			this.getInitialization().run(interpreter);
 		while (evaluateCondition(interpreter)) {
@@ -61,6 +61,7 @@ public class AstForNode extends AstNode {
 			if (this.getIncrement() != null)
 				this.getIncrement().run(interpreter);
 		}
+		interpreter.popScope();
 	}
 
 	private Boolean evaluateCondition(Interpreter interpreter) {

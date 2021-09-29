@@ -11,19 +11,20 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 public class Interpreter {
-	private final Map<String, Object> symbols;
 	private final List<AstNode> nodes;
 	private final InterpreterOutput output;
+	private final Deque<Map<String, Object>> scopeStack;
 
 	public Interpreter() {
-		this.symbols = new HashMap<>();
 		this.nodes = new ArrayList<>();
+		this.scopeStack = new ArrayDeque<>();
+		this.scopeStack.push(new HashMap<>());
 		this.output = new InterpreterOutput();
-		this.symbols.put("print", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+		this.scopeStack.getFirst().put("print", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
 			write(args[0].toString());
 			return null;
 		});
-		this.symbols.put("println", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+		this.scopeStack.getFirst().put("println", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
 			write(args[0].toString());
 			write("<br/>");
 			return null;
@@ -57,15 +58,37 @@ public class Interpreter {
 	}
 
 	public void putSymbols(Map<String, Object> data) {
-		symbols.putAll(data);
+		scopeStack.getFirst().putAll(data);
 	}
 
 	public void putSymbol(String data, Object value) {
-		symbols.put(data, value);
+		scopeStack.getFirst().put(data, value);
+	}
+
+	public void putScopedSymbol(String data, Object value) {
+		Map<String, Object> scope = scopeStack.stream()
+				.filter(s -> s.containsKey(data))
+				.findFirst().orElse(scopeStack.peek());
+		scope.put(data, value);
+	}
+
+	public void pushScope() {
+		this.scopeStack.push(new HashMap<>());
+	}
+
+	public void popScope() {
+		this.scopeStack.pop();
 	}
 
 	public Object getSymbolValue(String symbolName) {
-		Object o = symbols.get(symbolName);
+		Object o = null;
+		Map<String, Object> scope = scopeStack.stream()
+				.filter(s -> s.containsKey(symbolName))
+				.findFirst().orElse(null);
+		if (scope != null && scope.containsKey(symbolName)) {
+			o = scope.get(symbolName);
+		}
+
 		if (o == null) {
 			String[] parts = symbolName.split("\\.");
 			String className = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 1));
@@ -80,7 +103,7 @@ public class Interpreter {
 						throw new IllegalArgumentException();
 					}
 				};
-				symbols.put(symbolName, callback);
+				scopeStack.getFirst().put(symbolName, callback);
 				return callback;
 			} catch (ClassNotFoundException ex) {
 				return null;
@@ -102,6 +125,6 @@ public class Interpreter {
 	}
 
 	public Map<String, Object> getSymbols() {
-		return this.symbols;
+		return this.scopeStack.getFirst();
 	}
 }
