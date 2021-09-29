@@ -5,13 +5,26 @@ import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class InterpreterTest {
+	private static Map<String, Object> debugSymbols = new HashMap<>();
+
+	static  {
+		debugSymbols.put("dbg", (AstFunctionCallNode.AstFunctionCallback)(args) -> {
+			System.err.println(Arrays.toString(args));
+			return args;
+		});
+	}
+
 	@Test
 	void test_testInterpreter() {
 		String code = "val = 10; if (val > 9) { username = 'test'; if (true) { username='test2';}}";
@@ -152,5 +165,33 @@ class InterpreterTest {
 		interpreter.run();
 		Object val = interpreter.getSymbolValue("a");
 		assertEquals("abcabcabcabcabcabcabcabcabcabc", val);
+	}
+
+	@Test
+	void test_forLoop() {
+		String code = "for (a = 0; a < 10; a = a + 1) { print(a); }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		String content = interpreter.getContent();
+		assertEquals("0123456789", content);
+	}
+
+	@Test
+	void test_forLoop_noIncrement() {
+		String code = "for (a = 0; a < 10;) { print(a); a = a + 1; }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		String content = interpreter.getContent();
+		assertEquals("0123456789", content);
+	}
+
+	@Test
+	@Disabled
+	void test_forLoop_spiderLoop() {
+		String code = "for (;;) { print('a');}";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		String content = interpreter.getContent();
+		assertEquals("0123456789", content);
 	}
 }

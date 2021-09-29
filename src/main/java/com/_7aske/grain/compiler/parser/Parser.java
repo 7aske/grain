@@ -189,14 +189,29 @@ public class Parser {
 	}
 
 	private AstNode parseForStatement() {
+		Token forToken = iter.next();
+		AstForNode forNode = (AstForNode) createNode(forToken);
+		if (!iter.isPeekOfType(LPAREN))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", LPAREN.getValue());
 		iter.next();
-		return null;
+
+		if (!iter.isPeekOfType(SCOL))
+			forNode.setInitialization(parseExpression());
+		if (!iter.isPeekOfType(SCOL))
+			forNode.setCondition(parseExpression());
+		if (!iter.isPeekOfType(SCOL, RPAREN))
+			forNode.setIncrement(parseExpression());
+		while(iter.isPeekOfType(RPAREN, SCOL)) {
+			iter.next();
+		}
+		forNode.setBody(parseBlockStatement());
+		return forNode;
 	}
 
 	private AstNode parseIfStatement() {
 		Token ifToken = iter.next();
 		if (!iter.isPeekOfType(LPAREN)) {
-			throw new ParserSyntaxErrorException(getSourceCodeLocation(ifToken), "Expected '%s'", LPAREN.getValue());
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", LPAREN.getValue());
 		}
 		AstIfNode ifNode = (AstIfNode) createNode(ifToken);
 		AstNode condition = parseExpression();
@@ -243,7 +258,7 @@ public class Parser {
 			case ELSE:
 				break;
 			case FOR:
-				break;
+				return new AstForNode();
 			case IN:
 				break;
 			case CONTINUE:

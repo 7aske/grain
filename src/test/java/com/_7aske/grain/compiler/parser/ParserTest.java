@@ -120,6 +120,14 @@ class ParserTest {
 		System.out.println(content);
 	}
 
+
+	@Test
+	void test_forLoop() {
+		String code = "for (a = 0; a < 10; a = a + 1) { print(a); }";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+	}
+
 	void printAst(List<AstNode> asts, int depth) {
 		for (AstNode ast : asts) {
 			for (int i = 0; i < depth; ++i) System.out.print("    ");
