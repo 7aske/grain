@@ -75,18 +75,6 @@ class InterpreterTest {
 		assertNotNull(interpreter.getSymbolValue("a"));
 	}
 
-
-	@Test
-	void test_callStaticMethod() {
-		String code = "a = com._7aske.grain.util.NumberUtil.getNumberOrFloat('10')";
-		Lexer lexer = new Lexer(code);
-		Parser parser = new Parser(lexer);
-		Interpreter interpreter = new Interpreter(parser);
-		interpreter.run();
-		System.out.println(interpreter.getSymbolValue("a"));
-		assertNotNull(interpreter.getSymbolValue("a"));
-	}
-
 	@Test
 	void test_boolean() {
 		String code = "a = false; b = !(a || true) && true";
