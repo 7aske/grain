@@ -128,6 +128,21 @@ class ParserTest {
 		interpreter.run();
 	}
 
+	@Test
+	void test_forLoopDecrement() {
+		String code = "for (a = 10; a > 0; a = a - 1) { print(a); }";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+	}
+
+	@Test
+	void test_objectReference() {
+		String code = "context.request.headers();";
+		Parser parser = new Parser(new Lexer(code));
+		AstNode astNode = parser.parse();
+		printAst(astNode, 0);
+	}
+
 	void printAst(List<AstNode> asts, int depth) {
 		for (AstNode ast : asts) {
 			for (int i = 0; i < depth; ++i) System.out.print("    ");

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -213,4 +214,23 @@ class InterpreterTest {
 		assertNull(b);
 	}
 
+	@Test
+	void test_objectReference() {
+		String code = "a = date.getMonthValue();";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.putSymbol("date", LocalDate.parse("2020-10-10"));
+		interpreter.run();
+		Object a = interpreter.getSymbolValue("a");
+		assertEquals(10, a);
+	}
+
+	@Test
+	void test_objectReferenceAsClass() {
+		String code = "a = Integer.parseInt('12');";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.putSymbol("Integer", Integer.class);
+		interpreter.run();
+		Object a = interpreter.getSymbolValue("a");
+		assertEquals(12, a);
+	}
 }

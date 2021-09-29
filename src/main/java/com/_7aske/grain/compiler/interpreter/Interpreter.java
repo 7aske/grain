@@ -89,26 +89,26 @@ public class Interpreter {
 			o = scope.get(symbolName);
 		}
 
-		if (o == null) {
-			String[] parts = symbolName.split("\\.");
-			String className = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 1));
-			String methodName = parts[parts.length - 1];
-			try {
-				Class<?> clazz = getClass().getClassLoader().loadClass(className);
-				AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
-					try {
-						Method method = clazz.getMethod(methodName, Arrays.stream(args).map(Object::getClass).toArray(Class[]::new));
-						return method.invoke(null, args);
-					} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-						throw new IllegalArgumentException();
-					}
-				};
-				scopeStack.getFirst().put(symbolName, callback);
-				return callback;
-			} catch (ClassNotFoundException ex) {
-				return null;
-			}
-		}
+		// if (o == null) {
+		// 	String[] parts = symbolName.split("\\.");
+		// 	String className = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 1));
+		// 	String methodName = parts[parts.length - 1];
+		// 	try {
+		// 		Class<?> clazz = getClass().getClassLoader().loadClass(className);
+		// 		AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
+		// 			try {
+		// 				Method method = clazz.getMethod(methodName, Arrays.stream(args).map(Object::getClass).toArray(Class[]::new));
+		// 				return method.invoke(null, args);
+		// 			} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+		// 				throw new IllegalArgumentException();
+		// 			}
+		// 		};
+		// 		scopeStack.getFirst().put(symbolName, callback);
+		// 		return callback;
+		// 	} catch (ClassNotFoundException ex) {
+		// 		return null;
+		// 	}
+		// }
 		return o;
 	}
 

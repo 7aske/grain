@@ -107,8 +107,7 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private String eatIdentifier() {
-		// FIXME: dont parse DOT
-		return eatWhile(ch -> ch.matches("[a-zA-Z0-9_$.]+"));
+		return eatWhile(ch -> ch.matches("[a-zA-Z0-9_$]+"));
 	}
 
 	public void begin() {
@@ -128,7 +127,8 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private boolean isStartOfNumberLiteral() {
-		return peek().matches("[0-9-]");
+		// FIXME: wont work with negative numbers
+		return peek().matches("[0-9]");
 	}
 
 	private boolean isStartOfStringLiteral() {

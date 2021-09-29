@@ -87,6 +87,8 @@ public class Parser {
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
 			iter.rewind();
 			node = parseFunctionCall();
+		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(DOT)) {
+			node = parseObject(curr);
 		} else if (iter.isPeekOfType(SCOL, COMMA)) {
 			node = createNode(curr);
 			iter.next();
@@ -132,7 +134,7 @@ public class Parser {
 		Token token = iter.next();
 		iter.next(); // skip LPAREN
 		AstFunctionCallNode functionCallNode = new AstFunctionCallNode();
-		functionCallNode.setName((AstSymbolNode) createNode(token));
+		functionCallNode.setSymbol((AstSymbolNode) createNode(token));
 		List<AstNode> arguments = new ArrayList<>();
 		while (!iter.isPeekOfType(RPAREN) && !iter.isPeekOfType(SCOL) && !iter.isPeekOfType(_END)) {
 			AstNode node = parseExpression();
@@ -160,6 +162,23 @@ public class Parser {
 		return node;
 	}
 
+	private AstNode parseObject(Token token) {
+		AstObjectReferenceNode objectNode = new AstObjectReferenceNode(token.getValue());
+		iter.next(); // skip DOT
+		AstNode ref = parseSubExpression(Integer.MIN_VALUE);
+		if (ref instanceof AstObjectReferenceNode) {
+			objectNode.setReference(ref);
+		} else if (ref instanceof AstSymbolNode) {
+			objectNode.setReference(ref);
+		} else if (ref instanceof AstFunctionCallNode) {
+			objectNode.setReference(ref);
+		} else {
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s' or '%s' but found '%s'",
+					AstSymbolNode.class, AstFunctionCallNode.class, ref.getClass());
+		}
+		return objectNode;
+	}
+
 	private AstNode parseArithmeticNode(Token token, AstNode left) {
 		AstArithmeticNode arithmeticNode = (AstArithmeticNode) createNode(token);
 		arithmeticNode.setLeft(left);
@@ -174,7 +193,7 @@ public class Parser {
 		return fixPrecedence(booleanNode, booleanNode.getRight());
 	}
 
-	private AstNode parseEqualityNode(Token token, AstNode left){
+	private AstNode parseEqualityNode(Token token, AstNode left) {
 		AstEqualityNode equalityNode = (AstEqualityNode) createNode(token);
 		equalityNode.setLeft(left);
 		equalityNode.setRight(parseSubExpression(equalityNode.getOperator().getPrecedance()));
@@ -201,7 +220,7 @@ public class Parser {
 			forNode.setCondition(parseExpression());
 		if (!iter.isPeekOfType(SCOL, RPAREN))
 			forNode.setIncrement(parseExpression());
-		while(iter.isPeekOfType(RPAREN, SCOL)) {
+		while (iter.isPeekOfType(RPAREN, SCOL)) {
 			iter.next();
 		}
 		forNode.setBody(parseBlockStatement());
