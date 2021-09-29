@@ -57,7 +57,13 @@ public class AstArithmeticNode extends AstBinaryNode {
 			case ADD:
 				return left.toString() + right.toString();
 			case MUL:
-				return left.toString().repeat(Integer.parseInt(right.toString()));
+				if (left instanceof String) {
+					return left.toString().repeat(Integer.parseInt(right.toString()));
+				} else if (right instanceof String) {
+					return right.toString().repeat(Integer.parseInt(left.toString()));
+				} else {
+					throw new RuntimeException("Unsupported operation for:\nleft:" + left.getClass() + "\nright: " + right.getClass());
+				}
 			default:
 				throw new RuntimeException("Unsupported operation for:\nleft:" + left.getClass() + "\nright: " + right.getClass());
 		}

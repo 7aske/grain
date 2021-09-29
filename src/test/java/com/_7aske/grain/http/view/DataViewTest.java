@@ -39,4 +39,13 @@ class DataViewTest {
 		assertTrue(content.contains("this-too"));
 		assertFalse(content.contains("should-not-show"));
 	}
+
+	@Test
+	void test_getContent_simpleExpression() {
+		DataView dataView = new DataView("index-simple-expression.html");
+		String content = dataView.getContent();
+		System.out.println(content);
+		assertTrue(content.contains("Result is:20"));
+		assertTrue(content.contains("String is:test"));
+	}
 }

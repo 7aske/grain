@@ -4,6 +4,7 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.LexerException;
 
+import java.nio.channels.AsynchronousByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -14,7 +15,7 @@ import java.util.regex.Pattern;
 import static java.util.regex.Pattern.*;
 
 public class DataView extends AbstractView {
-	private final Pattern VARIABLE_PATTERN = compile("<%=\\s*?([A-Za-z0-9-_$]+)\\s*?%>");
+	private final Pattern VARIABLE_PATTERN = compile("<%=\\s*?(.*?)\\s*?%>");
 	private final Pattern CODE_SEGMENT = compile("<%[^=]\\s*?(.*?)\\s*?%>");
 	private final Pattern COMMENT_PATTERN = compile("((<!--).*?(-->))");
 	private Map<String, Object> data = null;
@@ -58,14 +59,13 @@ public class DataView extends AbstractView {
 			}
 
 			if (matchResult == null) {
-				code.append(createPrintStatement(content));
+				cachedContent = substituteValues(content, data);
 			} else {
 				code.append(createPrintStatement(content, matchResult.end(), content.length()));
+				Interpreter interpreter = new Interpreter(code.toString(), data);
+				interpreter.run();
+				cachedContent = substituteValues(interpreter.getContent(), interpreter.getSymbols());
 			}
-
-			Interpreter interpreter = new Interpreter(code.toString(), data);
-			interpreter.run();
-			cachedContent = substituteValues(interpreter.getContent(), interpreter.getSymbols());
 		}
 
 		return cachedContent;
@@ -88,14 +88,18 @@ public class DataView extends AbstractView {
 		}
 	}
 
-	private String substituteValues(CharSequence content, Map<String, Object> data) {
+	private Object tryInterpret(String code, Map<String, Object> symbols) {
+		return new Interpreter(code, symbols).run();
+	}
+
+	private String substituteValues(CharSequence content, Map<String, Object> symbols) {
 		StringBuilder result = new StringBuilder();
 		Matcher matcher = VARIABLE_PATTERN.matcher(content);
 		while (matcher.find()) {
 			String key = matcher.group(1);
 			if (key != null) {
-				Object value = data.getOrDefault(key, "");
-				matcher.appendReplacement(result, substituteValues(value == null ? "null" : value.toString(), data));
+				Object value = tryInterpret(key, symbols);
+				matcher.appendReplacement(result, value == null ? "null" : value.toString());
 			}
 		}
 

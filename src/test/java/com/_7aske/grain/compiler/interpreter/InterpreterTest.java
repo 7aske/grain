@@ -15,15 +15,18 @@ class InterpreterTest {
 	@Test
 	void test_testInterpreter() {
 		String code = "val = 10; if (val > 9) { username = 'test'; if (true) { username='test2';}}";
-		Lexer lexer = new Lexer(code);
-		lexer.begin();
-		Parser parser = new Parser(lexer);
-		AstNode ast = parser.parse();
-		Interpreter interpreter = new Interpreter();
-		interpreter.addNode(ast);
+		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.putSymbol("username", "test");
 		interpreter.run();
 		System.out.println(interpreter.getSymbols());
+	}
+
+	@Test
+	void test_testInterpreterReturn() {
+		String code = "10 + 10";
+		Interpreter interpreter = new Interpreter(code, null);
+		Object retval = interpreter.run();
+		assertEquals(20, retval);
 	}
 
 	@Test

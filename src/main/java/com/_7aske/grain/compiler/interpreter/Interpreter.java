@@ -93,10 +93,12 @@ public class Interpreter {
 		return output.getContent();
 	}
 
-	public void run() {
+	public Object run() {
 		for (AstNode node : this.nodes) {
 			node.run(this);
 		}
+		if (nodes.isEmpty()) return null;
+		return nodes.get(nodes.size() - 1).value();
 	}
 
 	public Map<String, Object> getSymbols() {
