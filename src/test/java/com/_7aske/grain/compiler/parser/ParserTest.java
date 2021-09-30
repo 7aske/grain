@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ParserTest {
 
@@ -141,6 +142,16 @@ class ParserTest {
 		Parser parser = new Parser(new Lexer(code));
 		AstNode astNode = parser.parse();
 		printAst(astNode, 0);
+	}
+
+	@Test
+	void test_import() {
+		String code = "import 'java.util.LocalDate';";
+		Parser parser = new Parser(new Lexer(code));
+		AstNode astNode = parser.parse();
+		printAst(astNode, 0);
+		assertTrue(((AstRootNode) astNode).getNodes().get(0) instanceof AstImportNode);
+		assertTrue(((AstImportNode) ((AstRootNode) astNode).getNodes().get(0)).getNode() instanceof AstLiteralNode);
 	}
 
 	void printAst(List<AstNode> asts, int depth) {

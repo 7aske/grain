@@ -14,9 +14,7 @@ public enum TokenType {
 	// keywords
 	IF("if"),
 	THEN("then"),
-	ELIF("elif"),
 	ELSE("else"),
-	ENDIF("endif"),
 	FOR("for"),
 	IN("in"),
 	CONTINUE("continue"),
@@ -24,6 +22,7 @@ public enum TokenType {
 	TRUE("true"),
 	FALSE("false"),
 	NULL("null"),
+	IMPORT("import"),
 
 	// operators
 	ASSN("="),

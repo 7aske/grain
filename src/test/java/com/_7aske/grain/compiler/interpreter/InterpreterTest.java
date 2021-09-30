@@ -276,4 +276,14 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals(30,  interpreter.getSymbolValue("a"));
 	}
+
+	@Test
+	void test_import() {
+		String code = "import 'java.time.LocalDate';" +
+				"a = LocalDate.parse('2020-10-10');" +
+				"a = a.toString();";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		assertEquals("2020-10-10",  interpreter.getSymbolValue("a"));
+	}
 }

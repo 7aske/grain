@@ -107,6 +107,8 @@ public class Parser {
 			node = parseSubExpression(10000);
 		} else if (curr.isOfType(COMMA)) {
 			node = parseExpression();
+		} else if (curr.isOfType(IMPORT)) {
+			node = parseImportStatement(curr);
 		} else {
 			if (curr.isOfType(NOT)) {
 				AstNotNode astNotNode = (AstNotNode) createNode(curr);
@@ -120,6 +122,15 @@ public class Parser {
 
 		parsedStack.push(node);
 		return node;
+	}
+
+	private AstNode parseImportStatement(Token curr) {
+		AstImportNode astImportNode = (AstImportNode) createNode(curr);
+		if (!iter.isPeekOfType(LIT_STR))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()),
+					"Expected token LIT_STR got '%s'", iter.peek().getValue());
+		astImportNode.setPackage(parseSubExpression(Integer.MIN_VALUE));
+		return astImportNode;
 	}
 
 	private AstNode parseArrayIndex(Token curr) {
@@ -295,7 +306,6 @@ public class Parser {
 			case LIT_INT:
 			case LIT_FLT:
 				return new AstLiteralNode(AstLiteralType.from(token.getType()), token.getValue());
-			case ELIF:
 			case IF:
 				return new AstIfNode();
 			case ELSE:
@@ -364,6 +374,8 @@ public class Parser {
 				break;
 			case INVALID:
 				break;
+			case IMPORT:
+				return new AstImportNode();
 		}
 		throw new ParserOperationNotSupportedException("Token " + token.getType() + " not supported.");
 	}
