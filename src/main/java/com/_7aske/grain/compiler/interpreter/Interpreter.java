@@ -6,8 +6,6 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 
 public class Interpreter {
@@ -69,6 +67,7 @@ public class Interpreter {
 		Map<String, Object> scope = scopeStack.stream()
 				.filter(s -> s.containsKey(data))
 				.findFirst().orElse(scopeStack.peek());
+		// scope stack cannot be empty (global scope)
 		scope.put(data, value);
 	}
 
@@ -88,27 +87,8 @@ public class Interpreter {
 		if (scope != null && scope.containsKey(symbolName)) {
 			o = scope.get(symbolName);
 		}
-
-		// if (o == null) {
-		// 	String[] parts = symbolName.split("\\.");
-		// 	String className = String.join(".", Arrays.copyOfRange(parts, 0, parts.length - 1));
-		// 	String methodName = parts[parts.length - 1];
-		// 	try {
-		// 		Class<?> clazz = getClass().getClassLoader().loadClass(className);
-		// 		AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
-		// 			try {
-		// 				Method method = clazz.getMethod(methodName, Arrays.stream(args).map(Object::getClass).toArray(Class[]::new));
-		// 				return method.invoke(null, args);
-		// 			} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-		// 				throw new IllegalArgumentException();
-		// 			}
-		// 		};
-		// 		scopeStack.getFirst().put(symbolName, callback);
-		// 		return callback;
-		// 	} catch (ClassNotFoundException ex) {
-		// 		return null;
-		// 	}
-		// }
+		if (o instanceof AstNode)
+			return ((AstNode) o).value();
 		return o;
 	}
 

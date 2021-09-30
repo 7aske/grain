@@ -54,6 +54,8 @@ public class Parser {
 			node = parseRelationalNode(iter.next(), node);
 		} else if (iter.isPeekOfType(ADD, SUB, DIV, DIV, MUL)) {
 			node = parseArithmeticNode(iter.next(), node);
+		} else if (iter.isPeekOfType(ASSN)) {
+			node = parseAssignmentNode(iter.next(), node);
 		}
 		return node;
 	}
@@ -62,7 +64,7 @@ public class Parser {
 		Token curr = iter.next();
 		AstNode node = null;
 
-		if (iter.isPeekOfType(RPAREN)) {
+		if (iter.isPeekOfType(RPAREN, RBRACK)) {
 			node = createNode(curr);
 			iter.next();
 		} else if (curr.isOfType(LPAREN, COMMA)) {
@@ -83,12 +85,15 @@ public class Parser {
 			if (!curr.isOfType(IDEN))
 				throw new ParserSyntaxErrorException(getSourceCodeLocation(curr),
 						"Cannot assign to '%s'", curr.getType());
-			node = parseAssignmentNode(curr);
+			node = createNode(curr);
+			node = parseAssignmentNode(iter.next(), node);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
-			iter.rewind();
-			node = parseFunctionCall();
+			node = createNode(curr);
+			node = parseFunctionCall((AstSymbolNode) node);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(DOT)) {
 			node = parseObject(curr);
+		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LBRACK)) {
+			node = parseArrayIndex(curr);
 		} else if (iter.isPeekOfType(SCOL, COMMA)) {
 			node = createNode(curr);
 			iter.next();
@@ -106,6 +111,13 @@ public class Parser {
 		return node;
 	}
 
+	private AstNode parseArrayIndex(Token curr) {
+		AstArrayIndexNode arrayIndexNode = new AstArrayIndexNode(createNode(curr));
+		iter.next(); // skip LBRACK
+		arrayIndexNode.setIndex(parseSubExpression(Integer.MIN_VALUE));
+		return arrayIndexNode;
+	}
+
 	private AstNode fixPrecedence(AstNode start, AstNode right) {
 		if (start.getPrecedence() > right.getPrecedence() && start instanceof AstBinaryNode && right instanceof AstBinaryNode) {
 			AstBinaryNode startBinary = (AstBinaryNode) start;
@@ -120,21 +132,20 @@ public class Parser {
 		return start;
 	}
 
-	private AstNode parseAssignmentNode(Token token) {
-		AstAssignmentNode astAssignmentNode = (AstAssignmentNode) createNode(iter.peek());
-		AstSymbolNode symbolNode = (AstSymbolNode) createNode(token);
-		astAssignmentNode.setSymbol(symbolNode);
-		iter.next(); // skip assn
+	private AstNode parseAssignmentNode(Token token, AstNode left) {
+		AstAssignmentNode astAssignmentNode = (AstAssignmentNode) createNode(token);
+		if (iter.isPeekOfType(ASSN))
+			iter.next(); // skip assn
+		astAssignmentNode.setSymbol(left);
 		AstNode value = parseSubExpression(AstAssignmentNode.PRECEDENCE);
 		astAssignmentNode.setValue(value);
 		return astAssignmentNode;
 	}
 
-	private AstNode parseFunctionCall() {
-		Token token = iter.next();
+	private AstNode parseFunctionCall(AstSymbolNode left) {
 		iter.next(); // skip LPAREN
 		AstFunctionCallNode functionCallNode = new AstFunctionCallNode();
-		functionCallNode.setSymbol((AstSymbolNode) createNode(token));
+		functionCallNode.setSymbol(left);
 		List<AstNode> arguments = new ArrayList<>();
 		while (!iter.isPeekOfType(RPAREN) && !iter.isPeekOfType(SCOL) && !iter.isPeekOfType(_END)) {
 			AstNode node = parseExpression();
@@ -154,8 +165,6 @@ public class Parser {
 			node = parseIfStatement();
 		} else if (iter.isPeekOfType(FOR)) {
 			node = parseForStatement();
-			// } else if (iter.isPeekOfType(ELSE)) {
-			// 	throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Unexpected token '%s'", ELSE.getValue());
 		} else {
 			node = parseExpression();
 		}

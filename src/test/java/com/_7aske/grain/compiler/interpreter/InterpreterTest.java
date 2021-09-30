@@ -1,16 +1,14 @@
 package com._7aske.grain.compiler.interpreter;
 
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
+import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -220,5 +218,41 @@ class InterpreterTest {
 		interpreter.run();
 		Object a = interpreter.getSymbolValue("a");
 		assertEquals(12, a);
+	}
+
+	@Test
+	void test_arrayIndex() {
+		String code = "b = a[0];";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		List<String> list = List.of("a", "b", "c");
+		interpreter.putSymbol("a", list);
+		interpreter.run();
+		Object b = interpreter.getSymbolValue("b");
+		assertEquals("a", b);
+	}
+
+	@Test
+	void test_arrayIndexAssignment() {
+		String code = "a[0] = 'g';";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		List<String> list = new ArrayList<>();
+		list.add("a");
+		list.add("aaa");
+		list.add("c");
+		interpreter.putSymbol("a", list);
+		interpreter.run();
+		List<Object> newList = (List<Object>) interpreter.getSymbolValue("a");
+		assertEquals("g", ((AstNode)newList.get(0)).value());
+	}
+
+	@Test
+	void test_arrayIndexCall() {
+		String code = "a[0] = print; b = a[0]; b('test');";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		List<String> list = new ArrayList<>();
+		list.add("elem");
+		interpreter.putSymbol("a", list);
+		interpreter.run();
+		assertEquals("test", interpreter.getContent());
 	}
 }

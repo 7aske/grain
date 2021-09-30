@@ -24,6 +24,10 @@ public class AstAssignmentNode extends AstBinaryNode {
 		this.left = symbol;
 	}
 
+	public void setSymbol(AstNode symbol) {
+		this.left = symbol;
+	}
+
 	public AstNode getValue() {
 		return right;
 	}
@@ -39,8 +43,13 @@ public class AstAssignmentNode extends AstBinaryNode {
 
 	@Override
 	public void run(Interpreter interpreter) {
+		left.run(interpreter);
 		right.run(interpreter);
-		interpreter.putScopedSymbol(((AstSymbolNode) left).getName(), right.value());
+		if (this.left instanceof AstArrayIndexNode) {
+			((AstArrayIndexNode) this.left).setValue(this.right);
+		} else {
+			interpreter.putScopedSymbol(((AstSymbolNode) left).getName(), right.value());
+		}
 	}
 
 	@Override
