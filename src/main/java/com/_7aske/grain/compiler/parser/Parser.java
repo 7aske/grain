@@ -384,6 +384,8 @@ public class Parser {
 				break;
 			case IMPORT:
 				return new AstImportNode();
+			case _END:
+				throw new ParserSyntaxErrorException(getSourceCodeLocation(token), "Invalid end of expression");
 		}
 		throw new ParserOperationNotSupportedException("Token " + token.getType() + " not supported.");
 	}
@@ -405,7 +407,7 @@ public class Parser {
 		String line = content.substring(index, lastIndex);
 		out.append(line);
 		out.append(" ".repeat(Math.max(0, token.getStartChar() - 2)));
-		out.append("^".repeat(token.getValue().length()));
+		out.append("^".repeat(token.getValue() == null ? 1 : token.getValue().length()));
 		out.append("\n");
 		out.append("─".repeat(Math.max(0, token.getStartChar() - 2)));
 		out.append("┘");

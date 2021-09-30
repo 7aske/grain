@@ -242,7 +242,7 @@ class InterpreterTest {
 		interpreter.putSymbol("a", list);
 		interpreter.run();
 		List<Object> newList = (List<Object>) interpreter.getSymbolValue("a");
-		assertEquals("g", ((AstNode)newList.get(0)).value());
+		assertEquals("g", ((AstNode) newList.get(0)).value());
 	}
 
 	@Test
@@ -265,7 +265,7 @@ class InterpreterTest {
 		interpreter.putSymbol("a", list);
 		interpreter.run();
 		List<Object> updatedList = (List<Object>) interpreter.getSymbolValue("a");
-		assertEquals("test",  updatedList.get(1));
+		assertEquals("test", updatedList.get(1));
 	}
 
 	@Test
@@ -274,7 +274,7 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.putSymbol("Integer", Integer.class);
 		interpreter.run();
-		assertEquals(30,  interpreter.getSymbolValue("a"));
+		assertEquals(30, interpreter.getSymbolValue("a"));
 	}
 
 	@Test
@@ -284,7 +284,7 @@ class InterpreterTest {
 				"a = a.toString();";
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.run();
-		assertEquals("2020-10-10",  interpreter.getSymbolValue("a"));
+		assertEquals("2020-10-10", interpreter.getSymbolValue("a"));
 	}
 
 	@Test
@@ -293,6 +293,14 @@ class InterpreterTest {
 				"a = LocalDate.parse('2020-10-10').toString() + '-10';";
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.run();
-		assertEquals("2020-10-10-10",  interpreter.getSymbolValue("a"));
+		assertEquals("2020-10-10-10", interpreter.getSymbolValue("a"));
+	}
+
+	@Test
+	void test_callExpression() {
+		String code = "a = String('b') + 'a';";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		assertEquals("ba", interpreter.getSymbolValue("a"));
 	}
 }

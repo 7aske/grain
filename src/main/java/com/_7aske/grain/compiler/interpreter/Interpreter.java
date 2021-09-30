@@ -63,12 +63,12 @@ public class Interpreter {
 		scopeStack.getFirst().put(data, value);
 	}
 
-	public void putScopedSymbol(String data, Object value) {
+	public void putScopedSymbol(String symbol, Object value) {
 		Map<String, Object> scope = scopeStack.stream()
-				.filter(s -> s.containsKey(data))
+				.filter(s -> s.containsKey(symbol))
 				.findFirst().orElse(scopeStack.peek());
 		// scope stack cannot be empty (global scope)
-		scope.put(data, value);
+		scope.put(symbol, value);
 	}
 
 	public void pushScope() {
@@ -83,10 +83,18 @@ public class Interpreter {
 		Object o = null;
 		Map<String, Object> scope = scopeStack.stream()
 				.filter(s -> s.containsKey(symbolName))
-				.findFirst().orElse(null);
-		if (scope != null && scope.containsKey(symbolName)) {
+				.findFirst().orElse(scopeStack.getFirst());
+
+		if (scope.containsKey(symbolName)) {
 			o = scope.get(symbolName);
+		} else {
+			Optional<Class<?>> clazz = tryLoadClass("java.lang." + symbolName.replaceAll("java.lang.", ""));
+			if (clazz.isPresent()) {
+				o = clazz.get();
+				putScopedSymbol(symbolName, o);
+			}
 		}
+
 		if (o instanceof AstNode)
 			return ((AstNode) o).value();
 		return o;
@@ -102,6 +110,14 @@ public class Interpreter {
 		}
 		if (nodes.isEmpty()) return null;
 		return nodes.get(nodes.size() - 1).value();
+	}
+
+	Optional<Class<?>> tryLoadClass(String classPath) {
+		try {
+			return Optional.of(ClassLoader.getSystemClassLoader().loadClass(classPath));
+		} catch (ClassNotFoundException e) {
+			return Optional.empty();
+		}
 	}
 
 	public Map<String, Object> getSymbols() {

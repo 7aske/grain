@@ -4,6 +4,7 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -73,8 +74,9 @@ public class AstFunctionCallNode extends AstUnaryNode {
 			arg.run(interpreter);
 		}
 
+		AstFunctionCallback callback;
 		if (this.backReference != null) {
-			AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
+			callback = (args) -> {
 				try {
 					Class<?> clazz = AstFunctionCallNode.this.backReference instanceof Class<?> ? (Class<?>)
 							AstFunctionCallNode.this.backReference : AstFunctionCallNode.this.backReference.getClass();
@@ -84,10 +86,24 @@ public class AstFunctionCallNode extends AstUnaryNode {
 					throw new IllegalArgumentException(e);
 				}
 			};
-			this.setCallback(callback);
 		} else {
-			this.setCallback((AstFunctionCallback) interpreter.getSymbolValue(this.getSymbol().getName()));
+			Object symbolObject = interpreter.getSymbolValue(this.getSymbol().getName());
+			if (symbolObject instanceof Class<?>) {
+				callback = (args) -> {
+					try {
+						Constructor<?> constructor = getConstructor((Class<?>) symbolObject, args);
+						return constructor.newInstance(args);
+					} catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+						throw new IllegalArgumentException(e);
+					}
+				};
+			} else if (symbolObject instanceof AstFunctionCallback) {
+				callback = (AstFunctionCallback) interpreter.getSymbolValue(this.getSymbol().getName());
+			} else {
+				throw new NullPointerException(String.format("Undefined symbol '%s'", this.symbol.getName()));
+			}
 		}
+		this.callback = callback;
 		this.returnValue = callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
 
 		if (this.reference instanceof AstFunctionCallNode){
@@ -105,6 +121,14 @@ public class AstFunctionCallNode extends AstUnaryNode {
 		Method[] methods = clazz.getMethods();
 		return Arrays.stream(methods)
 				.filter(m -> m.getName().equals(methodName) && areAllParametersCastable(m.getParameters(), args))
+				.findFirst()
+				.orElseThrow(NoSuchMethodException::new);
+	}
+
+	private Constructor<?> getConstructor(Class<?> clazz, Object[] args) throws NoSuchMethodException {
+		Constructor<?>[] constructors = clazz.getConstructors();
+		return Arrays.stream(constructors)
+				.filter(s -> areAllParametersCastable(s.getParameters(), args))
 				.findFirst()
 				.orElseThrow(NoSuchMethodException::new);
 	}
