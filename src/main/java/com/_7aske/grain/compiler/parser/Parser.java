@@ -177,6 +177,11 @@ public class Parser {
 		if (iter.isPeekOfType(RPAREN))
 			iter.next();
 		functionCallNode.setArguments(arguments);
+		if (iter.isPeekOfType(DOT)) {
+			iter.next();
+			AstNode next = parseSubExpression(Integer.MIN_VALUE);
+			functionCallNode.setReference(next);
+		}
 		return functionCallNode;
 	}
 
@@ -195,6 +200,9 @@ public class Parser {
 	}
 
 	private AstNode parseObject(Token token) {
+		if (token.getType() != IDEN)
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(token), "Expected identifier got '%s'", token.getValue());
+
 		AstObjectReferenceNode objectNode = new AstObjectReferenceNode(token.getValue());
 		iter.next(); // skip DOT
 		AstNode ref = parseSubExpression(Integer.MIN_VALUE);

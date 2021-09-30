@@ -3,14 +3,10 @@ package com._7aske.grain.compiler.ast;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
-
 public class AstObjectReferenceNode extends AstSymbolNode {
 	Object value;
 	private AstNode reference;
-	private AstNode backReference;
+	private Object backReference;
 	private String name;
 
 	public AstObjectReferenceNode() {
@@ -20,11 +16,11 @@ public class AstObjectReferenceNode extends AstSymbolNode {
 		this.name = name;
 	}
 
-	public AstNode getBackReference() {
+	public Object getBackReference() {
 		return backReference;
 	}
 
-	public void setBackReference(AstNode backReference) {
+	public void setBackReference(Object backReference) {
 		this.backReference = backReference;
 	}
 
@@ -70,7 +66,7 @@ public class AstObjectReferenceNode extends AstSymbolNode {
 			((AstObjectReferenceNode) this.reference).setBackReference(this);
 			this.reference.run(interpreter);
 		} else if (this.reference instanceof AstFunctionCallNode) {
-			((AstFunctionCallNode) this.reference).setObject(this.value);
+			((AstFunctionCallNode) this.reference).setBackReference(this.value);
 			this.reference.run(interpreter);
 		}
 	}
