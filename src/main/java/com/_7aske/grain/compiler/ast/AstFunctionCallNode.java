@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 public class AstFunctionCallNode extends AstUnaryNode {
 	private Object returnValue;
@@ -68,7 +67,7 @@ public class AstFunctionCallNode extends AstUnaryNode {
 			AstFunctionCallNode.AstFunctionCallback callback = (args) -> {
 				try {
 					Class<?> clazz = this.object instanceof Class<?> ? (Class<?>) this.object : this.object.getClass();
-					Method method = clazz.getMethod(this.getSymbol().getName(), Arrays.stream(args).map(Object::getClass).toArray(Class[]::new));
+					Method method = getMethod(clazz, getSymbol().getName(), args);
 					return method.invoke(this.object, args);
 				} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
 					throw new IllegalArgumentException(e);
@@ -81,8 +80,23 @@ public class AstFunctionCallNode extends AstUnaryNode {
 		this.returnValue = callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
 	}
 
-	private Method getMethod(Class<?> clazz, String methodName, int argCount) throws NoSuchMethodException {
-		return Arrays.stream(clazz.getMethods()).filter(m -> m.getName().equals(methodName) && m.getParameterCount() == argCount).findFirst().orElseThrow(NoSuchMethodException::new);
+	private Method getMethod(Class<?> clazz, String methodName, Object[] args) throws NoSuchMethodException {
+		Method[] methods = clazz.getMethods();
+		return Arrays.stream(methods)
+				.filter(m -> m.getName().equals(methodName) && areAllParametersCastable(m.getParameters(), args))
+				.findFirst()
+				.orElseThrow(NoSuchMethodException::new);
+	}
+
+	// TODO: implemented finding varargs methods
+	private boolean areAllParametersCastable(Parameter[] parameters, Object[] args) {
+		if (parameters.length != args.length) return false;
+		for (int i = 0; i < parameters.length; i++) {
+			if (!parameters[i].getType().isAssignableFrom(args[i].getClass())) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

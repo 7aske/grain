@@ -57,6 +57,8 @@ public class Parser {
 		} else if (iter.isPeekOfType(ASSN)) {
 			node = parseAssignmentNode(iter.next(), node);
 		}
+
+		parsedStack.push(node);
 		return node;
 	}
 
@@ -64,12 +66,7 @@ public class Parser {
 		Token curr = iter.next();
 		AstNode node = null;
 
-		if (iter.isPeekOfType(RPAREN, RBRACK)) {
-			node = createNode(curr);
-			iter.next();
-		} else if (curr.isOfType(LPAREN, COMMA)) {
-			node = parseExpression();
-		} else if (iter.isPeekOfType(AND, OR)) {
+		if (iter.isPeekOfType(AND, OR)) {
 			node = createNode(curr);
 			node = parseBooleanNode(iter.next(), node);
 		} else if (iter.isPeekOfType(EQ, NE)) {
@@ -97,6 +94,19 @@ public class Parser {
 		} else if (iter.isPeekOfType(SCOL, COMMA)) {
 			node = createNode(curr);
 			iter.next();
+		} else if (iter.isPeekOfType(RPAREN)) {
+			node = createNode(curr);
+		} else if (iter.isPeekOfType(RBRACK)) {
+			node = createNode(curr);
+			iter.next();
+		} else if (curr.isOfType(LPAREN)) {
+			// we hope that last value will be on the stack
+			// so that createNode() will pick it up from inside the next
+			// parseSubExpression() call
+			parseExpression();
+			node = parseSubExpression(10000);
+		} else if (curr.isOfType(COMMA)) {
+			node = parseExpression();
 		} else {
 			if (curr.isOfType(NOT)) {
 				AstNotNode astNotNode = (AstNotNode) createNode(curr);
@@ -108,6 +118,7 @@ public class Parser {
 			}
 		}
 
+		parsedStack.push(node);
 		return node;
 	}
 
@@ -137,7 +148,8 @@ public class Parser {
 		if (iter.isPeekOfType(ASSN))
 			iter.next(); // skip assn
 		astAssignmentNode.setSymbol(left);
-		AstNode value = parseSubExpression(AstAssignmentNode.PRECEDENCE);
+		AstNode value = parseExpression();
+
 		astAssignmentNode.setValue(value);
 		return astAssignmentNode;
 	}
@@ -224,11 +236,11 @@ public class Parser {
 		iter.next();
 
 		if (!iter.isPeekOfType(SCOL))
-			forNode.setInitialization(parseExpression());
+			forNode.setInitialization(parseSubExpression(Integer.MIN_VALUE));
 		if (!iter.isPeekOfType(SCOL))
-			forNode.setCondition(parseExpression());
+			forNode.setCondition(parseSubExpression(Integer.MIN_VALUE));
 		if (!iter.isPeekOfType(SCOL, RPAREN))
-			forNode.setIncrement(parseExpression());
+			forNode.setIncrement(parseSubExpression(Integer.MIN_VALUE));
 		while (iter.isPeekOfType(RPAREN, SCOL)) {
 			iter.next();
 		}
@@ -269,6 +281,9 @@ public class Parser {
 	}
 
 	private AstNode createNode(Token token) {
+		if (token.isOfType(RPAREN)) {
+			return parsedStack.pop();
+		}
 		return doCreateNode(token);
 	}
 

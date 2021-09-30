@@ -255,4 +255,25 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("test", interpreter.getContent());
 	}
+
+	@Test
+	void test_arrayAdd() {
+		String code = "a.add('test');";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		List<String> list = new ArrayList<>();
+		list.add("elem");
+		interpreter.putSymbol("a", list);
+		interpreter.run();
+		List<Object> updatedList = (List<Object>) interpreter.getSymbolValue("a");
+		assertEquals("test",  updatedList.get(1));
+	}
+
+	@Test
+	void test_integerParseInt() {
+		String code = "a = Integer.parseInt(('10')) + 20;";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.putSymbol("Integer", Integer.class);
+		interpreter.run();
+		assertEquals(30,  interpreter.getSymbolValue("a"));
+	}
 }
