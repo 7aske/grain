@@ -303,4 +303,12 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("ba", interpreter.getSymbolValue("a"));
 	}
+
+	@Test
+	void test_functionCallInForCondition() {
+		String code = "for (i = 0; i < String('aaa').length(); i = i + 1) { print('a'); }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		assertEquals("aaa", interpreter.getContent());
+	}
 }

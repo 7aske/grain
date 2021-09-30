@@ -182,6 +182,8 @@ public class Parser {
 			AstNode next = parseSubExpression(Integer.MIN_VALUE);
 			functionCallNode.setReference(next);
 		}
+		if (iter.isPeekOfType(SCOL))
+			iter.next();
 		return functionCallNode;
 	}
 
