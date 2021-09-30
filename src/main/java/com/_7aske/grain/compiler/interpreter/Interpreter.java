@@ -19,11 +19,11 @@ public class Interpreter {
 		this.scopeStack.push(new HashMap<>());
 		this.output = new InterpreterOutput();
 		this.scopeStack.getFirst().put("print", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
-			write(args[0].toString());
+			write(args[0] == null ? "null" : args[0].toString());
 			return null;
 		});
 		this.scopeStack.getFirst().put("println", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
-			write(args[0].toString());
+			write(args[0] == null ? "null" : args[0].toString());
 			write("<br/>");
 			return null;
 		});
