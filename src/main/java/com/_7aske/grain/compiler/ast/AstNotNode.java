@@ -12,12 +12,7 @@ public class AstNotNode extends AstUnaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		getNode().run(interpreter);
-	}
-
-	@Override
-	public Object value() {
-		return !(Boolean) getNode().value();
+	public Object run(Interpreter interpreter) {
+		return !(Boolean) getNode().run(interpreter);
 	}
 }

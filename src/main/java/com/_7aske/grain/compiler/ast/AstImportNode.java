@@ -5,7 +5,6 @@ import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstImportNode extends AstUnaryNode {
-	private Class<?> value;
 	public void setPackage(AstNode node) {
 		setNode(node);
 	}
@@ -15,12 +14,14 @@ public class AstImportNode extends AstUnaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		String packageName = (String) getNode().value();
-		String[] parts  = packageName.split("\\.");
+	public Object run(Interpreter interpreter) {
+		Object value;
+		String packageName = (String) getNode().run(interpreter);
+		String[] parts = packageName.split("\\.");
 		String className = parts[parts.length - 1];
-		this.value = loadClass(packageName);
-		interpreter.putSymbol(className, this.value);
+		value = loadClass(packageName);
+		interpreter.putSymbol(className, value);
+		return value;
 	}
 
 	private Class<?> loadClass(String classPath) {
@@ -29,10 +30,5 @@ public class AstImportNode extends AstUnaryNode {
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	@Override
-	public Object value() {
-		return value;
 	}
 }

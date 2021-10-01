@@ -7,7 +7,9 @@ import java.util.List;
 
 public class AstArrayIndexNode extends AstNode {
 	private AstNode symbol;
+	private Object symbolValue;
 	private AstNode index;
+	private Object indexValue;
 
 	public AstArrayIndexNode(AstNode symbol) {
 		this.symbol = symbol;
@@ -30,17 +32,13 @@ public class AstArrayIndexNode extends AstNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		this.symbol.run(interpreter);
-		this.index.run(interpreter);
-	}
-
-	@Override
-	public Object value() {
-		return ((List<Object>)this.symbol.value()).get(Integer.parseInt(String.valueOf(this.index.value())));
+	public Object run(Interpreter interpreter) {
+		symbolValue = this.symbol.run(interpreter);
+		indexValue = this.index.run(interpreter);
+		return ((List<Object>) symbolValue).get(Integer.parseInt(String.valueOf(indexValue)));
 	}
 
 	public void setValue(Object value) {
-		((List<Object>)this.symbol.value()).set(Integer.parseInt(String.valueOf(this.index.value())), value);
+		((List<Object>) symbolValue).set(Integer.parseInt(String.valueOf(indexValue)), value);
 	}
 }

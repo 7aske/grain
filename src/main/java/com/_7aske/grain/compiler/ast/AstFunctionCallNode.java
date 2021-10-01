@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AstFunctionCallNode extends AstUnaryNode {
-	private Object returnValue;
-
 	@FunctionalInterface
 	public interface AstFunctionCallback {
 		Object call(Object... args);
@@ -69,11 +67,7 @@ public class AstFunctionCallNode extends AstUnaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		for (AstNode arg : arguments) {
-			arg.run(interpreter);
-		}
-
+	public Object run(Interpreter interpreter) {
 		AstFunctionCallback callback;
 		if (this.backReference != null) {
 			callback = (args) -> {
@@ -103,18 +97,24 @@ public class AstFunctionCallNode extends AstUnaryNode {
 				throw new NullPointerException(String.format("Undefined symbol '%s'", this.symbol.getName()));
 			}
 		}
+		Object[] args = this.arguments.stream()
+				.map(arg -> arg.run(interpreter))
+				.toArray();
+
 		this.callback = callback;
-		this.returnValue = callback.call(arguments.stream().map(AstNode::value).toArray(Object[]::new));
+		Object returnValue = callback.call(args);
 
 		if (this.reference instanceof AstFunctionCallNode){
-			((AstFunctionCallNode) this.reference).setBackReference(this.returnValue);
+			((AstFunctionCallNode) this.reference).setBackReference(returnValue);
 		} else if (this.reference instanceof AstObjectReferenceNode){
-			((AstObjectReferenceNode) this.reference).setBackReference(this.returnValue);
+			((AstObjectReferenceNode) this.reference).setBackReference(returnValue);
 		}
+
 		if (this.reference instanceof AstNode) {
-			((AstNode) this.reference).run(interpreter);
-			this.returnValue = ((AstNode) this.reference).value();
+			returnValue = ((AstNode)this.reference).run(interpreter);
 		}
+
+		return returnValue;
 	}
 
 	private Method getMethod(Class<?> clazz, String methodName, Object[] args) throws NoSuchMethodException {
@@ -143,10 +143,4 @@ public class AstFunctionCallNode extends AstUnaryNode {
 		}
 		return true;
 	}
-
-	@Override
-	public Object value() {
-		return returnValue;
-	}
-
 }

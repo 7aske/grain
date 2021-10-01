@@ -4,31 +4,25 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstSymbolNode extends AstNode {
-	String name;
-	Object value;
+	String symbolName;
 
 	public AstSymbolNode() {
 	}
 
 	public AstSymbolNode(String name) {
-		this.name = name;
+		this.symbolName = name;
 	}
 
 	public String getName() {
-		return name;
+		return symbolName;
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.symbolName = name;
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		value = interpreter.getSymbolValue(name);
-	}
-
-	@Override
-	public Object value() {
-		return value;
+	public Object run(Interpreter interpreter) {
+		return interpreter.getSymbolValue(symbolName);
 	}
 }

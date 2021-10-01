@@ -25,15 +25,9 @@ public class AstArithmeticNode extends AstBinaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		this.left.run(interpreter);
-		this.right.run(interpreter);
-	}
-
-	@Override
-	public Object value() {
-		Object leftValue = left.value();
-		Object rightValue = right.value();
+	public Object run(Interpreter interpreter) {
+		Object leftValue = left.run(interpreter);
+		Object rightValue = right.run(interpreter);
 		boolean stringOperation = leftValue instanceof String || rightValue instanceof String;
 
 		if (stringOperation) {

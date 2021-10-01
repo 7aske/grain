@@ -4,7 +4,6 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstObjectReferenceNode extends AstSymbolNode {
-	Object value;
 	private AstNode reference;
 	private Object backReference;
 	private String name;
@@ -48,31 +47,31 @@ public class AstObjectReferenceNode extends AstSymbolNode {
 		return this.reference;
 	}
 
+	// TODO: refactor
 	@Override
-	public void run(Interpreter interpreter) {
+	public Object run(Interpreter interpreter) {
+		Object value = null;
 		if (this.backReference == null) {
-			this.value = interpreter.getSymbolValue(this.name);
+			value = interpreter.getSymbolValue(this.name);
 		} else {
-			if (this.backReference instanceof AstObjectReferenceNode && ((AstObjectReferenceNode) this.backReference).value != null) {
+			if (this.backReference instanceof AstObjectReferenceNode) {
+				Object backReferenceValue = ((AstObjectReferenceNode) this.backReference).run(interpreter);
 				try {
-					this.value = ((AstObjectReferenceNode) this.backReference).value.getClass().getField(this.name).get(((AstObjectReferenceNode) this.backReference).value);
+					value = backReferenceValue.getClass().getField(this.name).get(backReferenceValue);
 				} catch (IllegalAccessException | NoSuchFieldException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		}
 
 		if (this.reference instanceof AstObjectReferenceNode) {
-			((AstObjectReferenceNode) this.reference).setBackReference(this);
-			this.reference.run(interpreter);
+			((AstObjectReferenceNode) this.reference).setBackReference(value);
+			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstFunctionCallNode) {
-			((AstFunctionCallNode) this.reference).setBackReference(this.value);
-			this.reference.run(interpreter);
+			((AstFunctionCallNode) this.reference).setBackReference(value);
+			value = this.reference.run(interpreter);
 		}
-	}
 
-	@Override
-	public Object value() {
-		return this.reference.value();
+		return value;
 	}
 }

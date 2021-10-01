@@ -19,13 +19,20 @@ public class Interpreter {
 		this.scopeStack.push(new HashMap<>());
 		this.output = new InterpreterOutput();
 		this.scopeStack.getFirst().put("print", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
-			write(args[0] == null ? "null" : args[0].toString());
-			return null;
+			String value = (args[0] == null ? "null" : args[0].toString());
+			write(value);
+			return value;
 		});
 		this.scopeStack.getFirst().put("println", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
-			write(args[0] == null ? "null" : args[0].toString());
-			write("<br/>");
-			return null;
+			String value = (args[0] == null ? "null" : args[0].toString()) + "<br/>";
+			write(value);
+			return value;
+		});
+
+		this.scopeStack.getFirst().put("printf", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+			String value = String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length));
+			write(value);
+			return value;
 		});
 	}
 
@@ -95,8 +102,6 @@ public class Interpreter {
 			}
 		}
 
-		if (o instanceof AstNode)
-			return ((AstNode) o).value();
 		return o;
 	}
 
@@ -105,11 +110,11 @@ public class Interpreter {
 	}
 
 	public Object run() {
+		Object value = null;
 		for (AstNode node : this.nodes) {
-			node.run(this);
+			value = node.run(this);
 		}
-		if (nodes.isEmpty()) return null;
-		return nodes.get(nodes.size() - 1).value();
+		return value;
 	}
 
 	Optional<Class<?>> tryLoadClass(String classPath) {

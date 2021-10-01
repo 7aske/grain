@@ -37,18 +37,15 @@ public class AstEqualityNode extends AstBinaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		left.run(interpreter);
-		right.run(interpreter);
-	}
+	public Object run(Interpreter interpreter) {
+		Object leftValue = left.run(interpreter);
+		Object rightValue = right.run(interpreter);
 
-	@Override
-	public Object value() {
 		switch (this.operator) {
 			case EQ:
-				return Objects.equals(left.value(),right.value());
+				return Objects.equals(leftValue, rightValue);
 			case NE:
-				return !Objects.equals(left.value(),right.value());
+				return !Objects.equals(leftValue, rightValue);
 
 		}
 		throw new IllegalStateException("Unknown operator value " + operator);

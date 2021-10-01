@@ -32,15 +32,11 @@ public class AstRootNode extends AstUnaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
+	public Object run(Interpreter interpreter) {
+		Object value = null;
 		for (AstNode node : this.getNodes()) {
-			node.run(interpreter);
+			value = node.run(interpreter);
 		}
-	}
-
-	@Override
-	public Object value() {
-		if (nodes.isEmpty()) return null;
-		return nodes.get(nodes.size() - 1).value();
+		return value;
 	}
 }

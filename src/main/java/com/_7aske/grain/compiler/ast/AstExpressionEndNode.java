@@ -9,12 +9,7 @@ public class AstExpressionEndNode extends AstNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-
-	}
-
-	@Override
-	public Object value() {
-		return null;
+	public Object run(Interpreter interpreter) {
+		return this;
 	}
 }

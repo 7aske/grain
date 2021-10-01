@@ -40,22 +40,18 @@ public class AstIfNode extends AstTernaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		this.condition.run(interpreter);
-		if ((Boolean) value() && this.getIfTrue() != null){
+	public Object run(Interpreter interpreter) {
+		Object value = null;
+		Object conditionValue = this.condition.run(interpreter);
+		if ((Boolean) conditionValue && this.getIfTrue() != null){
 			interpreter.pushScope();
-			this.getIfTrue().run(interpreter);
+			value = this.getIfTrue().run(interpreter);
 			interpreter.popScope();
 		} else if (getIfFalse() != null) {
 			interpreter.pushScope();
-			this.getIfFalse().run(interpreter);
+			value = this.getIfFalse().run(interpreter);
 			interpreter.popScope();
 		}
+		return value;
 	}
-
-	@Override
-	public Object value() {
-		return this.condition.value();
-	}
-
 }

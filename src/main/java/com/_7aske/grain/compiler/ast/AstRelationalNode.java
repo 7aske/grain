@@ -48,15 +48,9 @@ public class AstRelationalNode extends AstBinaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		left.run(interpreter);
-		right.run(interpreter);
-	}
-
-	@Override
-	public Object value() {
-		Double leftValue = Double.parseDouble(String.valueOf(this.left.value()));
-		Double rightValue = Double.parseDouble(String.valueOf(this.right.value()));
+	public Object run(Interpreter interpreter) {
+		double leftValue = Double.parseDouble(String.valueOf(left.run(interpreter)));
+		double rightValue = Double.parseDouble(String.valueOf(right.run(interpreter)));
 		switch (this.operator) {
 			case GT:
 				return leftValue > rightValue;

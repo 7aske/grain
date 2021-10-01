@@ -154,6 +154,14 @@ class ParserTest {
 		assertTrue(((AstImportNode) ((AstRootNode) astNode).getNodes().get(0)).getNode() instanceof AstLiteralNode);
 	}
 
+	@Test
+	void test_break(){
+		String code = "if (true) { break; }";
+		Parser parser = new Parser(new Lexer(code));
+		AstNode astNode = parser.parse();
+		printAst(astNode, 0);
+	}
+
 	void printAst(List<AstNode> asts, int depth) {
 		for (AstNode ast : asts) {
 			for (int i = 0; i < depth; ++i) System.out.print("    ");

@@ -1,7 +1,6 @@
 package com._7aske.grain.compiler.interpreter;
 
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
-import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import org.junit.jupiter.api.Disabled;
@@ -242,7 +241,7 @@ class InterpreterTest {
 		interpreter.putSymbol("a", list);
 		interpreter.run();
 		List<Object> newList = (List<Object>) interpreter.getSymbolValue("a");
-		assertEquals("g", ((AstNode) newList.get(0)).value());
+		assertEquals("g", (newList.get(0)));
 	}
 
 	@Test
@@ -310,5 +309,21 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.run();
 		assertEquals("aaa", interpreter.getContent());
+	}
+
+	@Test
+	void test_forLoopBreak() {
+		String code = "for (i = 0; i < 10; i = i + 1) { if (i == 5) {break;} else { 1; } dbg(i, i); print('a'); }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		assertEquals("aaaaa", interpreter.getContent());
+	}
+
+	@Test
+	void test_forLoopContinue() {
+		String code = "for (i = 0; i < 10; i = i + 1) { if (i % 2 == 0) { continue; } print(i); }";
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.run();
+		assertEquals("13579", interpreter.getContent());
 	}
 }

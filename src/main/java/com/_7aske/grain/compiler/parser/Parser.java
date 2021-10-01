@@ -52,7 +52,7 @@ public class Parser {
 			node = parseEqualityNode(iter.next(), node);
 		} else if (iter.isPeekOfType(GT, LT, GE, LE)) {
 			node = parseRelationalNode(iter.next(), node);
-		} else if (iter.isPeekOfType(ADD, SUB, DIV, DIV, MUL)) {
+		} else if (iter.isPeekOfType(ADD, SUB, DIV, MOD, MUL)) {
 			node = parseArithmeticNode(iter.next(), node);
 		} else if (iter.isPeekOfType(ASSN)) {
 			node = parseAssignmentNode(iter.next(), node);
@@ -322,12 +322,10 @@ public class Parser {
 				break;
 			case FOR:
 				return new AstForNode();
-			case IN:
-				break;
 			case CONTINUE:
-				break;
+				return new AstContinueNode();
 			case BREAK:
-				break;
+				return new AstBreakNode();
 			case TRUE:
 			case FALSE:
 				return new AstLiteralNode(AstLiteralType.BOOLEAN, token.getValue());
@@ -354,36 +352,10 @@ public class Parser {
 			case GE:
 			case LE:
 				return new AstRelationalNode(AstRelationalOperator.from(token.getType()));
-			case INC:
-				break;
-			case DEC:
-				break;
-			case DOT:
-				break;
-			case COMMA:
-				break;
-			case SPACE:
-				break;
-			case TAB:
-				break;
-			case LF:
-				break;
 			case SCOL:
 				return new AstExpressionEndNode();
-			case LPAREN:
-				break;
-			case RPAREN:
-				break;
 			case LBRACE:
 				return new AstBlockNode();
-			case RBRACE:
-				break;
-			case LBRACK:
-				break;
-			case RBRACK:
-				break;
-			case INVALID:
-				break;
 			case IMPORT:
 				return new AstImportNode();
 			case _END:

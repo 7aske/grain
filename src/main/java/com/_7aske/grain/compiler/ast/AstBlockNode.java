@@ -1,5 +1,6 @@
 package com._7aske.grain.compiler.ast;
 
+import com._7aske.grain.compiler.ast.basic.AstFlowControlNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
@@ -31,17 +32,15 @@ public class AstBlockNode extends AstNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
+	public Object run(Interpreter interpreter) {
+		Object value = null;
 		interpreter.pushScope();
 		for (AstNode node: this.getNodes()) {
-			node.run(interpreter);
+			value = node.run(interpreter);
+			if (value instanceof AstFlowControlNode)
+				break;
 		}
 		interpreter.popScope();
-	}
-
-	@Override
-	public Object value() {
-		if (nodes.isEmpty()) return null;
-		return nodes.get(nodes.size() - 1).value();
+		return value;
 	}
 }

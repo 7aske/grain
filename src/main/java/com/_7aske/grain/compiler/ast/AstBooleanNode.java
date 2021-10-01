@@ -34,18 +34,14 @@ public class AstBooleanNode extends AstBinaryNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
-		left.run(interpreter);
-		right.run(interpreter);
-	}
-
-	@Override
-	public Object value() {
+	public Object run(Interpreter interpreter) {
+		Object leftValue = left.run(interpreter);
+		Object rightValue = right.run(interpreter);
 		switch (operator) {
 			case AND:
-				return Boolean.parseBoolean(String.valueOf(left.value())) && Boolean.parseBoolean(String.valueOf(right.value()));
+				return Boolean.parseBoolean(String.valueOf(leftValue)) && Boolean.parseBoolean(String.valueOf(rightValue));
 			case OR:
-				return Boolean.parseBoolean(String.valueOf(left.value())) || Boolean.parseBoolean(String.valueOf(right.value()));
+				return Boolean.parseBoolean(String.valueOf(leftValue)) || Boolean.parseBoolean(String.valueOf(rightValue));
 		}
 		throw new IllegalStateException("Unknown operator value " + operator);
 	}

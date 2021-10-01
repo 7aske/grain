@@ -52,27 +52,32 @@ public class AstForNode extends AstNode {
 	}
 
 	@Override
-	public void run(Interpreter interpreter) {
+	public Object run(Interpreter interpreter) {
+		Object value = null;
 		interpreter.pushScope();
 		if (this.getInitialization() != null)
 			this.getInitialization().run(interpreter);
+		boolean shouldSkip = false;
 		while (evaluateCondition(interpreter)) {
-			this.getBody().run(interpreter);
+			if (shouldSkip) {
+				shouldSkip = false;
+				continue;
+			}
+			value = this.getBody().run(interpreter);
+			if (value instanceof AstContinueNode)
+				shouldSkip = true;
+			if (value instanceof AstBreakNode)
+				break;
 			if (this.getIncrement() != null)
 				this.getIncrement().run(interpreter);
 		}
 		interpreter.popScope();
+		return value;
 	}
 
 	private Boolean evaluateCondition(Interpreter interpreter) {
 		if (this.getCondition() == null) return true;
-		this.getCondition().run(interpreter);
-		return (Boolean) this.getCondition().value();
+		Object value = this.getCondition().run(interpreter);
+		return (Boolean) value;
 	}
-
-	@Override
-	public Object value() {
-		return this.condition.value();
-	}
-
 }
