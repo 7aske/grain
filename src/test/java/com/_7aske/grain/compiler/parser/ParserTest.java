@@ -7,7 +7,6 @@ import com._7aske.grain.compiler.ast.basic.AstTernaryNode;
 import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
-import com._7aske.grain.http.view.DataView;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -112,30 +111,6 @@ class ParserTest {
 		assertEquals("login", interpreter.getSymbolValue("a"));
 	}
 
-
-	@Test
-	void test_dataView() {
-		DataView dataView = new DataView("index.html");
-		dataView.setData("username", "user1");
-		String content = dataView.getContent();
-		System.out.println(content);
-	}
-
-
-	@Test
-	void test_forLoop() {
-		String code = "for (a = 0; a < 10; a = a + 1) { print(a); }";
-		Interpreter interpreter = new Interpreter(code, null);
-		interpreter.run();
-	}
-
-	@Test
-	void test_forLoopDecrement() {
-		String code = "for (a = 10; a > 0; a = a - 1) { print(a); }";
-		Interpreter interpreter = new Interpreter(code, null);
-		interpreter.run();
-	}
-
 	@Test
 	void test_objectReference() {
 		String code = "context.request.headers();";
@@ -160,6 +135,14 @@ class ParserTest {
 		Parser parser = new Parser(new Lexer(code));
 		AstNode astNode = parser.parse();
 		printAst(astNode, 0);
+	}
+
+	@Test
+	void test_unaryMinus() {
+		String code = "a = -1 + 1; b = 1 + -1; c = 1 + -(1+1)";
+		Parser parser = new Parser(new Lexer(code));
+		AstNode program = parser.parse();
+		printAst(program, 0);
 	}
 
 	void printAst(List<AstNode> asts, int depth) {

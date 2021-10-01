@@ -326,4 +326,25 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("13579", interpreter.getContent());
 	}
+
+	@Test
+	void test_forLoopDecrement() {
+		String code = "for (a = 10; a > 0; a = a - 1) { print('a'); }";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("aaaaaaaaaa", interpreter.getContent());
+	}
+
+	@Test
+	void test_unaryMinusPlus() {
+		String code = "a = -1 + 1; b = 1 + -1; c = 1 + -(1+1); d = 1-+1; e = +1;";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals(0, interpreter.getSymbolValue("a"));
+		assertEquals(0, interpreter.getSymbolValue("b"));
+		assertEquals(-1, interpreter.getSymbolValue("c"));
+		assertEquals(0, interpreter.getSymbolValue("d"));
+		assertEquals(1, interpreter.getSymbolValue("e"));
+	}
+
 }

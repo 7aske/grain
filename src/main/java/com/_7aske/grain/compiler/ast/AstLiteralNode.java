@@ -24,6 +24,14 @@ public class AstLiteralNode extends AstUnaryNode {
 		this.value = value;
 	}
 
+	public AstLiteralType getType() {
+		return type;
+	}
+
+	public void setType(AstLiteralType type) {
+		this.type = type;
+	}
+
 	@Override
 	public Object run(Interpreter _ignored) {
 		if (type == AstLiteralType.BOOLEAN) {

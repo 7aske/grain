@@ -109,19 +109,33 @@ public class Parser {
 			node = parseExpression();
 		} else if (curr.isOfType(IMPORT)) {
 			node = parseImportStatement(curr);
+		} else if (curr.isOfType(ADD)) {
+			node = parseSubExpression(precedance);
+		} else if (curr.isOfType(SUB)) {
+			node = parseMinus();
+		} else if (curr.isOfType(NOT)) {
+			AstNotNode astNotNode = (AstNotNode) createNode(curr);
+			AstNode parsed = parseSubExpression(AstNotNode.PRECEDENCE);
+			astNotNode.setNode(parsed);
+			node = astNotNode;
 		} else {
-			if (curr.isOfType(NOT)) {
-				AstNotNode astNotNode = (AstNotNode) createNode(curr);
-				AstNode parsed = parseSubExpression(AstNotNode.PRECEDENCE);
-				astNotNode.setNode(parsed);
-				node = astNotNode;
-			} else {
-				node = createNode(curr);
-			}
+			node = createNode(curr);
 		}
 
 		parsedStack.push(node);
 		return node;
+	}
+
+	private AstNode parseMinus() {
+		AstMinusNode astMinusNode = new AstMinusNode();
+		AstNode parsed;
+		if (iter.isPeekOfType(LPAREN)) {
+			parsed = parseSubExpression(AstMinusNode.PRECEDENCE);
+		} else {
+			parsed = createNode(iter.next());
+		}
+		astMinusNode.setNode(parsed);
+		return astMinusNode;
 	}
 
 	private AstNode parseImportStatement(Token curr) {
