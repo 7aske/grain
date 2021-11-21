@@ -1,5 +1,7 @@
 package com._7aske.grain.component;
 
+import com._7aske.grain.GrainApp;
+import com._7aske.grain.orm.model.Model;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -32,6 +34,7 @@ class GrainRegistryTest {
 	@Test
 	void test_grainRegistry() {
 		GrainRegistry registry = new GrainRegistry();
+		registry.registerGrains(GrainApp.class.getPackageName());
 		TestController controller = registry.getGrain(TestController.class);
 		assertDoesNotThrow(controller::doSomething);
 	}

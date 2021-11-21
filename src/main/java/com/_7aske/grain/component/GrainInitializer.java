@@ -9,32 +9,66 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.getBestConstructor;
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.util.ReflectionUtil.*;
 
 public class GrainInitializer {
-	private final Map<Class<?>, Object> instances = new HashMap<>();
-	private final List<Dependency> dependencies;
+	private final Set<Dependency> dependencies;
 
-	public GrainInitializer(Set<Class<?>> grains) {
-		this.dependencies = grains.stream()
-				.map(g -> {
-					try {
-						return new Dependency(g);
-					} catch (NoSuchMethodException ex) {
-						throw new GrainInitializationException(String.format("Unable to find constructor for %s", g), ex);
-					}
-				})
-				.collect(Collectors.toList());
+	public GrainInitializer() {
+		this.dependencies = new HashSet<>();
+	}
 
+	public Map<Class<?>, Object> initialize(Set<Class<?>> classes) {
+		this.dependencies.addAll(classes.stream().map(Dependency::new).collect(Collectors.toList()));
+		this.dependencies.forEach(this::initializeConstructors);
 		this.dependencies.forEach(this::loadOwnDependencies);
 		this.dependencies.forEach(this::lazyInitialize);
 		this.dependencies.forEach(this::initializeSkippedFields);
-		this.dependencies.forEach(dep -> instances.put(dep.clazz, dep.instance));
-		this.dependencies.clear();
+		return this.dependencies.stream().collect(Collectors.toMap(Dependency::getClazz, Dependency::getInstance));
+	}
+
+	public Object addInitialized(Object object) {
+		Dependency dependency = new Dependency(object.getClass());
+		dependency.instance = object;
+		dependency.visited = true;
+		dependency.initialized = true;
+		this.dependencies.add(dependency);
+		return object;
+	}
+
+	private void initializeConstructors(Dependency dependency) {
+		try {
+			if (dependency.clazz.isInterface()) {
+				Dependency resolved = dependencies.stream()
+						.filter(dep -> {
+							if (dep.clazz.equals(dependency.clazz)) return false;
+							return haveCommonInterfaces(dep.clazz, dependency.clazz);
+						})
+						.findFirst()
+						.orElseThrow(NoSuchMethodException::new);
+				dependency.constructor = resolved.constructor;
+				dependency.params = resolved.params;
+			} else {
+				dependency.constructor = getBestConstructor(dependency.clazz);
+				dependency.params = dependency.constructor.getParameterTypes();
+			}
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Object initialize(Class<?> clazz) {
+			Dependency dependency = new Dependency(clazz);
+			this.initializeConstructors(dependency);
+			this.loadOwnDependencies(dependency);
+			this.lazyInitialize(dependency);
+			this.initializeSkippedFields(dependency);
+			this.dependencies.add(dependency);
+			return dependency.instance;
 	}
 
 	private void loadOwnDependencies(Dependency dependency) {
+		if (dependency.initialized) return;
 		try {
 			Dependency[] deps = mapParamsToDependencies(dependency, this.dependencies);
 			if (Arrays.stream(deps).anyMatch(Objects::isNull)) {
@@ -53,14 +87,10 @@ public class GrainInitializer {
 			field.setAccessible(true);
 			try {
 				if (field.get(dep.instance) == null && (isAnnotationPresent(field, Inject.class) || (isConstructorParam(dep.constructor, field.getType())))) {
-					Optional<Dependency> dependencyOptional = findDependencyByClass(field.getType());
-					if (dependencyOptional.isPresent()) {
-						Dependency dependency = dependencyOptional.get();
-						lazyInitialize(dependency);
-						field.set(dep.instance, dependency.instance);
-					} else {
-						throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz));
-					}
+					Dependency dependency = findDependencyByClass(field.getType())
+							.orElseThrow(() -> new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s: %s", dep.clazz, field.getType())));
+					lazyInitialize(dependency);
+					field.set(dep.instance, dependency.instance);
 				}
 			} catch (IllegalAccessException e) {
 				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);
@@ -76,7 +106,7 @@ public class GrainInitializer {
 	private Optional<Dependency> findDependencyByClass(Class<?> clazz) {
 		return dependencies.stream().filter(d -> {
 			if (clazz.isInterface()) {
-				return Arrays.asList(d.clazz.getInterfaces()).contains(clazz);
+				return Arrays.asList(d.clazz.getInterfaces()).contains(clazz) || d.clazz.equals(clazz);
 			} else {
 				return d.clazz.equals(clazz);
 			}
@@ -84,7 +114,7 @@ public class GrainInitializer {
 	}
 
 	private void lazyInitialize(Dependency dep) {
-		if (dep.visited) return;
+		if (dep.visited || dep.initialized) return;
 		dep.visited = true;
 		if (dep.instance == null) {
 			try {
@@ -96,13 +126,14 @@ public class GrainInitializer {
 					realParams[i] = deps[i].instance;
 				}
 				dep.instance = dep.constructor.newInstance(realParams);
+				dep.initialized = true;
 			} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 				throw new GrainInitializationException(String.format("Could not instantiate grain %s.", dep.clazz), e);
 			}
 		}
 	}
 
-	private Dependency[] mapParamsToDependencies(Class<?>[] params, List<Dependency> allDependencies) {
+	private Dependency[] mapParamsToDependencies(Class<?>[] params, Set<Dependency> allDependencies) {
 		return Arrays.stream(params)
 				.map(param -> {
 					if (param.isInterface()) {
@@ -120,37 +151,39 @@ public class GrainInitializer {
 				.toArray(Dependency[]::new);
 	}
 
-	private Dependency[] mapParamsToDependencies(Dependency dependency, List<Dependency> allDependencies) throws NoSuchMethodException {
-		return mapParamsToDependencies(getBestConstructor(dependency.clazz).getParameterTypes(), allDependencies);
-	}
-
-	public Map<Class<?>, Object> getLoaded() {
-		try {
-			return new HashMap<>(instances);
-		} finally {
-			instances.clear();
-		}
+	private Dependency[] mapParamsToDependencies(Dependency dependency, Set<Dependency> allDependencies) throws NoSuchMethodException {
+		return mapParamsToDependencies(dependency.constructor.getParameterTypes(), allDependencies);
 	}
 
 	private static final class Dependency {
 		boolean visited;
+		boolean initialized;
 		Class<?> clazz;
 		Constructor<?> constructor;
 		Class<?>[] params;
 		Object instance;
 		List<Dependency> dependencies;
 
-		public Dependency(Class<?> clazz) throws NoSuchMethodException {
+		public Dependency(Class<?> clazz) {
 			this(clazz, new ArrayList<>());
 		}
 
-		public Dependency(Class<?> clazz, List<Dependency> dependencies) throws NoSuchMethodException {
-			this.constructor = getBestConstructor(clazz);
-			this.params = constructor.getParameterTypes();
+		public Dependency(Class<?> clazz, List<Dependency> dependencies) {
+			this.constructor = null;
+			this.params = null;
 			this.clazz = clazz;
 			this.dependencies = dependencies;
 			this.visited = false;
 			this.instance = null;
+			this.initialized = false; // for manually initialized grains
+		}
+
+		public Class<?> getClazz() {
+			return clazz;
+		}
+
+		public Object getInstance() {
+			return instance;
 		}
 	}
 }

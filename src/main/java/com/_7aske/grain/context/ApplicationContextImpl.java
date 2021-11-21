@@ -1,13 +1,11 @@
 package com._7aske.grain.context;
 
+import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.GrainRegistry;
-import com._7aske.grain.config.GrainApplication;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import com._7aske.grain.util.classloader.GrainClassLoader;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class ApplicationContextImpl implements ApplicationContext {
 	private final GrainRegistry grainRegistry;
@@ -16,15 +14,11 @@ public class ApplicationContextImpl implements ApplicationContext {
 
 	public ApplicationContextImpl(String basePackage) {
 		this.basePackage = basePackage;
-		GrainClassLoader classLoader = new GrainClassLoader(this.basePackage);
-		Set<Class<?>> classes = classLoader.loadClasses(c -> c.isAnnotationPresent(GrainApplication.class));
-		List<String> packages = classes.stream().map(Class::getPackageName).collect(Collectors.toList());
+		GrainClassLoader classLoader = new GrainClassLoader(basePackage);
+		grainRegistry = new GrainRegistry();
+		staticLocationsRegistry = new StaticLocationsRegistry();
 
-		if (basePackage != null)
-			packages.add(basePackage);
-
-		this.grainRegistry = new GrainRegistry(packages.toArray(new String[0]));
-		this.staticLocationsRegistry = new StaticLocationsRegistry();
+		grainRegistry.registerGrains(classLoader.loadClasses(cl -> isAnnotationPresent(cl, Grain.class)));
 	}
 
 	@Override

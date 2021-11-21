@@ -5,6 +5,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 
 public class ReflectionUtil {
 	private ReflectionUtil() {}
@@ -38,14 +39,26 @@ public class ReflectionUtil {
 		throw cause;
 	}
 
+	public static boolean haveCommonInterfaces(Class<?> clazz1, Class<?> clazz2){
+		List<Class<?>> interfaces1 = Arrays.asList(clazz1.getInterfaces());
+		List<Class<?>> interfaces2 = Arrays.asList(clazz2.getInterfaces());
+		if (clazz2.isInterface()) return interfaces1.contains(clazz2);
+		if (clazz1.isInterface()) return interfaces2.contains(clazz1);
+		return interfaces1.stream().anyMatch(interfaces2::contains);
+	}
+
 	public static <T> Constructor<T> getBestConstructor(Class<T> clazz) throws NoSuchMethodException {
+		try {
+			return getAnyConstructor(clazz);
+		} catch (NoSuchMethodException ignored) {
+		}
 		Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
 		if (constructors.length == 0)
 			constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
-		if (constructors.length == 0)
-			return getAnyConstructor(clazz);
 		for (Constructor<T> c : constructors)
 			c.setAccessible(true);
+		if (constructors.length == 0)
+			throw new NoSuchMethodException();
 		if (constructors.length == 1)
 			return constructors[0];
 		Arrays.sort(constructors, (Comparator.comparingInt(Constructor::getParameterCount)));

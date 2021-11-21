@@ -1,8 +1,8 @@
 package com._7aske.grain.component;
 
-import com._7aske.grain.GrainApp;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.requesthandler.middleware.Middleware;
+import com._7aske.grain.util.ReflectionUtil;
 import com._7aske.grain.util.classloader.GrainClassLoader;
 
 import java.util.*;
@@ -12,22 +12,19 @@ import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class GrainRegistry {
 	private final Map<Class<?>, Object> grains = new HashMap<>();
-	private final String[] packages;
+	private final GrainInitializer grainInitializer;
 
-	public GrainRegistry(String... packages) {
-		if (packages.length == 0)
-			packages = new String[]{GrainApp.class.getPackageName()};
-		this.packages = packages;
-		doInitializeGrains();
+	public GrainRegistry() {
+		this.grainInitializer = new GrainInitializer();
 	}
 
-	private void doInitializeGrains() {
-		for (String basePackage : packages) {
-			Set<Class<?>> grainClasses = new GrainClassLoader(basePackage)
-					.loadClasses(c -> isAnnotationPresent(c, Grain.class));
-			grains.putAll(new GrainInitializer(grainClasses).getLoaded());
-		}
+	public void registerGrains(String basePkg) {
+		grains.putAll(grainInitializer.initialize(new GrainClassLoader(basePkg)
+				.loadClasses(cl -> ReflectionUtil.isAnnotationPresent(cl, Grain.class))));
+	}
 
+	public void registerGrains(Set<Class<?>> grainClasses) {
+		grains.putAll(grainInitializer.initialize(grainClasses));
 	}
 
 	public Set<Object> getControllers() {
@@ -51,6 +48,16 @@ public class GrainRegistry {
 				.collect(Collectors.toSet());
 	}
 
+	public void registerGrain(Class<?> clazz) {
+		if (!isAnnotationPresent(clazz, Grain.class)) {
+			throw new GrainRuntimeException(String.format("%s must be annotated with @Grain", clazz));
+		}
+		if (grains.containsKey(clazz)) {
+			throw new GrainRuntimeException(String.format("%s is already registered as a Grain", clazz));
+		}
+		grains.put(clazz, grainInitializer.initialize(clazz));
+	}
+
 	public void registerGrain(Object object) {
 		if (!isAnnotationPresent(object.getClass(), Grain.class)) {
 			throw new GrainRuntimeException(String.format("%s must be annotated with @Grain", object.getClass()));
@@ -58,6 +65,6 @@ public class GrainRegistry {
 		if (grains.containsKey(object.getClass())) {
 			throw new GrainRuntimeException(String.format("%s is already registered as a Grain", object.getClass()));
 		}
-		grains.put(object.getClass(), object);
+		grains.put(object.getClass(), grainInitializer.addInitialized(object));
 	}
 }
