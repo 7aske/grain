@@ -46,6 +46,9 @@ public abstract class GrainApp {
 		this.doConfigure();
 		// initialize/reload context
 		this.context = new ApplicationContextImpl(basePackage, configuration, staticLocationsRegistry);
+		// After initializing the application context we set it to the holder to make it
+		// available for use in other classes that are not available for dependency injection.
+		ApplicationContextHolder.setContext(this.context);
 	}
 
 	// Main run loop

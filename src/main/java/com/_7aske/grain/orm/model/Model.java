@@ -1,8 +1,13 @@
 package com._7aske.grain.orm.model;
 
+import com._7aske.grain.ApplicationContextHolder;
+import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.Id;
 import com._7aske.grain.orm.annotation.Table;
+import com._7aske.grain.orm.database.DatabaseExecutor;
+import com._7aske.grain.orm.querybuilder.QueryBuilder;
+import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
@@ -15,6 +20,11 @@ import java.util.stream.Collectors;
  * queries.
  */
 public class Model {
+	// @Temporary this should be injected through the dependency injection mechanism
+	// instead of relying on this hack.
+	private final ApplicationContext context = ApplicationContextHolder.getContext();
+	private final QueryBuilder queryBuilder;
+
 	Table table;
 	List<Field> fields;
 	List<Field> ids;
@@ -28,6 +38,7 @@ public class Model {
 		fields = Arrays.stream(getClass().getDeclaredFields())
 				.filter(f -> ReflectionUtil.isAnnotationPresent(f, Column.class))
 				.collect(Collectors.toList());
+		queryBuilder = new SqlQueryBuilder(this);
 	}
 
 	Table getTable() {
@@ -42,22 +53,32 @@ public class Model {
 		return ids;
 	}
 
+	protected DatabaseExecutor getDatabaseExecutor() {
+		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
+	}
+
+	// @Incomplete
 	public static Model findById(Object id) {
 		return null;
 	}
 
+	// @Incomplete
 	public static List<Model> findAll() {
 		return null;
 	}
 
+	// @Incomplete missing mapping of result set to inserted model
 	public Model save() {
+		getDatabaseExecutor().executeQuery(queryBuilder.getInsertQuery());
 		return null;
 	}
 
+	// @Incomplete
 	public Model update() {
 		return null;
 	}
 
+	// @Incomplete
 	public void delete() {
 
 	}
