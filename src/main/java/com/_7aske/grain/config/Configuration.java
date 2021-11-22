@@ -1,50 +1,61 @@
 package com._7aske.grain.config;
 
+import com._7aske.grain.component.Grain;
+
+import java.util.Properties;
+
+import static com._7aske.grain.config.ConfigurationKey.*;
 import static com._7aske.grain.constants.ServerConstants.PORT_MAX_VALUE;
 import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 
+@Grain
 public class Configuration {
-	private int port = 8080;
-	private String host = "0.0.0.0";
-	private int threads = 100;
+	private Properties properties;
 
-	private Configuration(){}
+	private Configuration(){
+		properties = new Properties();
+		properties.put(SERVER_HOST, "0.0.0.0");
+		properties.put(SERVER_PORT, 8080);
+		properties.put(SERVER_THREADS, 100);
+	}
 
 	public static Configuration createDefault() {
 		return new Configuration();
 	}
 
-	public Configuration(Configuration other) {
-		this.port = other.port;
-		this.host = other.host;
-		this.threads = other.threads;
+	public Properties getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Properties properties) {
+		this.properties = properties;
 	}
 
 	public int getThreads() {
-		return threads;
+		return (int) properties.get(SERVER_THREADS);
 	}
 
 	public void setThreads(int threads) {
 		if (threads < 1)
 			throw new IllegalArgumentException("Thread count must not be less than 1");
-		this.threads = threads;
+		this.properties.put(SERVER_THREADS, threads);
 	}
 
 	public int getPort() {
-		return port;
+		return (int) properties.get(SERVER_PORT);
 	}
 
 	public void setPort(int port) {
 		if (port < PORT_MIN_VALUE || port > PORT_MAX_VALUE)
 			throw new IllegalArgumentException(String.format("Port must be between %d and %d", PORT_MIN_VALUE, PORT_MAX_VALUE));
-		this.port = port;
+		this.properties.put(SERVER_PORT, port);
 	}
 
 	public String getHost() {
-		return host;
+		return (String) properties.get(SERVER_HOST);
 	}
 
 	public void setHost(String host) {
-		this.host = host;
+		this.properties.put(SERVER_HOST, host);
 	}
 }

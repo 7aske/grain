@@ -4,13 +4,17 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StaticLocationsRegistry  {
+public class StaticLocationsRegistry {
 	public static final String RESOURCES_PREFIX = "resources:";
 	private final List<String> locations = new ArrayList<>();
 
-	public StaticLocationsRegistry() {
+	private StaticLocationsRegistry() {
 		locations.add("resources:/static");
 		locations.add("resources:/public");
+	}
+
+	public static StaticLocationsRegistry createDefault() {
+		return new StaticLocationsRegistry();
 	}
 
 	public void addStaticLocation(String path) {

@@ -29,8 +29,6 @@ public class ConfigurationBuilder {
 	}
 
 	public Configuration build() {
-		Configuration configuration = new Configuration(this.instance);
-		this.instance = null;
-		return configuration;
+		return instance;
 	}
 }

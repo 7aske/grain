@@ -17,10 +17,16 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Main Application class responsible for setting up the application context
+ * and providing configuration utilities for its derived classes. In user
+ * defined application there should be a class that inherits this one and that gets
+ * passed to GrainApplicationRunner
+ */
 @GrainApplication
 public abstract class GrainApp {
 	private Configuration configuration;
-	private String basePackage;
+	private StaticLocationsRegistry staticLocationsRegistry;
 	private boolean running = true;
 	private ApplicationContext context;
 
@@ -29,13 +35,22 @@ public abstract class GrainApp {
 	protected GrainApp() {
 	}
 
+	// Package-private method that should be called from GrainAppRunner class
 	final void run() {
-		doConfigure();
 		doRun();
 	}
 
+	// Must be called in order to initialize application context with all
+	// required parameters and allow proper injection of configuration object
+	final void initialize(String basePackage) {
+		this.doConfigure();
+		// initialize/reload context
+		this.context = new ApplicationContextImpl(basePackage, configuration, staticLocationsRegistry);
+	}
+
+	// Main run loop
 	private void doRun() {
-		// TODO: replace with logger
+		// @Refactor replace with logger
 		System.err.printf("Started Grain application on %s:%d%n", configuration.getHost(), configuration.getPort());
 
 		ExecutorService executor = Executors.newFixedThreadPool(configuration.getThreads());
@@ -54,21 +69,22 @@ public abstract class GrainApp {
 		}
 	}
 
+	// Calling of all configuration methods should happen here as this method is being called
+	// before initializing application context
 	private void doConfigure() {
 		this.configure(configurationBuilder);
 		this.configuration = configurationBuilder.build();
-		this.staticLocationRegistry(context.getStaticLocationsRegistry());
+		this.staticLocationsRegistry = StaticLocationsRegistry.createDefault();
+		this.staticLocationRegistry(staticLocationsRegistry);
 	}
 
+	// Method used to allow derived class to modify configuration object
+	// before it gets passed to application context
 	protected void configure(ConfigurationBuilder builder) {
 	}
 
+	// Method used to allow derived class to modify static locations
+	// before they get passed to application context
 	protected void staticLocationRegistry(StaticLocationsRegistry registry) {
-	}
-
-	final void setBasePackage(String basePackage) {
-		this.basePackage = basePackage;
-		// reload context
-		this.context = new ApplicationContextImpl(basePackage);
 	}
 }
