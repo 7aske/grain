@@ -15,6 +15,8 @@ import static com._7aske.grain.config.ConfigurationKey.*;
 public final class ConnectionManager {
 	@Inject
 	public Configuration configuration;
+	// @Temporary
+	private boolean driverInitialized = false;
 
 	// Generates url from injected database properties
 	public String getConnectionUrl() {
@@ -28,16 +30,31 @@ public final class ConnectionManager {
 			return url;
 		// Possibly @Incomplete. Handle all cases for different connection url
 		// schemas.
-		return String.format("mysql://%s:%d/%s", host, port, name);
+		return String.format("jdbc:mysql://%s:%d/%s", host, port, name);
 	}
 
 	public Connection getConnection() {
+		if (!driverInitialized) {
+			initializeDriver();
+			driverInitialized = false;
+		}
 		String user = (String) configuration.getProperties().get(DATABASE_USER);
 		String pass = (String) configuration.getProperties().get(DATABASE_PASS);
 		try {
 			return DriverManager.getConnection(getConnectionUrl(), user, pass);
 		} catch (SQLException e) {
 			throw new GrainDbConnectionException(e);
+		}
+	}
+
+	private void initializeDriver() {
+		try {
+			String className = (String) configuration.getProperties().get(DATABASE_DRIVER_CLASS);
+			if (className != null) {
+				Class.forName(className);
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		}
 	}
 }

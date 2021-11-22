@@ -69,7 +69,7 @@ public class Model {
 
 	// @Incomplete missing mapping of result set to inserted model
 	public Model save() {
-		getDatabaseExecutor().executeQuery(queryBuilder.getInsertQuery());
+		getDatabaseExecutor().executeUpdate(queryBuilder.getInsertQuery());
 		return null;
 	}
 
