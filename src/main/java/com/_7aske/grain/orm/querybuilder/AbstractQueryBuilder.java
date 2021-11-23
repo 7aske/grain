@@ -1,5 +1,6 @@
 package com._7aske.grain.orm.querybuilder;
 
+import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
 
@@ -8,7 +9,11 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy hh:mm:ss";
@@ -19,6 +24,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
 	private final ModelInspector model;
 
+
 	protected AbstractQueryBuilder(Model model) {
 		this.model = new ModelInspector(model);
 	}
@@ -27,14 +33,6 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected ModelInspector getModel() {
 		return model;
 	}
-
-	public abstract String getSelectQuery();
-
-	public abstract String getUpdateQuery();
-
-	public abstract String getInsertQuery();
-
-	public abstract String getDeleteQuery();
 
 	protected Object getFieldValue(Field field) {
 		Object value = null;
@@ -75,5 +73,25 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		} else {
 			return String.format("'%s'", value);
 		}
+	}
+
+	protected Map<String, Object> getIdValuePairs() {
+		return getModel().getModelIds()
+				.stream()
+				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
+	}
+
+	protected Map<String, Object> getValuePairs() {
+		return getModel().getModelFields()
+				.stream()
+				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
+	}
+
+	protected Map<String, Object> getValuePairsFor(String... columns) {
+		return Arrays.stream(columns)
+				// @Refactor this can be better
+				.map(col -> getModel().getModelFields().stream().filter(f -> f.getAnnotation(Column.class).name().equals(col)).findFirst())
+				.flatMap(Optional::stream)
+				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
 	}
 }

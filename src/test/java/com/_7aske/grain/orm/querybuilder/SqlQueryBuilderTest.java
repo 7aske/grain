@@ -59,32 +59,32 @@ class SqlQueryBuilderTest {
 	@Test
 	void testQueryBuilderSelect() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
-		String selectSql = queryBuilder.getSelectQuery();
+		String selectSql = queryBuilder.select().build();
 
-		assertEquals("select test0.test_id, test0.string, test0.number, test0.date, test0.local_date, test0.boolean, test0.boolean2 from test test0;", selectSql);
+		assertEquals("select test_id, string, number, date, local_date, boolean, boolean2 from test ", selectSql);
 	}
 
 	@Test
 	void testQueryBuilderUpdate() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
-		String updateSql = queryBuilder.getUpdateQuery();
+		String updateSql = queryBuilder.update().allValues().byId().build();
 
-		assertEquals("update test set string = 'Test Name', number = 1, date = '01-01-1970', local_date = '01-01-2000', boolean = true, boolean2 = true where test_id = 1;", updateSql);
+		assertEquals("update test set date = '01-01-1970', number = 1, boolean = true, string = 'Test Name', boolean2 = true, test_id = 1, local_date = '01-01-2000' where test_id = 1 ", updateSql);
 	}
 
 	@Test
 	void testQueryBuilderInsert() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
-		String insertSql = queryBuilder.getInsertQuery();
+		String insertSql = queryBuilder.insert().build();
 
-		assertEquals("insert into test (string, number, date, local_date, boolean, boolean2) values ('Test Name', 1, '01-01-1970', '01-01-2000', true, true);", insertSql);
+		assertEquals("insert into test (string, number, date, local_date, boolean, boolean2) values ('Test Name', 1, '01-01-1970', '01-01-2000', true, true) ", insertSql);
 	}
 
 	@Test
 	void testQueryBuilderDelete() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
-		String deleteSql = queryBuilder.getDeleteQuery();
+		String deleteSql = queryBuilder.delete().byId().build();
 
-		assertEquals("delete from test where test_id = 1;", deleteSql);
+		assertEquals("delete from test where test_id = 1 ", deleteSql);
 	}
 }

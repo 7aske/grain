@@ -1,7 +1,6 @@
 package com._7aske.grain.http.json;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.List;
 
@@ -65,7 +64,6 @@ public class JsonDeserializer<T> {
 					object.putBoolean(fieldName, (Boolean) field.get(instance));
 					// @Incomplete handle array types
 				} else if (List.class.isAssignableFrom(fieldType)) {
-					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
 					JsonArray list = doDeserialize((List<Object>) field.get(instance));
 					object.putArray(fieldName, list);
 				} else {
