@@ -60,9 +60,11 @@ public class JsonParser {
 			return null;
 		}
 		try {
-			float parsed = Float.parseFloat(val);
+			double parsed = Double.parseDouble(val);
 			if (parsed == (int) parsed) {
-				return (int) parsed;
+				// @Warning this may cause issues with large numbers
+				// but removes a lot of headaches with parsing integer types.
+				return Integer.parseInt(val);
 			} else {
 				return parsed;
 			}

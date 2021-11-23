@@ -68,7 +68,7 @@ public class Model {
 	public static <T extends Model> T findById(Class<T> clazz, Object id) {
 		try {
 			Model instance = ReflectionUtil.getAnyConstructor(clazz).newInstance();
-			return (T) instance.doFindById(clazz, id);
+			return instance.doFindById(clazz, id);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
 			return null;
@@ -78,7 +78,7 @@ public class Model {
 	public static <T extends Model> List<T> findAll(Class<T> clazz) {
 		try {
 			Model instance = ReflectionUtil.getAnyConstructor(clazz).newInstance();
-			return (List<T>) instance.doFindAll(clazz);
+			return instance.doFindAll(clazz);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
 			return new ArrayList<>();
@@ -86,10 +86,10 @@ public class Model {
 	}
 
 	// @Temporary
-	public Model doFindById(Class<? extends Model> clazz, Object id) {
+	public <T extends Model> T doFindById(Class<T> clazz, Object id) {
 		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, Object>> data = databaseExecutor.executeQuery(queryBuilder.select().byId(id).build());
-		ModelMapper modelMapper = new ModelMapper(clazz, data);
+		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().byId(id).build());
+		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
 		List<? extends Model> result = modelMapper.get();
 		// If we're getting the rows by ID there should really be only one
 		// row returned.
@@ -103,14 +103,14 @@ public class Model {
 	}
 
 	// @Temporary
-	public List<Model> doFindAll(Class<? extends Model> clazz) {
+	public <T extends Model> List<T> doFindAll(Class<T> clazz) {
 		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, Object>> data = databaseExecutor.executeQuery(queryBuilder.select().build());
-		ModelMapper modelMapper = new ModelMapper(clazz, data);
+		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().build());
+		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
 		return modelMapper.get();
 	}
 
-	public Model save() {
+	public <T extends Model> T save() {
 		long id = getDatabaseExecutor().executeUpdate(queryBuilder.insert().build());
 		// @Temporary @Incomplete handle composite keys?
 		if (this.getIds().size() == 1) {
@@ -120,21 +120,21 @@ public class Model {
 				e.printStackTrace();
 			}
 		}
-		return this;
+		return (T) this;
 	}
 
 	// @Optimization Figure out how to not query the database after updating.
-	public Model update() {
-		getDatabaseExecutor().executeQuery(queryBuilder.update().allValues().byId().build());
+	public <T extends Model> T update() {
+		getDatabaseExecutor().executeUpdate(queryBuilder.update().allValues().byId().build());
 		// @Incomplete handle composite keys
 		Field idField = getIds().get(0);
 		try {
-			return doFindById(this.getClass(), idField.get(this));
+			return (T) doFindById(this.getClass(), idField.get(this));
 		} catch (IllegalAccessException e) {
 			// @Warning If the findById query fails we return same object we updated
 			// there might be loss of information in that case.
 			e.printStackTrace();
-			return this;
+			return (T) this;
 		}
 	}
 

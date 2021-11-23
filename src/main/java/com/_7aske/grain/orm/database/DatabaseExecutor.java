@@ -34,16 +34,16 @@ public class DatabaseExecutor {
 		}
 	}
 
-	public List<Map<String, Object>> executeQuery(String query) {
-		List<Map<String, Object>> out = new ArrayList<>();
+	public List<Map<String, String>> executeQuery(String query) {
+		List<Map<String, String>> out = new ArrayList<>();
 		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
 			ResultSet resultSet = statement.executeQuery(query);
 			ResultSetMetaData metaData = resultSet.getMetaData();
 			while (resultSet.next()) {
-				Map<String, Object> data = new HashMap<>();
+				Map<String, String> data = new HashMap<>();
 				int colCount = metaData.getColumnCount();
 				for (int i = 1; i <= colCount; i++) {
-					data.put(metaData.getColumnName(i), resultSet.getObject(i));
+					data.put(metaData.getColumnName(i), resultSet.getString(i));
 				}
 				out.add(data);
 			}

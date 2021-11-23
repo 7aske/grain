@@ -27,4 +27,22 @@ class JsonParserTests {
 		assertNull(test.getArray("result").getObject(0).getArray("missions").getObject(0).get("description"));
 		assertEquals(18, test.getArray("result").getObject(0).getArray("tags").getObject(1).get("id"));
 	}
+
+	static final class User {
+		private long id;
+		private Long wid;
+		private String username;
+
+		public User() {
+		}
+	}
+
+	@Test
+	void testSerializer() {
+		JsonSerializer<User> serializer = new JsonSerializer<>(User.class);
+		User user = serializer.serialize(new JsonParser("{\"username\": \"username\", \"id\": 1, \"wid\": 2}").parse());
+		assertEquals(1, user.id);
+		assertEquals(2, user.wid);
+		assertEquals("username", user.username);
+	}
 }

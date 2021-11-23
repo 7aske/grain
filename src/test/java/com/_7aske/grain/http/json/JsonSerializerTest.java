@@ -23,7 +23,9 @@ class JsonSerializerTest {
 		String field;
 		Boolean bool;
 		Integer num;
+		Long lng;
 		Float flt;
+		Double dbl;
 		Nested test;
 		Object nullable;
 		List<Nested> list;
@@ -47,7 +49,7 @@ class JsonSerializerTest {
 
 	@Test
 	void test_serialize() {
-		String json = "{\"list\":[{\"nested\":\"ohyes\"}], \"field\":\"field\", \"bool\":true, \"num\":1, \"nullable\":null, \"test\": {\"nested\": \"yes\"}, \"flt\":3.3}";
+		String json = "{\"list\":[{\"nested\":\"ohyes\"}], \"field\":\"field\", \"bool\":true, \"num\":1, \"nullable\":null, \"test\": {\"nested\": \"yes\"}, \"flt\":3.3, \"lng\": 1, \"dbl\": 0.1242}";
 		JsonObject object = new JsonParser(json).parse();
 		JsonSerializer<TestClass> serializer = new JsonSerializer<>(TestClass.class);
 		TestClass test = serializer.serialize(object);

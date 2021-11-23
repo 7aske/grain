@@ -4,6 +4,7 @@ import com._7aske.grain.controller.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,11 +26,16 @@ public class ControllerWrapper {
 				.collect(Collectors.toList());
 	}
 
-	public Optional<ControllerMethodWrapper> getMethod(String path, HttpMethod method) {
+	public List<ControllerMethodWrapper> getMethods() {
+		return methods;
+	}
+
+	public Optional<ControllerMethodWrapper> getMethod(String requestPath, HttpMethod method) {
 		return methods.stream()
-				.filter(m -> arePathsMatching(path, join(getPath(), m.getPath()))
+				// matching request path and controller + method paths
+				.filter(m -> arePathsMatching(requestPath, join(getPath(), m.getPath()))
 						&& (method == null || m.getHttpMethod().equals(method)))
-				.findFirst();
+				.max(Comparator.comparingInt(p -> p.getPath().length()));
 	}
 
 	public Optional<ControllerMethodWrapper> getMethod(String path) {

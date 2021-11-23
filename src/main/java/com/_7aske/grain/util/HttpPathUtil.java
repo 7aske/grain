@@ -1,7 +1,13 @@
 package com._7aske.grain.util;
 
 
+import com._7aske.grain.controller.PathVariable;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class HttpPathUtil {
+	public final static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("(\\{([\\w_]*(?=[\\w]+)[\\w\\d_]+)})", Pattern.MULTILINE);
 	public static final char PATH_SEP = '/';
 	private HttpPathUtil() {
 	}
@@ -13,7 +19,9 @@ public class HttpPathUtil {
 			return false;
 		}
 		for (int i = 0; i < controllerPathSegments.length; ++i) {
-			if (!controllerPathSegments[i].equals(pathSegments[i])) {
+			// We match exacts strings of all path segments unless controller path
+			// segment is a path variable pattern. In that case we don't fail.
+			if (!controllerPathSegments[i].equals(pathSegments[i]) && (!PATH_VARIABLE_PATTERN.matcher(controllerPathSegments[i]).find())) {
 				return false;
 			}
 		}
@@ -49,5 +57,26 @@ public class HttpPathUtil {
 			copy = copy.substring(val.length());
 
 		return copy;
+	}
+
+	// Method for extracting values of path variables.
+	// E.g. request path /test/123/whatever/456 and method mapping /test/{id}/whatever/{id2}
+	// should result in id='1'.
+	public static String resolvePathVariableValue(String requestPath, String fullMethodMapping, PathVariable pathVariable) {
+		String[] requestSegments = trimFront(requestPath, "/").split("/+");
+		String[] controllerPathSegments = trimFront(fullMethodMapping, "/").split("/+");
+
+		// We match request and controller path segment by segment and when the controller
+		// segment is a path variable and when it equals the searched for path variable name
+		// we return the string of the current request segment.
+		int len = Math.min(requestSegments.length, controllerPathSegments.length);
+		for (int i = 0; i < len; i++) {
+			String contSeg = controllerPathSegments[i];
+			Matcher matcher = PATH_VARIABLE_PATTERN.matcher(contSeg);
+			if (matcher.find() && pathVariable.value().equals(matcher.group(2))) {
+				return requestSegments[i];
+			}
+		}
+		return null;
 	}
 }

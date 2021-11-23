@@ -43,32 +43,58 @@ public class JsonSerializer<T> {
 		try {
 			Constructor<T> constructor = ReflectionUtil.getAnyConstructor(clazz);
 			T instance = constructor.newInstance();
-			for (Field field : clazz.getDeclaredFields()) {
-				if (field.isAnnotationPresent(JsonIgnore.class)){
+			for (Field field : instance.getClass().getDeclaredFields()) {
+				if (field.isAnnotationPresent(JsonIgnore.class)) {
 					continue;
 				}
 				field.setAccessible(true);
 				Class<?> type = field.getType();
 				String name = field.getName();
-				if (Number.class.isAssignableFrom(type) ||
+				Object val = object.get(name);
+				if (type.isPrimitive() ||
+						Number.class.isAssignableFrom(type) ||
 						String.class.isAssignableFrom(type) ||
 						Boolean.class.isAssignableFrom(type)) {
-					Object val = object.get(name);
-					field.set(instance, val);
+
+					// @Refactor
+					// This is nasty hack to handle different number types that
+					// might be set to the model class.
+					if (Byte.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Byte.parseByte(val.toString()));
+					} else if (Byte.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Short.parseShort(val.toString()));
+					} else if (Integer.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Integer.parseInt(val.toString()));
+					} else if (Float.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Float.parseFloat(val.toString()));
+					} else if (Double.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Double.parseDouble(val.toString()));
+					} else if (Boolean.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Boolean.parseBoolean(val.toString()));
+					} else if (Long.class.isAssignableFrom(field.getType())) {
+						field.set(instance, Long.parseLong(val.toString()));
+					} else if (Character.class.isAssignableFrom(field.getType())) {
+						// @Note this is probably bad
+						field.set(instance, val.toString().charAt(0));
+					} else if (String.class.isAssignableFrom(field.getType())) {
+						field.set(instance, val);
+					} else {
+						// @Temporary
+						System.err.printf("Setting value to type %s%n", field.getType());
+						field.set(instance, val);
+					}
 				} else if (List.class.isAssignableFrom(type)) {
 					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-					List<Object> list = serialize(genericType, (JsonArray) object.get(name));
+					List<Object> list = serialize(genericType, (JsonArray) val);
 					field.set(instance, list);
 				} else {
-					if (object.get(name) == null) {
+					if (val == null) {
 						field.set(instance, null);
 					} else {
 						JsonSerializer<?> serializer = new JsonSerializer<>(field.getType());
-						Object val = serializer.serialize((JsonObject) object.get(name));
-						field.set(instance, val);
+						field.set(instance, serializer.serialize((JsonObject) val));
 					}
 				}
-				field.setAccessible(false);
 			}
 			return instance;
 
@@ -76,6 +102,5 @@ public class JsonSerializer<T> {
 			e.printStackTrace();
 			return null;
 		}
-
 	}
 }

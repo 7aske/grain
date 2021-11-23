@@ -1,5 +1,6 @@
 package com._7aske.grain.requesthandler.controller;
 
+import com._7aske.grain.controller.PathVariable;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
@@ -8,6 +9,7 @@ import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.http.view.DataView;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
+import com._7aske.grain.util.HttpPathUtil;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -26,6 +28,10 @@ public class ControllerHandler implements RequestHandler {
 		ControllerMethodWrapper method = controller.getMethod(request.getPath(), request.getMethod())
 				.orElseThrow(() -> new HttpException.NotFound(request.getPath()));
 
+		// @CopyPaste from ControllerWrapper
+		String fullControllerMapping = HttpPathUtil.join(controller.getPath(), method.getPath());
+
+		// Here we handle Controller method parameter parsing
 		Parameter[] declaredParams = method.getParameters();
 		Object[] params = new Object[declaredParams.length];
 		for (int i = 0; i < declaredParams.length; i++) {
@@ -36,6 +42,27 @@ public class ControllerHandler implements RequestHandler {
 				params[i] = response;
 			} else if (param.isAnnotationPresent(JsonBody.class)) {
 				params[i] = new JsonSerializer<>(param.getType()).serialize((JsonObject) request.getBody());
+			} else if (param.isAnnotationPresent(PathVariable.class)) {
+				PathVariable pathVariable = param.getAnnotation(PathVariable.class);
+				String value = HttpPathUtil.resolvePathVariableValue(request.getPath(), fullControllerMapping, pathVariable);
+				// @Refactor move this to converter registry
+				if (value ==  null) {
+					params[i] = null;
+				} else if (Integer.class.isAssignableFrom(param.getType())) {
+					params[i] = Integer.parseInt(value);
+				} else if (Float.class.isAssignableFrom(param.getType())) {
+					params[i] = Float.parseFloat(value);
+				} else if (Long.class.isAssignableFrom(param.getType())) {
+					params[i] = Long.parseLong(value);
+				} else if (Boolean.class.isAssignableFrom(param.getType())) {
+					params[i] = Boolean.parseBoolean(value);
+				} else if (Short.class.isAssignableFrom(param.getType())) {
+					params[i] = Short.parseShort(value);
+				} else if (Byte.class.isAssignableFrom(param.getType())) {
+					params[i] = Byte.parseByte(value);
+				} else {
+					params[i] = value;
+				}
 			} else if (Map.class.isAssignableFrom(param.getType())) {
 				params[i] = ((JsonObject)request.getBody()).getData();
 			}
