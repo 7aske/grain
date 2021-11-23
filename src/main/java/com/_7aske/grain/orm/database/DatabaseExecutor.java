@@ -5,10 +5,11 @@ import com._7aske.grain.component.Inject;
 import com._7aske.grain.orm.connection.ConnectionManager;
 import com._7aske.grain.orm.exception.GrainDbStatementException;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Grain
 public class DatabaseExecutor {
@@ -17,8 +18,7 @@ public class DatabaseExecutor {
 
 	// Used for update and insert operations
 	public long executeUpdate(String query) {
-		Connection connection = connectionManager.getConnection();
-		try (Statement statement = connection.createStatement()) {
+		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
 			statement.executeUpdate(query);
 			ResultSet resultSet = statement.getGeneratedKeys();
 			// If there is a result we return the ID of the newly created row
@@ -34,12 +34,22 @@ public class DatabaseExecutor {
 		}
 	}
 
-	public ResultSet executeQuery(String query) {
-		Connection connection = connectionManager.getConnection();
-		try (Statement statement = connection.createStatement()) {
-			return statement.executeQuery(query);
+	public List<Map<String, Object>> executeQuery(String query) {
+		List<Map<String, Object>> out = new ArrayList<>();
+		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
+			ResultSet resultSet = statement.executeQuery(query);
+			ResultSetMetaData metaData = resultSet.getMetaData();
+			while (resultSet.next()) {
+				Map<String, Object> data = new HashMap<>();
+				int colCount = metaData.getColumnCount();
+				for (int i = 1; i <= colCount; i++) {
+					data.put(metaData.getColumnName(i), resultSet.getObject(i));
+				}
+				out.add(data);
+			}
 		} catch (SQLException e) {
 			throw new GrainDbStatementException(e);
 		}
+		return out;
 	}
 }

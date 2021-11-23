@@ -11,8 +11,11 @@ import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -58,13 +61,26 @@ public class Model {
 	}
 
 	// @Incomplete
-	public static Model findById(Object id) {
+	public static Object findById(Object id) {
 		return null;
 	}
 
-	// @Incomplete
-	public static List<Model> findAll() {
-		return null;
+	public static <T extends Model> List<T> findAll(Class<T> clazz) {
+		try {
+			Model instance = ReflectionUtil.getAnyConstructor(clazz).newInstance();
+			return (List<T>) instance.doFindAll(clazz);
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+	}
+
+	// @Temporary
+	public List<Model> doFindAll(Class<? extends Model> clazz) {
+		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
+		List<Map<String, Object>> data = databaseExecutor.executeQuery(queryBuilder.getSelectQuery());
+		ModelMapper modelMapper = new ModelMapper(clazz, data);
+		return modelMapper.get();
 	}
 
 	public Model save() {
