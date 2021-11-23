@@ -2,6 +2,7 @@ package com._7aske.grain.http.json;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collection;
 import java.util.List;
 
 public class JsonDeserializer<T> {
@@ -11,7 +12,7 @@ public class JsonDeserializer<T> {
 		this.clazz = clazz;
 	}
 
-	public JsonArray deserialize(Class<?> type, List<Object> arr) {
+	private JsonArray doDeserialize(Class<?> type, List<Object> arr) {
 		JsonArray res = new JsonArray();
 		for (Object object : arr) {
 			if (Number.class.isAssignableFrom(type) ||
@@ -19,13 +20,13 @@ public class JsonDeserializer<T> {
 					Boolean.class.isAssignableFrom(type)) {
 				res.add(object);
 			} else if (List.class.isAssignableFrom(type)) {
-				res.add(deserialize(type, (JsonArray) object));
+				res.add(doDeserialize(type, (List<Object>) object));
 			} else {
 				if (object == null) {
 					res.add(null);
 				} else {
 					JsonDeserializer<?> deserializer = new JsonDeserializer<>(type);
-					Object val = deserializer.deserialize(object);
+					Object val = deserializer.doDeserialize(object);
 					res.add(val);
 				}
 			}
@@ -34,7 +35,15 @@ public class JsonDeserializer<T> {
 		return res;
 	}
 
-	public JsonObject deserialize(Object instance) {
+	public Object deserialize(Object instance) {
+		if (Collection.class.isAssignableFrom(clazz)) {
+			return doDeserialize(clazz, (List<Object>) instance);
+		} else {
+			return doDeserialize(instance);
+		}
+	}
+
+	private JsonObject doDeserialize(Object instance) {
 		try {
 			JsonObject object = new JsonObject();
 
@@ -53,14 +62,14 @@ public class JsonDeserializer<T> {
 					object.putBoolean(fieldName, (Boolean) field.get(instance));
 				} else if (List.class.isAssignableFrom(fieldType)) {
 					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-					JsonArray list = deserialize(genericType, (List<Object>) field.get(instance));
+					JsonArray list = doDeserialize(genericType, (List<Object>) field.get(instance));
 					object.putArray(fieldName, list);
 				} else {
 					if (field.get(instance) == null) {
 						object.putNull(fieldName);
 					} else {
 						JsonDeserializer<?> deserializer = new JsonDeserializer<>(field.getType());
-						JsonObject val = deserializer.deserialize(field.get(instance));
+						JsonObject val = deserializer.doDeserialize(field.get(instance));
 						object.putObject(fieldName, val);
 					}
 				}

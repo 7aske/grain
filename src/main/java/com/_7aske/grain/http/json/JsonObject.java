@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class JsonObject {
+public class JsonObject implements JsonString {
 	private final Map<String, Object> data;
 
 	public JsonObject() {
@@ -13,7 +13,7 @@ public class JsonObject {
 
 	public static <T> JsonObject of(T object) {
 		JsonDeserializer<T> deserializer = new JsonDeserializer<T>((Class<T>) object.getClass());
-		return deserializer.deserialize(object);
+		return (JsonObject) deserializer.deserialize(object);
 	}
 
 	public JsonObject(Map<String, Object> data) {

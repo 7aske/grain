@@ -24,7 +24,7 @@ class JsonDeserializerTest {
 		user.username = "username";
 		user.manager = manager;
 		JsonDeserializer<User> deserializer = new JsonDeserializer<>(User.class);
-		JsonObject jsonObject = deserializer.deserialize(user);
+		JsonObject jsonObject = (JsonObject) deserializer.deserialize(user);
 
 		assertEquals("username", jsonObject.getString("username"));
 		assertNull(jsonObject.get("password"));

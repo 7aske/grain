@@ -161,6 +161,7 @@ public class GrainInitializer {
 		}
 	}
 
+	// @DeadCode
 	private void callLifecycleMethods() {
 		dependencies.forEach(this::callLifecycleMethods);
 	}
