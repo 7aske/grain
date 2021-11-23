@@ -3,6 +3,7 @@ package com._7aske.grain;
 import com._7aske.grain.component.Controller;
 import com._7aske.grain.config.ConfigurationBuilder;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,11 @@ class GrainAppTest {
 					.port(testPort)
 					.host("127.0.0.1");
 		}
+	}
+
+	@BeforeEach
+	void setup() {
+		ApplicationContextHolder.setContext(null);
 	}
 
 	@Test

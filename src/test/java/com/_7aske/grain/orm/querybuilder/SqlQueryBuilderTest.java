@@ -61,7 +61,7 @@ class SqlQueryBuilderTest {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
 		String selectSql = queryBuilder.getSelectQuery();
 
-		assertEquals("select test0.test_id, test0.string, test0.number, test0.date, test0.local_date, test0.boolean from test test0;", selectSql);
+		assertEquals("select test0.test_id, test0.string, test0.number, test0.date, test0.local_date, test0.boolean, test0.boolean2 from test test0;", selectSql);
 	}
 
 	@Test
@@ -69,7 +69,7 @@ class SqlQueryBuilderTest {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
 		String updateSql = queryBuilder.getUpdateQuery();
 
-		assertEquals("update test set string = 'Test Name', number = 1, date = '01-01-1970', local_date = '01-01-2000', boolean = true where test_id = 1;", updateSql);
+		assertEquals("update test set string = 'Test Name', number = 1, date = '01-01-1970', local_date = '01-01-2000', boolean = true, boolean2 = true where test_id = 1;", updateSql);
 	}
 
 	@Test
@@ -77,7 +77,7 @@ class SqlQueryBuilderTest {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
 		String insertSql = queryBuilder.getInsertQuery();
 
-		assertEquals("insert into test (string, number, date, local_date, boolean) values ('Test Name', 1, '01-01-1970', '01-01-2000', true);", insertSql);
+		assertEquals("insert into test (string, number, date, local_date, boolean, boolean2) values ('Test Name', 1, '01-01-1970', '01-01-2000', true, true);", insertSql);
 	}
 
 	@Test

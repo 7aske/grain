@@ -66,7 +66,6 @@ class ModelTest {
 	void testModel_hasDatabaseExecutor() {
 		TestModel testModel = new TestModel();
 		DatabaseExecutor executor = testModel.getDatabaseExecutor();
-		testModel.save();
 		assertNotNull(executor);
 	}
 

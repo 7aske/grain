@@ -12,7 +12,7 @@ public class ApplicationContextHolder {
 	}
 
 	static void setContext(ApplicationContext applicationContext) {
-		if (ApplicationContextHolder.applicationContext != null)
+		if (ApplicationContextHolder.applicationContext != null && applicationContext != null)
 			throw new GrainRuntimeException("Called set on non-null context");
 		ApplicationContextHolder.applicationContext = applicationContext;
 	}

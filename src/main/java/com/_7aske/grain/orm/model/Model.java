@@ -67,10 +67,16 @@ public class Model {
 		return null;
 	}
 
-	// @Incomplete missing mapping of result set to inserted model
 	public Model save() {
-		getDatabaseExecutor().executeUpdate(queryBuilder.getInsertQuery());
-		return null;
+		long id = getDatabaseExecutor().executeUpdate(queryBuilder.getInsertQuery());
+		if (this.getIds().size() == 1) {
+			try {
+				this.getIds().get(0).set(this, id);
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		return this;
 	}
 
 	// @Incomplete
