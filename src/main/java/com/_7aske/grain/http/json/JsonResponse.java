@@ -18,8 +18,8 @@ public final class JsonResponse<T> {
 	}
 
 	private JsonResponse(T object) {
-		JsonDeserializer<T> deserializer = new JsonDeserializer<>((Class<T>) object.getClass());
-		this.body = (JsonString) deserializer.deserialize(object);
+		JsonSerializer<T> deserializer = new JsonSerializer<>((Class<T>) object.getClass());
+		this.body = (JsonString) deserializer.serialize(object);
 		this.status = HttpStatus.OK;
 		this.headers = new HashMap<>();
 		this.headers.put(HttpHeaders.CONTENT_TYPE, "application/json");
@@ -63,8 +63,8 @@ public final class JsonResponse<T> {
 		}
 
 		public JsonResponse<T> body(T object) {
-			JsonDeserializer<T> deserializer = new JsonDeserializer<>((Class<T>) object.getClass());
-			instance.body = (JsonString) deserializer.deserialize(object);
+			JsonSerializer<T> deserializer = new JsonSerializer<>((Class<T>) object.getClass());
+			instance.body = (JsonString) deserializer.serialize(object);
 			return instance;
 		}
 	}

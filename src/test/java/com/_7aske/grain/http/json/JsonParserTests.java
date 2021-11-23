@@ -39,8 +39,8 @@ class JsonParserTests {
 
 	@Test
 	void testSerializer() {
-		JsonSerializer<User> serializer = new JsonSerializer<>(User.class);
-		User user = serializer.serialize(new JsonParser("{\"username\": \"username\", \"id\": 1, \"wid\": 2}").parse());
+		JsonDeserializer<User> serializer = new JsonDeserializer<>(User.class);
+		User user = serializer.deserialize(new JsonParser("{\"username\": \"username\", \"id\": 1, \"wid\": 2}").parse());
 		assertEquals(1, user.id);
 		assertEquals(2, user.wid);
 		assertEquals("username", user.username);

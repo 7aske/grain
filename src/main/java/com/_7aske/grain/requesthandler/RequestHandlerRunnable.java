@@ -18,7 +18,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Objects;
 
+import static com._7aske.grain.http.HttpContentType.APPLICATION_JSON;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class RequestHandlerRunnable implements Runnable {
@@ -33,8 +35,9 @@ public class RequestHandlerRunnable implements Runnable {
 		this.staticHandlerRegistry = new StaticHandlerRegistry(context.getStaticLocationsRegistry());
 		this.middlewareRegistry = new MiddlewareHandlerRegistry(context.getGrainRegistry());
 
+		// Used for parsing JSON body
 		middlewareRegistry.addHandler((req, res) -> {
-			if (req.hasHeader(CONTENT_TYPE) && req.getHeader(CONTENT_TYPE).equals("application/json")) {
+			if (Objects.equals(req.getHeader(CONTENT_TYPE), APPLICATION_JSON)) {
 				JsonParser deserializer = new JsonParser((String) req.getBody());
 				req.setBody(deserializer.parse());
 			}

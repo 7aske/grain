@@ -12,8 +12,8 @@ public class JsonObject implements JsonString {
 	}
 
 	public static <T> JsonObject of(T object) {
-		JsonDeserializer<T> deserializer = new JsonDeserializer<T>((Class<T>) object.getClass());
-		return (JsonObject) deserializer.deserialize(object);
+		JsonSerializer<T> deserializer = new JsonSerializer<T>((Class<T>) object.getClass());
+		return (JsonObject) deserializer.serialize(object);
 	}
 
 	public JsonObject(Map<String, Object> data) {

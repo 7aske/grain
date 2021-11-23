@@ -4,9 +4,11 @@ import com._7aske.grain.exception.http.HttpParsingException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import static com._7aske.grain.http.HttpConstants.CRLF;
 import static com._7aske.grain.http.HttpConstants.CRLF_LEN;
+import static com._7aske.grain.http.HttpContentType.APPLICATION_X_WWW_FORM_URLENCODED;
 import static com._7aske.grain.http.HttpHeaders.*;
 
 public class HttpRequestParser {
@@ -69,7 +71,7 @@ public class HttpRequestParser {
 			String contentLength;
 			if ((contentLength = request.getHeader(CONTENT_LENGTH)) != null) {
 				String body = buffer.substring(crlfIndex + CRLF_LEN, Math.min(buffer.length(), crlfIndex + CRLF_LEN + Integer.parseInt(contentLength)));
-				if (request.hasHeader(CONTENT_TYPE) && request.getHeader(CONTENT_TYPE).equals("application/x-www-form-urlencoded")) {
+				if (Objects.equals(request.getHeader(CONTENT_TYPE), APPLICATION_X_WWW_FORM_URLENCODED)) {
 					request.putParameters(body);
 				} else {
 					request.setBody(body);
