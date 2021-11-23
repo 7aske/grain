@@ -12,23 +12,25 @@ public class JsonDeserializer<T> {
 		this.clazz = clazz;
 	}
 
-	private JsonArray doDeserialize(Class<?> type, List<Object> arr) {
+	private JsonArray doDeserialize(List<Object> arr) {
 		JsonArray res = new JsonArray();
 		for (Object object : arr) {
+			if (object == null) {
+				res.add(null);
+				continue;
+			}
+			Class<?> type = object.getClass();
 			if (Number.class.isAssignableFrom(type) ||
 					String.class.isAssignableFrom(type) ||
 					Boolean.class.isAssignableFrom(type)) {
 				res.add(object);
+				// @Incomplete handle array type
 			} else if (List.class.isAssignableFrom(type)) {
-				res.add(doDeserialize(type, (List<Object>) object));
+				res.add(doDeserialize((List<Object>) object));
 			} else {
-				if (object == null) {
-					res.add(null);
-				} else {
-					JsonDeserializer<?> deserializer = new JsonDeserializer<>(type);
-					Object val = deserializer.doDeserialize(object);
-					res.add(val);
-				}
+				JsonDeserializer<?> deserializer = new JsonDeserializer<>(type);
+				Object val = deserializer.doDeserialize(object);
+				res.add(val);
 			}
 		}
 
@@ -36,8 +38,9 @@ public class JsonDeserializer<T> {
 	}
 
 	public Object deserialize(Object instance) {
+		// @Incomplete handle array type
 		if (Collection.class.isAssignableFrom(clazz)) {
-			return doDeserialize(clazz, (List<Object>) instance);
+			return doDeserialize((List<Object>) instance);
 		} else {
 			return doDeserialize(instance);
 		}
@@ -48,7 +51,7 @@ public class JsonDeserializer<T> {
 			JsonObject object = new JsonObject();
 
 			for (Field field : clazz.getDeclaredFields()) {
-				if (field.isAnnotationPresent(JsonIgnore.class)){
+				if (field.isAnnotationPresent(JsonIgnore.class)) {
 					continue;
 				}
 				field.setAccessible(true);
@@ -60,9 +63,10 @@ public class JsonDeserializer<T> {
 					object.putString(fieldName, (String) field.get(instance));
 				} else if (Boolean.class.isAssignableFrom(fieldType)) {
 					object.putBoolean(fieldName, (Boolean) field.get(instance));
+					// @Incomplete handle array types
 				} else if (List.class.isAssignableFrom(fieldType)) {
 					Class<?> genericType = (Class<T>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
-					JsonArray list = doDeserialize(genericType, (List<Object>) field.get(instance));
+					JsonArray list = doDeserialize((List<Object>) field.get(instance));
 					object.putArray(fieldName, list);
 				} else {
 					if (field.get(instance) == null) {
