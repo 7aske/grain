@@ -171,7 +171,7 @@ public class GrainInitializer {
 			if (method.isAnnotationPresent(AfterInit.class)) {
 				try {
 					// We call the lifecycle methods with any other Grain instances as parameters
-					method.invoke(dependency.instance, mapParamsToInstances(dependency.params, dependencies));
+					method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					// @Incomplete should we throw
 					e.printStackTrace();
