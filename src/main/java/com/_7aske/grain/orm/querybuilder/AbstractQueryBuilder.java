@@ -1,6 +1,7 @@
 package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.orm.annotation.Column;
+import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
 
@@ -9,10 +10,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractQueryBuilder implements QueryBuilder {
@@ -37,7 +35,21 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		Object value = null;
 		try {
 			field.setAccessible(true);
-			value = field.get(getModelInspector().getModel());
+			// Handle the case where the formatted value is a relationship object
+			if (field.isAnnotationPresent(ManyToOne.class))  {
+				Model model = (Model) field.get(getModelInspector().getModel());
+				List<Field> ids = new ModelInspector(model).getModelIds();
+				if (ids.size() > 1) {
+					// @Temporary probably should throw
+					System.err.println("Unsupported update of ManyToOne relationship with composite foreign key");
+				} else {
+					Field idField = ids.get(0);
+					idField.setAccessible(true);
+					value = idField.get(model);
+				}
+			} else {
+				value = field.get(getModelInspector().getModel());
+			}
 		} catch (IllegalAccessException e) {
 			// ignored
 		}
@@ -57,9 +69,22 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 			return "NULL";
 		} else if (String.class.isAssignableFrom(field.getType())) {
 			return String.format("'%s'", value);
-		} else if (Number.class.isAssignableFrom(field.getType())) {
+		} else if (Byte.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Byte.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Integer.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Float.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Double.class.isAssignableFrom(field.getType())) {
 			return value.toString();
 		} else if (Boolean.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Long.class.isAssignableFrom(field.getType())) {
+			return value.toString();
+		} else if (Character.class.isAssignableFrom(field.getType())) {
+			// @Note @CopyPasta this is probably bad
 			return value.toString();
 		} else if (field.getType().isPrimitive()) {
 			return value.toString();
@@ -70,7 +95,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		} else if (LocalDateTime.class.isAssignableFrom(field.getType())) {
 			return String.format("'%s'", ((LocalDateTime) value).format(DATE_TIME_FORMAT));
 		} else {
-			return String.format("'%s'", value);
+			return value.toString();
 		}
 	}
 
@@ -81,9 +106,14 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	}
 
 	protected Map<String, Object> getValuePairs() {
-		return getModelInspector().getModelFields()
+		Map<String, Object> columns = getModelInspector().getModelFields()
 				.stream()
 				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
+		Map<String, Object> manyToOne = getModelInspector().getModelManyToOne()
+				.stream()
+				.collect(Collectors.toMap(f -> f.getAnnotation(ManyToOne.class).column().name(), this::getFormattedFieldValue));
+		columns.putAll(manyToOne);
+		return columns;
 	}
 
 	protected Map<String, Object> getValuePairsFor(String... columns) {

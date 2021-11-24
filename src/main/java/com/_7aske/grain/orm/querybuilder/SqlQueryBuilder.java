@@ -1,6 +1,7 @@
 package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.orm.annotation.*;
+import com._7aske.grain.orm.exception.GrainDbUpdateIdMissingException;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
 
@@ -186,6 +187,8 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
 							.collect(Collectors.joining(", ")));
 					builder.append(" ");
+				} else {
+					throw new GrainDbUpdateIdMissingException();
 				}
 				break;
 			case UPDATE:
@@ -193,9 +196,11 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				builder.append(thisTableName);
 				builder.append(" set ");
 				if (update != null) {
+					// @Incomplete should probably handle cascading at some point
 					builder.append(update.entrySet().stream()
 							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
 							.collect(Collectors.joining(", ")));
+
 				}
 				if (where != null) {
 					builder.append(" where ");
@@ -203,6 +208,8 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
 							.collect(Collectors.joining(", ")));
 					builder.append(" ");
+				} else {
+					throw new GrainDbUpdateIdMissingException();
 				}
 				break;
 			case INSERT:

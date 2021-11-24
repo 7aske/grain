@@ -1,5 +1,8 @@
 package com._7aske.grain.orm.querybuilder;
 
+import com._7aske.grain.ApplicationContextHolder;
+import com._7aske.grain.GrainApp;
+import com._7aske.grain.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.Id;
 import com._7aske.grain.orm.annotation.ManyToOne;
@@ -15,6 +18,7 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SqlQueryBuilderTest {
+	static class TestApp extends GrainApp {}
 	@Table(name = "test")
 	public static final class TestModel extends Model {
 		@Id
@@ -41,6 +45,27 @@ class SqlQueryBuilderTest {
 
 	}
 
+	@Table(name = "category")
+	static class Category extends Model {
+		@Id
+		@Column(name = "category_id")
+		private Long id;
+		@Column(name = "name")
+		private String name;
+	}
+
+	@Table(name = "post")
+	class Post extends Model {
+		@Id
+		@Column(name = "post_id")
+		private Long id;
+		@Column(name = "title")
+		private String title;
+		@ManyToOne(table = "category", column = @Column(name = "category_fk"), referencedColumn = "category_id")
+		private Category category;
+	}
+
+
 	@Table(name = "entity")
 	static final class EntityWithJoin extends Model {
 		@Id
@@ -54,9 +79,14 @@ class SqlQueryBuilderTest {
 
 	TestModel testEntity;
 	EntityWithJoin ewj;
-
+	Post post;
+	Category category;
+	ApplicationContextImpl context;
 	@BeforeEach
 	void setup() {
+		context = new ApplicationContextImpl(TestApp.class.getPackageName());
+		ApplicationContextHolder.setContext(context);
+
 		testEntity = new TestModel();
 		testEntity.id = 1;
 		testEntity.string = "Test Name";
@@ -69,6 +99,15 @@ class SqlQueryBuilderTest {
 		ewj = new EntityWithJoin();
 		testEntity.id = 1;
 		ewj.test = testEntity;
+
+		category = new Category();
+		category.id = 1L;
+		category.name = "Test Category";
+
+		post = new Post();
+		post.id = 1L;
+		post.title = "Post Title";
+		post.category = category;
 	}
 
 
@@ -110,5 +149,13 @@ class SqlQueryBuilderTest {
 		String deleteSql = queryBuilder.select().join().build();
 
 		assertEquals("select test_id, test_fk, test.test_id as test_test_id, test.string as test_string, test.number as test_number, test.date as test_date, test.local_date as test_local_date, test.boolean as test_boolean, test.boolean2 as test_boolean2 from entity join test on test.test_id = entity.test_fk ", deleteSql);
+	}
+
+	@Test
+	void testQueryBuilderUpdateJoin() {
+		QueryBuilder queryBuilder = new SqlQueryBuilder(post);
+		String updateSql = queryBuilder.update().allValues().join().byId().build();
+
+		assertEquals("update post set post_id = 1, title = 'Post Title', category_fk = 1 where post_id = 1 ", updateSql);
 	}
 }
