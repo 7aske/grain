@@ -2,6 +2,7 @@ package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.Id;
+import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.Table;
 import com._7aske.grain.orm.model.Model;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +41,19 @@ class SqlQueryBuilderTest {
 
 	}
 
+	@Table(name = "entity")
+	static final class EntityWithJoin extends Model {
+		@Id
+		@Column(name = "test_id")
+		private Integer id;
+
+		@ManyToOne(table = "test", referencedColumn = "test_id", column = @Column(name = "test_fk"))
+		private TestModel test;
+
+	}
+
 	TestModel testEntity;
+	EntityWithJoin ewj;
 
 	@BeforeEach
 	void setup() {
@@ -53,6 +66,9 @@ class SqlQueryBuilderTest {
 		testEntity.bool = true;
 		testEntity.bool2 = true;
 
+		ewj = new EntityWithJoin();
+		testEntity.id = 1;
+		ewj.test = testEntity;
 	}
 
 
@@ -84,6 +100,14 @@ class SqlQueryBuilderTest {
 	void testQueryBuilderDelete() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
 		String deleteSql = queryBuilder.delete().byId().build();
+
+		assertEquals("delete from test where test_id = 1 ", deleteSql);
+	}
+
+	@Test
+	void testQueryBuilderSelectJoin() {
+		QueryBuilder queryBuilder = new SqlQueryBuilder(ewj);
+		String deleteSql = queryBuilder.select().join().build();
 
 		assertEquals("delete from test where test_id = 1 ", deleteSql);
 	}

@@ -3,8 +3,10 @@ package com._7aske.grain.orm.annotation;
 import java.lang.annotation.*;
 
 @Documented
+@Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
-public @interface Column {
-	String name() default "";
+public @interface OneToMany {
+	String column();
+	String referencedColumn();
+	String table();
 }

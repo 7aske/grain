@@ -29,8 +29,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		this.model = new ModelInspector(model);
 	}
 
-	// @Refactor should not be called getModel
-	protected ModelInspector getModel() {
+	protected ModelInspector getModelInspector() {
 		return model;
 	}
 
@@ -38,7 +37,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		Object value = null;
 		try {
 			field.setAccessible(true);
-			value = field.get(getModel().getModel());
+			value = field.get(getModelInspector().getModel());
 		} catch (IllegalAccessException e) {
 			// ignored
 		}
@@ -76,13 +75,13 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	}
 
 	protected Map<String, Object> getIdValuePairs() {
-		return getModel().getModelIds()
+		return getModelInspector().getModelIds()
 				.stream()
 				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
 	}
 
 	protected Map<String, Object> getValuePairs() {
-		return getModel().getModelFields()
+		return getModelInspector().getModelFields()
 				.stream()
 				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
 	}
@@ -90,7 +89,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected Map<String, Object> getValuePairsFor(String... columns) {
 		return Arrays.stream(columns)
 				// @Refactor this can be better
-				.map(col -> getModel().getModelFields().stream().filter(f -> f.getAnnotation(Column.class).name().equals(col)).findFirst())
+				.map(col -> getModelInspector().getModelFields().stream().filter(f -> f.getAnnotation(Column.class).name().equals(col)).findFirst())
 				.flatMap(Optional::stream)
 				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
 	}

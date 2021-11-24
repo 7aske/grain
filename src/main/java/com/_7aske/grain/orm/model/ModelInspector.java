@@ -31,4 +31,12 @@ public final class ModelInspector {
 	public Model getModel() {
 		return model;
 	}
+
+	public List<Field> getModelManyToOne() {
+		return model.getManyToOne();
+	}
+
+	public List<Field> getModelOneToMany() {
+		return model.getOneToMany();
+	}
 }

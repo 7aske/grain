@@ -1,14 +1,19 @@
 package com._7aske.grain.orm.querybuilder;
 
-import com._7aske.grain.orm.annotation.Column;
-import com._7aske.grain.orm.annotation.Id;
+import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.model.Model;
+import com._7aske.grain.orm.model.ModelInspector;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.text.MessageFormat;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.orm.querybuilder.QueryBuilder.Operation.*;
+import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
 
 /**
  * QueryBuilder variant responsible for creating basic CRUD
@@ -21,6 +26,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	protected Map<String, Object> update = null;
 	protected String[] groupBy = null;
 	protected String[] orderBy = null;
+	protected List<Join> joins = null;
 
 	public SqlQueryBuilder(Model model) {
 		super(model);
@@ -52,6 +58,25 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	}
 
 	@Override
+	public QueryBuilder join() {
+		joins = getModelInspector().getModelManyToOne()
+				.stream()
+				.map(f -> Join.from(f.getType(), f.getAnnotation(ManyToOne.class)))
+				.collect(Collectors.toList());
+		return this;
+	}
+
+	@Override
+	public QueryBuilder join(ManyToOne relation) {
+		return null;
+	}
+
+	@Override
+	public QueryBuilder join(OneToMany relation) {
+		return null;
+	}
+
+	@Override
 	public QueryBuilder byId() {
 		where = getIdValuePairs();
 		return this;
@@ -60,7 +85,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	// @Incomplete should allow composite keys
 	@Override
 	public QueryBuilder byId(Object id) {
-		Field idField = getModel().getModelIds().get(0);
+		Field idField = getModelInspector().getModelIds().get(0);
 		where = Map.of(idField.getAnnotation(Column.class).name(), getFormattedFieldValue(idField, id));
 		return this;
 	}
@@ -93,6 +118,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	@Override
 	public String build() {
 		StringBuilder builder = new StringBuilder();
+		String thisTableName = getModelInspector().getModelTable().name();
 
 		switch (operation) {
 			case SELECT:
@@ -100,13 +126,56 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				if (columns != null && columns.length > 0) {
 					builder.append(String.join(", ", columns)).append(" ");
 				} else {
-					builder.append(getModel().getModelFields()
+					builder.append(getModelInspector().getModelFields()
 							.stream()
-							.map(field ->  field.getAnnotation(Column.class).name())
+							.map(field -> field.getAnnotation(Column.class).name())
 							.collect(Collectors.joining(", ")));
+					if (joins != null) {
+						builder.append(", ");
+						builder.append(getModelInspector().getModelManyToOne()
+								.stream()
+								// @Refactor Was about to put aliases to make sure no collisions happen in
+								// the column names but it would affect ModelMapper mapping. For
+								// now this remains like this until ModelMapper mapping is changed.
+								.map(field -> field.getAnnotation(ManyToOne.class).column().name())
+								.collect(Collectors.joining(", ")));
+
+						// @Refactor
+						builder.append(", ");
+						builder.append(joins
+								.stream()
+								.map(field -> {
+									try {
+										Class<?> clazz = field.getClazz();
+										Table table = clazz.getAnnotation(Table.class);
+										Model instance = (Model) getAnyConstructor(clazz).newInstance();
+										// @Incomplete should probably repeat the same process for
+										// @ManyToOne fields of clazz as well???
+										return new ModelInspector(instance).getModelFields()
+												.stream()
+												// @Temporary hack to create alias that can be used with result set metadata.
+												// Alias can collide with root table column names.
+												.map(f -> MessageFormat.format("{0}.{1} as {0}_{1}", table.name(), f.getAnnotation(Column.class).name()))
+												.collect(Collectors.joining(", "));
+									} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+										e.printStackTrace();
+										return null;
+									}
+								})
+								.filter(Objects::nonNull)
+								.collect(Collectors.joining(", ")));
+					}
 				}
 				builder.append(" from ");
-				builder.append(getModel().getModelTable().name()).append(" ");
+				builder.append(thisTableName).append(" ");
+				if (joins != null) {
+					joins.forEach(join -> {
+						builder.append("join ").append(join.getTable()).append(" on ");
+						builder.append(join.getTable()).append(".").append(join.getReferencedColumn());
+						builder.append(" = ");
+						builder.append(thisTableName).append(".").append(join.getColumn()).append(" ");
+					});
+				}
 				if (where != null) {
 					builder.append("where ");
 					builder.append(where.entrySet().stream()
@@ -117,7 +186,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				break;
 			case DELETE:
 				builder.append("delete from ");
-				builder.append(getModel().getModelTable().name());
+				builder.append(thisTableName);
 				if (where != null) {
 					builder.append(" where ");
 					builder.append(where.entrySet().stream()
@@ -128,7 +197,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				break;
 			case UPDATE:
 				builder.append("update ");
-				builder.append(getModel().getModelTable().name());
+				builder.append(thisTableName);
 				builder.append(" set ");
 				if (update != null) {
 					builder.append(update.entrySet().stream()
@@ -145,10 +214,10 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				break;
 			case INSERT:
 				builder.append("insert into ");
-				builder.append(getModel().getModelTable().name());
+				builder.append(thisTableName);
 				builder.append(" (");
 
-				String columns = getModel().getModelFields()
+				String columns = getModelInspector().getModelFields()
 						.stream()
 						.filter(field -> {
 							Id id = field.getAnnotation(Id.class);
@@ -162,7 +231,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 
 				builder.append(" values (");
 
-				String values = getModel().getModelFields()
+				String values = getModelInspector().getModelFields()
 						.stream()
 						.filter(field -> {
 							Id id = field.getAnnotation(Id.class);
@@ -183,6 +252,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 		this.update = null;
 		this.groupBy = null;
 		this.orderBy = null;
+		this.joins = null;
 		return builder.toString();
 	}
 }

@@ -43,7 +43,10 @@ public class DatabaseExecutor {
 				Map<String, String> data = new HashMap<>();
 				int colCount = metaData.getColumnCount();
 				for (int i = 1; i <= colCount; i++) {
-					data.put(metaData.getColumnName(i), resultSet.getString(i));
+					// @Note use getColumnLabel instead of getColumnName
+					// because we're using aliases for referencing joined
+					// column names.
+					data.put(metaData.getColumnLabel(i), resultSet.getString(i));
 				}
 				out.add(data);
 			}

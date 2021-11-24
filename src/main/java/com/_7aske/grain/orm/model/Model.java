@@ -2,9 +2,7 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.orm.annotation.Column;
-import com._7aske.grain.orm.annotation.Id;
-import com._7aske.grain.orm.annotation.Table;
+import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbNoSuchRowException;
 import com._7aske.grain.orm.exception.GrainDbNonUniqueResultException;
@@ -20,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
+import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+
 /**
  * Model class representing a database entity/entry. Also contains all the required logic to generate
  * queries.
@@ -30,9 +31,11 @@ public class Model {
 	private final ApplicationContext context = ApplicationContextHolder.getContext();
 	private final QueryBuilder queryBuilder;
 
-	Table table;
-	List<Field> fields;
-	List<Field> ids;
+	final Table table;
+	final List<Field> fields;
+	final List<Field> ids;
+	final List<Field> oneToMany;
+	final List<Field> manyToOne;
 
 	protected Model() {
 		// @Incomplete Error handling if models do have id's set
@@ -40,10 +43,16 @@ public class Model {
 		// @Incomplete Handle composite keys
 		table = getClass().getAnnotation(Table.class);
 		ids = Arrays.stream(getClass().getDeclaredFields())
-				.filter(f -> ReflectionUtil.isAnnotationPresent(f, Id.class))
+				.filter(f -> isAnnotationPresent(f, Id.class))
 				.collect(Collectors.toList());
 		fields = Arrays.stream(getClass().getDeclaredFields())
 				.filter(f -> ReflectionUtil.isAnnotationPresent(f, Column.class))
+				.collect(Collectors.toList());
+		oneToMany = Arrays.stream(getClass().getDeclaredFields())
+				.filter(f -> isAnnotationPresent(f, OneToMany.class))
+				.collect(Collectors.toList());
+		manyToOne = Arrays.stream(getClass().getDeclaredFields())
+				.filter(f -> isAnnotationPresent(f, ManyToOne.class))
 				.collect(Collectors.toList());
 		queryBuilder = new SqlQueryBuilder(this);
 	}
@@ -60,6 +69,14 @@ public class Model {
 		return ids;
 	}
 
+	List<Field> getOneToMany() {
+		return oneToMany;
+	}
+
+	List<Field> getManyToOne() {
+		return manyToOne;
+	}
+
 	protected DatabaseExecutor getDatabaseExecutor() {
 		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
 	}
@@ -67,7 +84,7 @@ public class Model {
 	// @Incomplete
 	public static <T extends Model> T findById(Class<T> clazz, Object id) {
 		try {
-			Model instance = ReflectionUtil.getAnyConstructor(clazz).newInstance();
+			Model instance = getAnyConstructor(clazz).newInstance();
 			return instance.doFindById(clazz, id);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
@@ -77,7 +94,7 @@ public class Model {
 
 	public static <T extends Model> List<T> findAll(Class<T> clazz) {
 		try {
-			Model instance = ReflectionUtil.getAnyConstructor(clazz).newInstance();
+			Model instance = getAnyConstructor(clazz).newInstance();
 			return instance.doFindAll(clazz);
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			e.printStackTrace();
@@ -88,7 +105,7 @@ public class Model {
 	// @Temporary
 	public <T extends Model> T doFindById(Class<T> clazz, Object id) {
 		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().byId(id).build());
+		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().join().byId(id).build());
 		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
 		List<? extends Model> result = modelMapper.get();
 		// If we're getting the rows by ID there should really be only one
@@ -105,7 +122,7 @@ public class Model {
 	// @Temporary
 	public <T extends Model> List<T> doFindAll(Class<T> clazz) {
 		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().build());
+		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().join().build());
 		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
 		return modelMapper.get();
 	}
