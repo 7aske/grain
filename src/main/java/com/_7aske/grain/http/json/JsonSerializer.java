@@ -16,6 +16,9 @@ public class JsonSerializer<T> {
 	}
 
 	private JsonArray doSerialize(List<Object> arr) {
+		if (arr == null) {
+			return null;
+		}
 		JsonArray res = new JsonArray();
 		for (Object object : arr) {
 			if (object == null) {

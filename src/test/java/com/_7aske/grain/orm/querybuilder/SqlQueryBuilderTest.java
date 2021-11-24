@@ -3,10 +3,7 @@ package com._7aske.grain.orm.querybuilder;
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.context.ApplicationContextImpl;
-import com._7aske.grain.orm.annotation.Column;
-import com._7aske.grain.orm.annotation.Id;
-import com._7aske.grain.orm.annotation.ManyToOne;
-import com._7aske.grain.orm.annotation.Table;
+import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.model.Model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +11,16 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SqlQueryBuilderTest {
-	static class TestApp extends GrainApp {}
+	static class TestApp extends GrainApp {
+	}
+
 	@Table(name = "test")
 	public static final class TestModel extends Model {
 		@Id
@@ -55,7 +57,7 @@ class SqlQueryBuilderTest {
 	}
 
 	@Table(name = "post")
-	class Post extends Model {
+	static class Post extends Model {
 		@Id
 		@Column(name = "post_id")
 		private Long id;
@@ -63,8 +65,20 @@ class SqlQueryBuilderTest {
 		private String title;
 		@ManyToOne(table = "category", column = @Column(name = "category_fk"), referencedColumn = "category_id")
 		private Category category;
+		// @ManyToOne(table = "user", referencedColumn = "user_id", column = @Column(name = "user_fk"))
+		// private User user;
 	}
 
+	@Table(name = "user")
+	static class User extends Model {
+		@Id
+		@Column(name = "user_id")
+		private Long id;
+		@Column(name = "name")
+		private String name;
+		@OneToMany(table = "post", column = "user_id", referencedColumn = "user_fk")
+		private List<Post> posts;
+	}
 
 	@Table(name = "entity")
 	static final class EntityWithJoin extends Model {
@@ -82,8 +96,12 @@ class SqlQueryBuilderTest {
 	Post post;
 	Category category;
 	ApplicationContextImpl context;
+	User user;
+
 	@BeforeEach
 	void setup() {
+		// Reloading context
+		ApplicationContextHolder.setContext(null);
 		context = new ApplicationContextImpl(TestApp.class.getPackageName());
 		ApplicationContextHolder.setContext(context);
 
@@ -108,6 +126,11 @@ class SqlQueryBuilderTest {
 		post.id = 1L;
 		post.title = "Post Title";
 		post.category = category;
+
+		user = new User();
+		user.id = 1L;
+		user.name= "user";
+		user.posts = List.of(post);
 	}
 
 
@@ -146,16 +169,27 @@ class SqlQueryBuilderTest {
 	@Test
 	void testQueryBuilderSelectJoin() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(ewj);
-		String deleteSql = queryBuilder.select().join().build();
-
-		assertEquals("select test_id, test_fk, test.test_id as test_test_id, test.string as test_string, test.number as test_number, test.date as test_date, test.local_date as test_local_date, test.boolean as test_boolean, test.boolean2 as test_boolean2 from entity join test on test.test_id = entity.test_fk ", deleteSql);
+		String selectSql = queryBuilder.select().join().build();
+		String regex = "select test_id, test_fk, test.test_id as test_\\d+_test_id, test.string as test_\\d+_string, test.number as test_\\d+_number, test.date as test_\\d+_date, test.local_date as test_\\d+_local_date, test.boolean as test_\\d+_boolean, test.boolean2 as test_\\d+_boolean2 from entity join test on test.test_id = entity.test_fk ";
+		Pattern pattern = Pattern.compile(regex);
+		System.err.println(selectSql);
+		assertTrue(pattern.matcher(selectSql).find());
 	}
 
 	@Test
 	void testQueryBuilderUpdateJoin() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(post);
 		String updateSql = queryBuilder.update().allValues().join().byId().build();
-
 		assertEquals("update post set post_id = 1, title = 'Post Title', category_fk = 1 where post_id = 1 ", updateSql);
+	}
+
+	@Test
+	void testQueryBuilderSelectOneToManyJoin() {
+		QueryBuilder queryBuilder = new SqlQueryBuilder(user);
+		String selectSql = queryBuilder.select().join().build();
+		String regex = "select user_id, name, post.post_id as post_\\d+_post_id, post.title as post_\\d+_title from user join post on post.user_fk = user.user_id ";
+		Pattern pattern = Pattern.compile(regex);
+		System.err.println(selectSql);
+		assertTrue(pattern.matcher(selectSql).find());
 	}
 }

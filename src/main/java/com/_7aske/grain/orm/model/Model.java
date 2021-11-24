@@ -81,7 +81,8 @@ public class Model {
 
 	protected <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
 		List<Map<String, String>> data = getDatabaseExecutor().executeQuery(query);
-		return new ModelMapper<>(clazz, data).get();
+		ModelDataAggregator<T> aggregator = new ModelDataAggregator<>(clazz, data);
+		return new ModelMapper<T>(clazz, aggregator.aggregate()).get();
 	}
 
 	// @Incomplete

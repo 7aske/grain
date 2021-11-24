@@ -2,20 +2,21 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
-import com._7aske.grain.orm.annotation.Table;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com._7aske.grain.util.QueryBuilderUtil.getFormattedAlias;
+import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 public class ModelMapper<T extends Model> {
 	private final Class<?> modelClazz;
-	private final List<Map<String, String>> data;
+	private final List<Map<String, Object>> data;
 
-	public ModelMapper(Class<T> modelClazz, List<Map<String, String>> data) {
+	public ModelMapper(Class<T> modelClazz, List<Map<String, Object>> data) {
 		this.modelClazz = modelClazz;
 		this.data = data;
 	}
@@ -30,7 +31,7 @@ public class ModelMapper<T extends Model> {
 
 				for (Field field : model.getFields()) {
 					Column column = field.getAnnotation(Column.class);
-					String val = modelData.get(column.name());
+					String val = (String) modelData.get(column.name());
 					field.setAccessible(true);
 
 					assignValueToField(model, field, val, modelData);
@@ -38,10 +39,18 @@ public class ModelMapper<T extends Model> {
 
 				for (Field field : model.getManyToOne()) {
 					ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-					String val = modelData.get(manyToOne.column().name());
+					String val = (String) modelData.get(manyToOne.column().name());
 					field.setAccessible(true);
 
 					assignValueToField(model, field, val, modelData);
+				}
+
+				for (Field field : model.getOneToMany()) {
+					List<Map<String, Object>> values = (List<Map<String, Object>>) modelData.get(field.getName());
+					field.setAccessible(true);
+					Class<? extends Model> clazz = getGenericListTypeArgument(field);
+					List<?> toSet = new ModelMapper<>(clazz, values).get();
+					field.set(model, toSet);
 				}
 
 				models.add(model);
@@ -53,11 +62,13 @@ public class ModelMapper<T extends Model> {
 		return models;
 	}
 
-	private void assignValueToField(Model model, Field field, String val, Map<String, String> modelData) throws IllegalAccessException {
+	private void assignValueToField(Model model, Field field, String val, Map<String, Object> modelData) throws IllegalAccessException {
 		// @Refactor
 		// This is nasty hack to handle different number types that
 		// might be set to the model class.
-		if (Byte.class.isAssignableFrom(field.getType())) {
+		if (val == null) {
+			field.set(model, null);
+		} else if (Byte.class.isAssignableFrom(field.getType())) {
 			field.set(model, Byte.parseByte(val));
 		} else if (Byte.class.isAssignableFrom(field.getType())) {
 			field.set(model, Short.parseShort(val));
@@ -89,15 +100,11 @@ public class ModelMapper<T extends Model> {
 		}
 	}
 
-	private void setFieldModelValue(Model model, Field field, Map<String, String> modelData) throws IllegalAccessException {
+	private void setFieldModelValue(Model model, Field field, Map<String, Object> modelData) throws IllegalAccessException {
 		Model instance = (Model) newInstance(field.getType());
-		Table table = instance.getTable();
 		for (Field f : instance.getFields()) {
 			f.setAccessible(true);
-			Column column = f.getAnnotation(Column.class);
-			// @Refactor alias should be generated in a common place
-			// across all files that use it.
-			String v = modelData.get(String.format("%s_%s", table.name(), column.name()));
+			String v = (String) modelData.get(getFormattedAlias(field));
 			assignValueToField(instance, f, v, modelData);
 		}
 		field.set(model, instance);

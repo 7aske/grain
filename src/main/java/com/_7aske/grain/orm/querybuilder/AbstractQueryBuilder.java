@@ -2,6 +2,7 @@ package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
+import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
 
@@ -36,7 +37,9 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 		try {
 			field.setAccessible(true);
 			// Handle the case where the formatted value is a relationship object
-			if (field.isAnnotationPresent(ManyToOne.class))  {
+			if (field.isAnnotationPresent(OneToMany.class)) {
+
+			} else if (field.isAnnotationPresent(ManyToOne.class))  {
 				Model model = (Model) field.get(getModelInspector().getModel());
 				List<Field> ids = new ModelInspector(model).getModelIds();
 				if (ids.size() > 1) {
