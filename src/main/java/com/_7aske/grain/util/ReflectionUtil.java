@@ -1,14 +1,27 @@
 package com._7aske.grain.util;
 
+import com._7aske.grain.exception.GrainReflectionException;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 public class ReflectionUtil {
-	private ReflectionUtil() {}
+	private ReflectionUtil() {
+	}
+
+	// RuntimeException version of getAnyConstructor
+	public static <T> Constructor<T> getAnyConstructorNoThrow(Class<T> clazz) {
+		try {
+			return getAnyConstructor(clazz);
+		} catch (NoSuchMethodException e) {
+			throw new GrainReflectionException(e);
+		}
+	}
 
 	public static <T> Constructor<T> getAnyConstructor(Class<T> clazz) throws NoSuchMethodException {
 		Constructor<T> constructor = null;
@@ -39,7 +52,7 @@ public class ReflectionUtil {
 		throw cause;
 	}
 
-	public static boolean haveCommonInterfaces(Class<?> clazz1, Class<?> clazz2){
+	public static boolean haveCommonInterfaces(Class<?> clazz1, Class<?> clazz2) {
 		List<Class<?>> interfaces1 = Arrays.asList(clazz1.getInterfaces());
 		List<Class<?>> interfaces2 = Arrays.asList(clazz2.getInterfaces());
 		if (clazz2.isInterface()) return interfaces1.contains(clazz2);
@@ -83,5 +96,13 @@ public class ReflectionUtil {
 
 	public static boolean isAnnotationPresent(Field field, Class<? extends Annotation> annotation) {
 		return field.isAnnotationPresent(annotation);
+	}
+
+	public static <T> T newInstance(Class<T> clazz) throws GrainReflectionException {
+		try {
+			return getAnyConstructor(clazz).newInstance();
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+			throw new GrainReflectionException(e);
+		}
 	}
 }

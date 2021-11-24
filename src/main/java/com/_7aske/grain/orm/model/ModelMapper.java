@@ -5,12 +5,11 @@ import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.Table;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
+import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 public class ModelMapper<T extends Model> {
 	private final Class<?> modelClazz;
@@ -25,28 +24,28 @@ public class ModelMapper<T extends Model> {
 	public List<T> get() {
 		List<T> models = new ArrayList<>();
 		// @Refactor use stream
-		data.forEach(d -> {
+		data.forEach(modelData -> {
 			try {
-				T model = (T) getAnyConstructor(modelClazz).newInstance();
+				T model = (T) newInstance(modelClazz);
 
 				for (Field field : model.getFields()) {
 					Column column = field.getAnnotation(Column.class);
-					String val = d.get(column.name());
+					String val = modelData.get(column.name());
 					field.setAccessible(true);
 
-					assignValueToField(model, field, val, d);
+					assignValueToField(model, field, val, modelData);
 				}
 
 				for (Field field : model.getManyToOne()) {
 					ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-					String val = d.get(manyToOne.column().name());
+					String val = modelData.get(manyToOne.column().name());
 					field.setAccessible(true);
 
-					assignValueToField(model, field, val, d);
+					assignValueToField(model, field, val, modelData);
 				}
 
 				models.add(model);
-			} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			} catch (IllegalAccessException e) {
 				e.printStackTrace();
 			}
 		});
@@ -54,7 +53,7 @@ public class ModelMapper<T extends Model> {
 		return models;
 	}
 
-	private void assignValueToField(Model model, Field field, String val, Map<String, String> currData) throws IllegalAccessException {
+	private void assignValueToField(Model model, Field field, String val, Map<String, String> modelData) throws IllegalAccessException {
 		// @Refactor
 		// This is nasty hack to handle different number types that
 		// might be set to the model class.
@@ -79,25 +78,28 @@ public class ModelMapper<T extends Model> {
 			field.set(model, val);
 		} else {
 			if (field.isAnnotationPresent(ManyToOne.class)) {
-				try {
-					Model instance = (Model) getAnyConstructor(field.getType()).newInstance();
-					Table table = instance.getTable();
-					for (Field f : instance.getFields()) {
-						Column column = f.getAnnotation(Column.class);
-						String v = currData.get(String.format("%s_%s", table.name(), column.name()));
-						f.setAccessible(true);
-						assignValueToField(instance, f, v, currData);
-					}
-					field.set(model, instance);
-					// @Refactor
-				} catch (InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-					e.printStackTrace();
-				}
+				setFieldModelValue(model, field, modelData);
+				System.err.println(Thread.currentThread().getStackTrace()[0]);
 			} else {
-				// @Temporary
+				// @Temporary until we handle all the cases
+				System.err.println(Thread.currentThread().getStackTrace()[0]);
 				System.err.printf("Setting value to type %s%n", field.getType());
 				field.set(model, val);
 			}
 		}
+	}
+
+	private void setFieldModelValue(Model model, Field field, Map<String, String> modelData) throws IllegalAccessException {
+		Model instance = (Model) newInstance(field.getType());
+		Table table = instance.getTable();
+		for (Field f : instance.getFields()) {
+			f.setAccessible(true);
+			Column column = f.getAnnotation(Column.class);
+			// @Refactor alias should be generated in a common place
+			// across all files that use it.
+			String v = modelData.get(String.format("%s_%s", table.name(), column.name()));
+			assignValueToField(instance, f, v, modelData);
+		}
+		field.set(model, instance);
 	}
 }

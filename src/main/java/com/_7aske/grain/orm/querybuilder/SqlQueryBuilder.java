@@ -5,15 +5,13 @@ import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.orm.querybuilder.QueryBuilder.Operation.*;
-import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
+import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 /**
  * QueryBuilder variant responsible for creating basic CRUD
@@ -130,7 +128,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 							.stream()
 							.map(field -> field.getAnnotation(Column.class).name())
 							.collect(Collectors.joining(", ")));
-					if (joins != null) {
+					if (joins != null && !joins.isEmpty()) {
 						builder.append(", ");
 						builder.append(getModelInspector().getModelManyToOne()
 								.stream()
@@ -145,24 +143,19 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 						builder.append(joins
 								.stream()
 								.map(field -> {
-									try {
-										Class<?> clazz = field.getClazz();
-										Table table = clazz.getAnnotation(Table.class);
-										Model instance = (Model) getAnyConstructor(clazz).newInstance();
-										// @Incomplete should probably repeat the same process for
-										// @ManyToOne fields of clazz as well???
-										return new ModelInspector(instance).getModelFields()
-												.stream()
-												// @Temporary hack to create alias that can be used with result set metadata.
-												// Alias can collide with root table column names.
-												.map(f -> MessageFormat.format("{0}.{1} as {0}_{1}", table.name(), f.getAnnotation(Column.class).name()))
-												.collect(Collectors.joining(", "));
-									} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-										e.printStackTrace();
-										return null;
-									}
+									Class<?> clazz = field.getClazz();
+									Model instance = (Model) newInstance(clazz);
+									// @Incomplete should probably repeat the same process for
+									// @ManyToOne fields of clazz as well???
+									return new ModelInspector(instance).getModelFields()
+											.stream()
+											// @Temporary hack to create alias that can be used with result set metadata.
+											// Alias can collide with root table column names.
+											.map(f -> MessageFormat.format("{0}.{1} as {0}_{1}",
+													clazz.getAnnotation(Table.class).name(),
+													f.getAnnotation(Column.class).name()))
+											.collect(Collectors.joining(", "));
 								})
-								.filter(Objects::nonNull)
 								.collect(Collectors.joining(", ")));
 					}
 				}

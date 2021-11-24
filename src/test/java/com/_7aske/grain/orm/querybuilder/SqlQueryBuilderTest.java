@@ -109,6 +109,6 @@ class SqlQueryBuilderTest {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(ewj);
 		String deleteSql = queryBuilder.select().join().build();
 
-		assertEquals("delete from test where test_id = 1 ", deleteSql);
+		assertEquals("select test_id, test_fk, test.test_id as test_test_id, test.string as test_string, test.number as test_number, test.date as test_date, test.local_date as test_local_date, test.boolean as test_boolean, test.boolean2 as test_boolean2 from entity join test on test.test_id = entity.test_fk ", deleteSql);
 	}
 }

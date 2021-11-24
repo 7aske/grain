@@ -7,6 +7,16 @@ public class ConfigurationBuilder {
 		this.instance = Configuration.createDefault();
 	}
 
+	// Sets the property directly to Configuration.properties
+	public void setProperty(Configuration.Key prop, Object value) {
+		this.instance.setProperty(prop, value);
+	}
+
+	// Allows to set any arbitrary key to Configuration.properties
+	public void setPropertyUnsafe(String prop, Object value) {
+		this.instance.setPropertyUnsafe(prop, value);
+	}
+
 	public ConfigurationBuilder port(int port) {
 		this.instance.setPort(port);
 		return this;
@@ -21,6 +31,7 @@ public class ConfigurationBuilder {
 		this.instance.setThreads(threads);
 		return this;
 	}
+
 
 	public Configuration build() {
 		return instance;

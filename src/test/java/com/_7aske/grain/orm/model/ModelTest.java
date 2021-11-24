@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 
-import static com._7aske.grain.config.ConfigurationKey.*;
+import static com._7aske.grain.config.Configuration.Key.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ModelTest {
@@ -43,9 +43,9 @@ class ModelTest {
 		field.set(null, context);
 
 		Configuration configuration = context.getGrainRegistry().getGrain(Configuration.class);
-		configuration.getProperties().put(DATABASE_HOST, "127.0.0.1");
-		configuration.getProperties().put(DATABASE_PORT, 3306);
-		configuration.getProperties().put(DATABASE_NAME, "test");
+		configuration.setProperty(DATABASE_HOST, "127.0.0.1");
+		configuration.setProperty(DATABASE_PORT, 3306);
+		configuration.setProperty(DATABASE_NAME, "test");
 	}
 
 	@Test

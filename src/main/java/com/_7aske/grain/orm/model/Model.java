@@ -11,15 +11,13 @@ import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 /**
  * Model class representing a database entity/entry. Also contains all the required logic to generate
@@ -81,33 +79,26 @@ public class Model {
 		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
 	}
 
+	protected <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
+		List<Map<String, String>> data = getDatabaseExecutor().executeQuery(query);
+		return new ModelMapper<>(clazz, data).get();
+	}
+
 	// @Incomplete
 	public static <T extends Model> T findById(Class<T> clazz, Object id) {
-		try {
-			Model instance = getAnyConstructor(clazz).newInstance();
-			return instance.doFindById(clazz, id);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			e.printStackTrace();
-			return null;
-		}
+		Model instance = newInstance(clazz);
+		return instance.doFindById(clazz, id);
 	}
 
 	public static <T extends Model> List<T> findAll(Class<T> clazz) {
-		try {
-			Model instance = getAnyConstructor(clazz).newInstance();
-			return instance.doFindAll(clazz);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-			e.printStackTrace();
-			return new ArrayList<>();
-		}
+		Model instance = newInstance(clazz);
+		return instance.doFindAll(clazz);
 	}
 
 	// @Temporary
 	public <T extends Model> T doFindById(Class<T> clazz, Object id) {
-		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().join().byId(id).build());
-		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
-		List<? extends Model> result = modelMapper.get();
+		List<T> result = executeQuery(clazz, queryBuilder.select().join().byId(id).build());
+
 		// If we're getting the rows by ID there should really be only one
 		// row returned.
 		if (result.size() > 1)
@@ -116,15 +107,12 @@ public class Model {
 		if (result.size() == 0)
 			throw new GrainDbNoSuchRowException();
 
-		return modelMapper.get().get(0);
+		return result.get(0);
 	}
 
 	// @Temporary
 	public <T extends Model> List<T> doFindAll(Class<T> clazz) {
-		DatabaseExecutor databaseExecutor = getDatabaseExecutor();
-		List<Map<String, String>> data = databaseExecutor.executeQuery(queryBuilder.select().join().build());
-		ModelMapper<T> modelMapper = new ModelMapper<>(clazz, data);
-		return modelMapper.get();
+		return executeQuery(clazz, queryBuilder.select().join().build());
 	}
 
 	public <T extends Model> T save() {

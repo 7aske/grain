@@ -2,22 +2,28 @@ package com._7aske.grain.orm.database;
 
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
+import com._7aske.grain.config.Configuration;
 import com._7aske.grain.orm.connection.ConnectionManager;
 import com._7aske.grain.orm.exception.GrainDbStatementException;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com._7aske.grain.config.Configuration.Key.DATABASE_EXECUTOR_PRINT_SQL;
 
 @Grain
 public class DatabaseExecutor {
 	@Inject
-	public ConnectionManager connectionManager;
+	protected ConnectionManager connectionManager;
+	@Inject
+	protected Configuration configuration;
 
 	// Used for update and insert operations
 	public long executeUpdate(String query) {
+		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
+			// @Temporary replace with logger
+			System.err.println(query);
+		}
 		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
 			statement.executeUpdate(query);
 			ResultSet resultSet = statement.getGeneratedKeys();
@@ -35,6 +41,10 @@ public class DatabaseExecutor {
 	}
 
 	public List<Map<String, String>> executeQuery(String query) {
+		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
+			// @Temporary replace with logger
+			System.err.println(query);
+		}
 		List<Map<String, String>> out = new ArrayList<>();
 		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
 			ResultSet resultSet = statement.executeQuery(query);
