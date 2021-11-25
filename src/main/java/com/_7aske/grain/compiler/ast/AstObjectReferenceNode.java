@@ -3,6 +3,8 @@ package com._7aske.grain.compiler.ast;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
+import java.lang.reflect.Field;
+
 public class AstObjectReferenceNode extends AstSymbolNode {
 	private AstNode reference;
 	private Object backReference;
@@ -64,12 +66,22 @@ public class AstObjectReferenceNode extends AstSymbolNode {
 			}
 		}
 
-		if (this.reference instanceof AstObjectReferenceNode) {
+		if (value == null) {
+			return null;
+		} else if (this.reference instanceof AstObjectReferenceNode) {
 			((AstObjectReferenceNode) this.reference).setBackReference(value);
 			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstFunctionCallNode) {
 			((AstFunctionCallNode) this.reference).setBackReference(value);
 			value = this.reference.run(interpreter);
+		} else if (this.reference instanceof AstSymbolNode) {
+			try {
+				Field field = value.getClass().getDeclaredField(((AstSymbolNode) this.reference).symbolName);
+				field.setAccessible(true);
+				value = field.get(value);
+			} catch (IllegalAccessException | NoSuchFieldException e) {
+				e.printStackTrace();
+			}
 		}
 
 		return value;

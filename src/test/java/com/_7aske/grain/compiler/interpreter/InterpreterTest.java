@@ -200,7 +200,7 @@ class InterpreterTest {
 	}
 
 	@Test
-	void test_objectReference() {
+	void test_objectReferenceMethod() {
 		String code = "a = date.getMonthValue();";
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.putSymbol("date", LocalDate.parse("2020-10-10"));
@@ -347,4 +347,20 @@ class InterpreterTest {
 		assertEquals(1, interpreter.getSymbolValue("e"));
 	}
 
+	static class User {
+		private String username;
+
+		public User(String username) {
+			this.username = username;
+		}
+	}
+
+	@Test
+	void test_objectReference() {
+		String code = "print(user.username);";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("user", new User("test"));
+		interpreter.run();
+		assertEquals("test", interpreter.getContent());
+	}
 }

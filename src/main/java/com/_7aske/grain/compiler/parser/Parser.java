@@ -215,6 +215,10 @@ public class Parser {
 		return node;
 	}
 
+	// @Todo this only works when parsing single step reference line user.username
+	// it will not work with references like user.username.length(). In that case
+	// there should be an intermediate value e.g. name = user.username; and then
+	// calle to method name.length().
 	private AstNode parseObject(Token token) {
 		if (token.getType() != IDEN)
 			throw new ParserSyntaxErrorException(getSourceCodeLocation(token), "Expected identifier got '%s'", token.getValue());

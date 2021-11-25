@@ -137,7 +137,7 @@ public class AstFunctionCallNode extends AstUnaryNode {
 	private boolean areAllParametersCastable(Parameter[] parameters, Object[] args) {
 		if (parameters.length != args.length) return false;
 		for (int i = 0; i < parameters.length; i++) {
-			if (!parameters[i].getType().isAssignableFrom(args[i].getClass())) {
+			if (!parameters[i].getType().isPrimitive() && !parameters[i].getType().isAssignableFrom(args[i].getClass())) {
 				return false;
 			}
 		}
