@@ -2,13 +2,14 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
+import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com._7aske.grain.util.QueryBuilderUtil.getFormattedAlias;
+import static com._7aske.grain.util.QueryBuilderUtil.getColumnName;
 import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
@@ -30,19 +31,12 @@ public class ModelMapper<T extends Model> {
 				T model = (T) newInstance(modelClazz);
 
 				for (Field field : model.getFields()) {
-					Column column = field.getAnnotation(Column.class);
-					String val = (String) modelData.get(column.name());
-					field.setAccessible(true);
-
+					String val = (String) modelData.get(getColumnName(field));
 					assignValueToField(model, field, val, modelData);
 				}
 
 				for (Field field : model.getManyToOne()) {
-					ManyToOne manyToOne = field.getAnnotation(ManyToOne.class);
-					String val = (String) modelData.get(manyToOne.column().name());
-					field.setAccessible(true);
-
-					assignValueToField(model, field, val, modelData);
+					setFieldModelValue(model, field, (Map<String, Object>) modelData.get(getColumnName(field)));
 				}
 
 				for (Field field : model.getOneToMany()) {
@@ -63,6 +57,7 @@ public class ModelMapper<T extends Model> {
 	}
 
 	private void assignValueToField(Model model, Field field, String val, Map<String, Object> modelData) throws IllegalAccessException {
+		field.setAccessible(true);
 		// @Refactor
 		// This is nasty hack to handle different number types that
 		// might be set to the model class.
@@ -90,10 +85,8 @@ public class ModelMapper<T extends Model> {
 		} else {
 			if (field.isAnnotationPresent(ManyToOne.class)) {
 				setFieldModelValue(model, field, modelData);
-				System.err.println(Thread.currentThread().getStackTrace()[0]);
 			} else {
 				// @Temporary until we handle all the cases
-				System.err.println(Thread.currentThread().getStackTrace()[0]);
 				System.err.printf("Setting value to type %s%n", field.getType());
 				field.set(model, val);
 			}
@@ -101,11 +94,17 @@ public class ModelMapper<T extends Model> {
 	}
 
 	private void setFieldModelValue(Model model, Field field, Map<String, Object> modelData) throws IllegalAccessException {
+		field.setAccessible(true);
 		Model instance = (Model) newInstance(field.getType());
 		for (Field f : instance.getFields()) {
 			f.setAccessible(true);
-			String v = (String) modelData.get(getFormattedAlias(field));
-			assignValueToField(instance, f, v, modelData);
+			if (f.isAnnotationPresent(Column.class)) {
+				assignValueToField(instance, f, (String) modelData.get(getColumnName(f)), modelData);
+			} else if (f.isAnnotationPresent(ManyToOne.class)) {
+				setFieldModelValue(instance, f, (Map<String, Object>) modelData.get(f.getName()));
+			} else {
+				throw new GrainDbIntrospectionException("Unsupported operation");
+			}
 		}
 		field.set(model, instance);
 	}

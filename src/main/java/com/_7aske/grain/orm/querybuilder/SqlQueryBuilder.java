@@ -6,18 +6,15 @@ import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.exception.GrainDbUpdateIdMissingException;
 import com._7aske.grain.orm.model.Model;
-import com._7aske.grain.orm.model.ModelInspector;
+import com._7aske.grain.util.QueryBuilderUtil;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.orm.querybuilder.QueryBuilder.Operation.*;
-import static com._7aske.grain.util.QueryBuilderUtil.getFormattedAlias;
-import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
-import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 /**
  * QueryBuilder variant responsible for creating basic CRUD
@@ -30,7 +27,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	protected Map<String, Object> update = null;
 	protected String[] groupBy = null;
 	protected String[] orderBy = null;
-	protected List<Join> joins = null;
+	protected List<Join<?, ?>> joins = null;
 
 	public SqlQueryBuilder(Model model) {
 		super(model);
@@ -63,25 +60,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 
 	@Override
 	public QueryBuilder join() {
-		List<Join> manyToOne = getModelInspector().getModelManyToOne()
-				.stream()
-				.map(f -> Join.from(f.getType(), f.getAnnotation(ManyToOne.class)))
-				.collect(Collectors.toList());
-		List<Join> oneToMany = getModelInspector().getModelOneToMany()
-				.stream()
-				.map(f -> {
-					Class<?> clazz = f.getType();
-					// If the container is a list class we get the generic parameter
-					// to use in joins.
-					if (List.class.isAssignableFrom(clazz)) {
-						clazz = getGenericListTypeArgument(f);
-					}
-					return Join.from(clazz, f.getAnnotation(OneToMany.class));
-				})
-				.collect(Collectors.toList());
-		joins = new ArrayList<>();
-		joins.addAll(manyToOne);
-		joins.addAll(oneToMany);
+		joins = QueryBuilderUtil.getJoins(getModelInspector().getModel().getClass(), new Stack<>());
 		return this;
 	}
 
@@ -134,7 +113,6 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	}
 
 	// @Incomplete Doesn't implement group by and order by
-	// @Incomplete Doesn't implement joining of joined tables
 	@Override
 	public String build() {
 		StringBuilder builder = new StringBuilder();
@@ -146,46 +124,32 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				if (columns != null && columns.length > 0) {
 					builder.append(String.join(", ", columns)).append(" ");
 				} else {
-					builder.append(getModelInspector().getModelFields()
+					// @Refactor change the way model inspector returns fields
+					builder.append(getModelInspector().getAllModelFields()
 							.stream()
-							.map(field -> field.getAnnotation(Column.class).name())
+							.map(field -> {
+								String column;
+								if (field.isAnnotationPresent(Column.class)) {
+									column = field.getAnnotation(Column.class).name();
+								} else {
+									column = field.getAnnotation(ManyToOne.class).column();
+								}
+								return String.format("%s.%s", thisTableName, column);
+							})
 							.collect(Collectors.joining(", ")));
 					if (joins != null && !joins.isEmpty()) {
-						if (!getModelInspector().getModelManyToOne().isEmpty()) {
-							builder.append(", ");
-						}
-						builder.append(getModelInspector().getModelManyToOne()
-								.stream()
-								// @Refactor Was about to put aliases to make sure no collisions happen
-								// in the column names but it would affect ModelMapper mapping. For
-								// now this remains like this until ModelMapper mapping is changed.
-								.map(field -> field.getAnnotation(ManyToOne.class).column().name())
-								.collect(Collectors.joining(", ")));
-
-						// joins.size is always greater than zero
 						builder.append(", ");
-						builder.append(joins
-								.stream()
-								.map(join -> {
-									Class<?> clazz = join.getClazz();
-									Model instance = (Model) newInstance(clazz);
-									return new ModelInspector(instance).getModelFields()
-											.stream()
-											.map(f -> getFormattedAlias(clazz, f))
-											.collect(Collectors.joining(", "));
-								})
+						builder.append(joins.stream()
+								.flatMap(j -> j.getFields().stream())
 								.collect(Collectors.joining(", ")));
 					}
 				}
 				builder.append(" from ");
 				builder.append(thisTableName).append(" ");
 				if (joins != null) {
-					joins.forEach(join -> {
-						builder.append("join ").append(join.getTable()).append(" on ");
-						builder.append(join.getTable()).append(".").append(join.getReferencedColumn());
-						builder.append(" = ");
-						builder.append(thisTableName).append(".").append(join.getColumn()).append(" ");
-					});
+					builder.append(joins.stream()
+							.map(Join::getSql)
+							.collect(Collectors.joining(" ")));
 				}
 				if (where != null) {
 					builder.append("where ");

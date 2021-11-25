@@ -56,7 +56,7 @@ public class DatabaseExecutor {
 					// @Note use getColumnLabel instead of getColumnName
 					// because we're using aliases for referencing joined
 					// column names.
-					data.put(metaData.getColumnLabel(i), resultSet.getString(i));
+					data.put(getScopedColumnName(metaData, i), resultSet.getString(i));
 				}
 				out.add(data);
 			}
@@ -64,5 +64,9 @@ public class DatabaseExecutor {
 			throw new GrainDbStatementException(e);
 		}
 		return out;
+	}
+
+	private String getScopedColumnName(ResultSetMetaData metaData, int i) throws SQLException {
+		return String.format("%s.%s", metaData.getTableName(i), metaData.getColumnName(i));
 	}
 }

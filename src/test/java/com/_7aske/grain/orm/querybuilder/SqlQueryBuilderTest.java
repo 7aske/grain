@@ -12,10 +12,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com._7aske.grain.util.QueryBuilderUtil.getJoins;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SqlQueryBuilderTest {
 	static class TestApp extends GrainApp {
@@ -63,7 +64,7 @@ class SqlQueryBuilderTest {
 		private Long id;
 		@Column(name = "title")
 		private String title;
-		@ManyToOne(table = "category", column = @Column(name = "category_fk"), referencedColumn = "category_id")
+		@ManyToOne(table = "category", column = "category_fk", referencedColumn = "category_id")
 		private Category category;
 		// @ManyToOne(table = "user", referencedColumn = "user_id", column = @Column(name = "user_fk"))
 		// private User user;
@@ -86,7 +87,7 @@ class SqlQueryBuilderTest {
 		@Column(name = "test_id")
 		private Integer id;
 
-		@ManyToOne(table = "test", referencedColumn = "test_id", column = @Column(name = "test_fk"))
+		@ManyToOne(table = "test", referencedColumn = "test_id", column = "test_fk")
 		private TestModel test;
 
 	}
@@ -129,7 +130,7 @@ class SqlQueryBuilderTest {
 
 		user = new User();
 		user.id = 1L;
-		user.name= "user";
+		user.name = "user";
 		user.posts = List.of(post);
 	}
 
@@ -139,7 +140,7 @@ class SqlQueryBuilderTest {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(testEntity);
 		String selectSql = queryBuilder.select().build();
 
-		assertEquals("select test_id, string, number, date, local_date, boolean, boolean2 from test ", selectSql);
+		assertEquals("select test.test_id, test.string, test.number, test.date, test.local_date, test.boolean, test.boolean2 from test ", selectSql);
 	}
 
 	@Test
@@ -170,7 +171,7 @@ class SqlQueryBuilderTest {
 	void testQueryBuilderSelectJoin() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(ewj);
 		String selectSql = queryBuilder.select().join().build();
-		String regex = "select test_id, test_fk, test.test_id as test_\\d+_test_id, test.string as test_\\d+_string, test.number as test_\\d+_number, test.date as test_\\d+_date, test.local_date as test_\\d+_local_date, test.boolean as test_\\d+_boolean, test.boolean2 as test_\\d+_boolean2 from entity join test on test.test_id = entity.test_fk ";
+		String regex = "select entity.test_id, entity.test_fk, test_\\d+.test_id, test_\\d+.string, test_\\d+.number, test_\\d+.date, test_\\d+.local_date, test_\\d+.boolean, test_\\d+.boolean2 from entity left join test test_\\d+ on entity.test_fk = test_\\d+.test_id";
 		Pattern pattern = Pattern.compile(regex);
 		System.err.println(selectSql);
 		assertTrue(pattern.matcher(selectSql).find());
@@ -187,9 +188,15 @@ class SqlQueryBuilderTest {
 	void testQueryBuilderSelectOneToManyJoin() {
 		QueryBuilder queryBuilder = new SqlQueryBuilder(user);
 		String selectSql = queryBuilder.select().join().build();
-		String regex = "select user_id, name, post.post_id as post_\\d+_post_id, post.title as post_\\d+_title from user join post on post.user_fk = user.user_id ";
+		String regex = "select user.user_id, user.name, post_\\d+.post_id, post_\\d+.title, post_\\d+.category_fk, category_\\d+.category_id, category_\\d+.name from user left join post post_\\d+ on user.user_id = post_\\d+.user_fk left join category category_\\d+ on post_\\d+.category_fk = category_\\d+.category_id";
 		Pattern pattern = Pattern.compile(regex);
 		System.err.println(selectSql);
 		assertTrue(pattern.matcher(selectSql).find());
+	}
+
+	@Test
+	void testNewJoins() {
+		List<Join<?,?>> joins = getJoins(User.class, new Stack<>());
+		assertFalse(joins.isEmpty());
 	}
 }

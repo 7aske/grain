@@ -1,9 +1,13 @@
 package com._7aske.grain.orm.model;
 
+import com._7aske.grain.orm.annotation.Column;
+import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.Table;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Class used for exposing model getters to QueryBuilder classes to
@@ -22,6 +26,12 @@ public final class ModelInspector {
 
 	public List<Field> getModelFields() {
 		return model.getFields();
+	}
+
+	public List<Field> getAllModelFields() {
+		return Arrays.stream(model.getClass().getDeclaredFields())
+				.filter(f -> f.isAnnotationPresent(Column.class) || f.isAnnotationPresent(ManyToOne.class))
+				.collect(Collectors.toList());
 	}
 
 	public List<Field> getModelIds() {

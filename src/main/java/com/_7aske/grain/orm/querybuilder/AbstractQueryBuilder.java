@@ -114,7 +114,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
 		Map<String, Object> manyToOne = getModelInspector().getModelManyToOne()
 				.stream()
-				.collect(Collectors.toMap(f -> f.getAnnotation(ManyToOne.class).column().name(), this::getFormattedFieldValue));
+				.collect(Collectors.toMap(f -> f.getAnnotation(ManyToOne.class).column(), this::getFormattedFieldValue));
 		columns.putAll(manyToOne);
 		return columns;
 	}
