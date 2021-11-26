@@ -1,5 +1,7 @@
 package com._7aske.grain.http;
 
+import com._7aske.grain.http.session.Cookie;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +52,10 @@ public class HttpResponse {
 			cachedHttpString = builder.toString();
 		}
 		return cachedHttpString;
+	}
+
+	public void setCookie(Cookie cookie) {
+		this.headers.put(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 
 	public String getVersion() {

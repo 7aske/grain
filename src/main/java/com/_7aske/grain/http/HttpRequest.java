@@ -1,5 +1,6 @@
 package com._7aske.grain.http;
 
+import com._7aske.grain.http.session.Cookie;
 import com._7aske.grain.util.ArrayUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -31,6 +32,22 @@ public class HttpRequest {
 		this.parameters = other.parameters;
 		this.queryString = other.queryString;
 		this.body = other.body;
+	}
+
+	public Cookie getCookie() {
+		String cookieData = headers.get(HttpHeaders.COOKIE);
+		if (cookieData == null) {
+			return null;
+		}
+		return parseCookie(cookieData);
+	}
+
+	private Cookie parseCookie(String data) {
+		return Cookie.parse(data);
+	}
+
+	private void setCookie(Cookie cookie) {
+		this.headers.put(HttpHeaders.SET_COOKIE, cookie.toString());
 	}
 
 	public String getVersion() {

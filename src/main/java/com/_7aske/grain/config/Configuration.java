@@ -18,6 +18,7 @@ public class Configuration {
 		setProperty(SERVER_THREADS, 100);
 		setProperty(REQUEST_HANDLER_ACCESS_LOG, true);
 		setProperty(DATABASE_EXECUTOR_PRINT_SQL, true);
+		setProperty(SESSION_ENABLED, true);
 	}
 
 	public static Configuration createDefault() {
@@ -72,6 +73,7 @@ public class Configuration {
 
 	public enum Key {
 		// @formatter:off
+	    SESSION_ENABLED             ("session.enabled"),
 		SERVER_PORT                 ("server.port"),
 		SERVER_HOST                 ("server.host"),
 		SERVER_THREADS              ("server.threads"),
