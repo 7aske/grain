@@ -10,13 +10,15 @@ import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 
 @Grain
 public class Configuration {
-	private Properties properties;
+	private final Properties properties;
 
 	private Configuration(){
 		properties = new Properties();
-		properties.put(SERVER_HOST, "0.0.0.0");
-		properties.put(SERVER_PORT, 8080);
-		properties.put(SERVER_THREADS, 100);
+		setProperty(SERVER_HOST, "0.0.0.0");
+		setProperty(SERVER_PORT, 8080);
+		setProperty(SERVER_THREADS, 100);
+		setProperty(REQUEST_HANDLER_ACCESS_LOG, true);
+		setProperty(DATABASE_EXECUTOR_PRINT_SQL, true);
 	}
 
 	public static Configuration createDefault() {
@@ -42,31 +44,31 @@ public class Configuration {
 	}
 
 	public int getThreads() {
-		return (int) properties.get(SERVER_THREADS);
+		return (int) getProperty(SERVER_THREADS);
 	}
 
 	public void setThreads(int threads) {
 		if (threads < 1)
 			throw new IllegalArgumentException("Thread count must not be less than 1");
-		this.properties.put(SERVER_THREADS, threads);
+		this.setProperty(SERVER_THREADS, threads);
 	}
 
 	public int getPort() {
-		return (int) properties.get(SERVER_PORT);
+		return (int) getProperty(SERVER_PORT);
 	}
 
 	public void setPort(int port) {
 		if (port < PORT_MIN_VALUE || port > PORT_MAX_VALUE)
 			throw new IllegalArgumentException(String.format("Port must be between %d and %d", PORT_MIN_VALUE, PORT_MAX_VALUE));
-		this.properties.put(SERVER_PORT, port);
+		this.setProperty(SERVER_PORT, port);
 	}
 
 	public String getHost() {
-		return (String) properties.get(SERVER_HOST);
+		return (String) getProperty(SERVER_HOST);
 	}
 
 	public void setHost(String host) {
-		this.properties.put(SERVER_HOST, host);
+		this.setProperty(SERVER_HOST, host);
 	}
 
 	public enum Key {
@@ -81,7 +83,8 @@ public class Configuration {
 		DATABASE_PASS               ("database.pass"),
 		DATABASE_URL                ("database.url"),
 		DATABASE_DRIVER_CLASS       ("database.driver_class"),
-		DATABASE_EXECUTOR_PRINT_SQL ("database.executor.print-sql");
+		DATABASE_EXECUTOR_PRINT_SQL ("database.executor.print-sql"),
+		REQUEST_HANDLER_ACCESS_LOG  ("request-handler.access-log");
 		// @formatter:on
 
 		private final String key;

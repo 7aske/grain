@@ -14,6 +14,7 @@ public class AbstractView {
 
 	protected AbstractView(String path) {
 		this.path = path;
+		// @Optimization cache content type for given path
 		this.contentType = probeContentTypeNoThrow(Paths.get(path), "text/html");
 	}
 

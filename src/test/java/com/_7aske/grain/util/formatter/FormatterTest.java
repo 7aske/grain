@@ -36,7 +36,7 @@ class FormatterTest {
 
 	@Test
 	void testFormat_paddingRight() {
-		String res = new Formatter("test {:-10:a}test").format("hello");
+		String res = new Formatter("test {:-10}test").format("hello");
 
 		assertEquals("test hello     test", res);
 	}

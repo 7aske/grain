@@ -18,6 +18,7 @@ public final class ConnectionManager {
 	public Configuration configuration;
 	// @Temporary
 	private boolean driverInitialized = false;
+	private Connection connection;
 
 	// Generates url from injected database properties
 	public String getConnectionUrl() {
@@ -35,6 +36,17 @@ public final class ConnectionManager {
 	}
 
 	public Connection getConnection() {
+		try {
+			if (connection == null || connection.isClosed()) {
+				initializeConnection();
+			}
+			return connection;
+		} catch (SQLException e) {
+			throw new GrainDbConnectionException(e);
+		}
+	}
+
+	public void initializeConnection() {
 		if (!driverInitialized) {
 			initializeDriver();
 			driverInitialized = false;
@@ -42,7 +54,7 @@ public final class ConnectionManager {
 		String user = (String) configuration.getProperty(DATABASE_USER);
 		String pass = (String) configuration.getProperty(DATABASE_PASS);
 		try {
-			return DriverManager.getConnection(getConnectionUrl(), user, pass);
+			connection = DriverManager.getConnection(getConnectionUrl(), user, pass);
 		} catch (SQLException e) {
 			throw new GrainDbConnectionException(e);
 		}
@@ -55,7 +67,7 @@ public final class ConnectionManager {
 				Class.forName(className);
 			}
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			throw new GrainDbConnectionException(e);
 		}
 	}
 }
