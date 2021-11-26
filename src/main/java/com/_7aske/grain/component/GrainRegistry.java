@@ -18,6 +18,7 @@ public class GrainRegistry {
 
 	public GrainRegistry() {
 		this.grainInitializer = new GrainInitializer();
+		registerGrain(this);
 	}
 
 	public void registerGrains(String basePkg) {

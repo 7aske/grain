@@ -9,4 +9,5 @@ public interface ApplicationContext {
 	StaticLocationsRegistry getStaticLocationsRegistry();
 	Configuration getConfiguration();
 	String getPackage();
+	<T> T getGrain(Class<T> clazz);
 }

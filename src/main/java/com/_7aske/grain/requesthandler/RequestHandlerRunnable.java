@@ -8,7 +8,6 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpRequestParser;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.HttpStatus;
-import com._7aske.grain.http.json.JsonParser;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
@@ -24,7 +23,6 @@ import java.net.Socket;
 import java.util.Objects;
 
 import static com._7aske.grain.config.Configuration.Key.REQUEST_HANDLER_ACCESS_LOG;
-import static com._7aske.grain.http.HttpContentType.APPLICATION_JSON;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class RequestHandlerRunnable implements Runnable {
@@ -35,19 +33,12 @@ public class RequestHandlerRunnable implements Runnable {
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
-		ControllerHandlerRegistry controllerRegistry = new ControllerHandlerRegistry(context.getGrainRegistry());
+		// @Todo Make static handler registry a Grain
 		StaticHandlerRegistry staticHandlerRegistry = new StaticHandlerRegistry(context.getStaticLocationsRegistry());
-		MiddlewareHandlerRegistry middlewareRegistry = new MiddlewareHandlerRegistry(context.getGrainRegistry());
+		ControllerHandlerRegistry controllerRegistry = context.getGrain(ControllerHandlerRegistry.class);
+		MiddlewareHandlerRegistry middlewareRegistry = context.getGrain(MiddlewareHandlerRegistry.class);
 		this.configuration = context.getConfiguration();
 
-		// Used for parsing JSON body
-		middlewareRegistry.addHandler((req, res) -> {
-			if (Objects.equals(req.getHeader(CONTENT_TYPE), APPLICATION_JSON)) {
-				JsonParser deserializer = new JsonParser((String) req.getBody());
-				req.setBody(deserializer.parse());
-			}
-			return false;
-		});
 
 		this.handlerRunner = HandlerRunnerFactory.getRunner()
 				.addRegistry(middlewareRegistry)

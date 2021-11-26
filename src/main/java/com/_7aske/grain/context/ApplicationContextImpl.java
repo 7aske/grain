@@ -49,4 +49,9 @@ public class ApplicationContextImpl implements ApplicationContext {
 	public String getPackage() {
 		return basePackage;
 	}
+
+	@Override
+	public <T> T getGrain(Class<T> clazz) {
+		return grainRegistry.getGrain(clazz);
+	}
 }
