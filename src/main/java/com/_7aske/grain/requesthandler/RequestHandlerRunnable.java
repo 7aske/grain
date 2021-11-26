@@ -9,6 +9,8 @@ import com._7aske.grain.http.HttpRequestParser;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.HttpStatus;
 import com._7aske.grain.http.json.JsonParser;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
@@ -28,6 +30,7 @@ public class RequestHandlerRunnable implements Runnable {
 	private final StaticHandlerRegistry staticHandlerRegistry;
 	private final ControllerHandlerRegistry controllerRegistry;
 	private final MiddlewareHandlerRegistry middlewareRegistry;
+	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
@@ -53,13 +56,13 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
 
+			long start = System.currentTimeMillis();
 			try {
 				HandlerRunnerFactory.getRunner()
 						.addRegistry(middlewareRegistry)
 						.addRegistry(controllerRegistry)
 						.addRegistry(staticHandlerRegistry)
 						.run(request, response);
-
 			} catch (HttpException ex) {
 				ex.printStackTrace();
 				response.setStatus(ex.getStatus());
@@ -78,7 +81,9 @@ public class RequestHandlerRunnable implements Runnable {
 						.setHeader(CONTENT_TYPE, "text/html")
 						.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
 			} finally {
+				long end = System.currentTimeMillis();
 				writer.write(response.getHttpString());
+				logger.info("{} {} {} - {} - {}ms", request.getMethod(), request.getPath(), request.getVersion(), response.getStatus().getValue(), end - start);
 			}
 
 		} catch (IOException e) {

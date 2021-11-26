@@ -45,7 +45,13 @@ public class Formatter {
 						// @Temporary do proper formatting of floats
 						toPrintStr = String.format("%."+precision+"f", toPrint);
 					}
-					String pad = " ".repeat(Math.max(0, padLength - toPrintStr.length()));
+					int len = toPrintStr.length();
+					// @Temporary nasty hack to remove ANSI escape chars
+					// used for colored output
+					if (toPrintStr.startsWith("\u001B")) {
+						len -= 9;
+					}
+					String pad = " ".repeat(Math.max(0, padLength - len));
 					if (!padRight)
 						builder.append(pad);
 					builder.append(toPrintStr);

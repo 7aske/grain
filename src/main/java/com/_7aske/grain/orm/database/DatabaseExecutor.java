@@ -3,6 +3,8 @@ package com._7aske.grain.orm.database;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.connection.ConnectionManager;
 import com._7aske.grain.orm.exception.GrainDbStatementException;
 
@@ -17,12 +19,12 @@ public class DatabaseExecutor {
 	protected ConnectionManager connectionManager;
 	@Inject
 	protected Configuration configuration;
+	private final Logger logger = LoggerFactory.getLogger(DatabaseExecutor.class);
 
 	// Used for update and insert operations
 	public long executeUpdate(String query) {
 		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
-			// @Temporary replace with logger
-			System.err.println(query);
+			logger.trace(query);
 		}
 		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
 			statement.executeUpdate(query);
@@ -42,8 +44,7 @@ public class DatabaseExecutor {
 
 	public List<Map<String, String>> executeQuery(String query) {
 		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
-			// @Temporary replace with logger
-			System.err.println(query);
+			logger.trace(query);
 		}
 		List<Map<String, String>> out = new ArrayList<>();
 		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {

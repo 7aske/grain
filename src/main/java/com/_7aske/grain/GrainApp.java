@@ -6,6 +6,8 @@ import com._7aske.grain.config.GrainApplication;
 import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.context.ApplicationContextImpl;
 import com._7aske.grain.exception.AppInitializationException;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.RequestHandlerRunnable;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
@@ -29,6 +31,7 @@ public abstract class GrainApp {
 	private StaticLocationsRegistry staticLocationsRegistry;
 	private boolean running = true;
 	private ApplicationContext context;
+	private final Logger logger = LoggerFactory.getLogger(GrainApp.class);
 
 	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
 
@@ -49,12 +52,12 @@ public abstract class GrainApp {
 		// After initializing the application context we set it to the holder to make it
 		// available for use in other classes that are not available for dependency injection.
 		ApplicationContextHolder.setContext(this.context);
+		logger.info("Initialized application context");
 	}
 
 	// Main run loop
 	private void doRun() {
-		// @Refactor replace with logger
-		System.err.printf("Started Grain application on %s:%d%n", configuration.getHost(), configuration.getPort());
+		logger.info("Started Grain application on {}:{}", configuration.getHost(), configuration.getPort());
 
 		ExecutorService executor = Executors.newFixedThreadPool(configuration.getThreads());
 

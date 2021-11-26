@@ -1,5 +1,7 @@
 package com._7aske.grain.util;
 
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
 import com._7aske.grain.orm.model.Model;
@@ -17,6 +19,7 @@ import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class QueryBuilderUtil {
+	private static final Logger logger = LoggerFactory.getLogger(QueryBuilderUtil.class);
 	private QueryBuilderUtil() {
 	}
 
@@ -106,7 +109,7 @@ public class QueryBuilderUtil {
 
 		// @Temporary
 		if (fields.size() > 1)
-			System.err.println("WARNING: getId called for class with a composite ID");
+			logger.warn("Called getId for class with a composite ID");
 
 		return fields.get(0);
 	}
@@ -138,7 +141,7 @@ public class QueryBuilderUtil {
 						result.addAll(getJoins(type, stack));
 					} else if (f.isAnnotationPresent(ManyToMany.class)) {
 						// @Incomplete
-						System.err.println("ManyToMany relationship not implemented for getJoins");
+						logger.warn("ManyToMany relationship not implemented for getJoins");
 					}
 				});
 		return result;

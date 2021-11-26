@@ -1,5 +1,7 @@
 package com._7aske.grain.orm.querybuilder;
 
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
@@ -21,6 +23,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected final static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(DATE_FORMAT_STRING);
 	protected final static SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT_STRING);
 	protected final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
+	private final Logger logger = LoggerFactory.getLogger(AbstractQueryBuilder.class);
 	private final ModelInspector model;
 
 
@@ -44,7 +47,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 				List<Field> ids = new ModelInspector(model).getModelIds();
 				if (ids.size() > 1) {
 					// @Temporary probably should throw
-					System.err.println("Unsupported update of ManyToOne relationship with composite foreign key");
+					logger.warn("Unsupported update of ManyToOne relationship with composite foreign key");
 				} else {
 					Field idField = ids.get(0);
 					idField.setAccessible(true);
