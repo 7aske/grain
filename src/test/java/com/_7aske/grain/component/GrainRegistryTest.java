@@ -1,5 +1,6 @@
 package com._7aske.grain.component;
 
+import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.context.ApplicationContext;
@@ -65,6 +66,7 @@ class GrainRegistryTest {
 
 	@Test
 	void testAfterInit() {
+		ApplicationContextHolder.setContext(null);
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName());
 		TestServiceImpl testService = applicationContext.getGrainRegistry().getGrain(TestServiceImpl.class);
 		assertEquals("something", testService.something);

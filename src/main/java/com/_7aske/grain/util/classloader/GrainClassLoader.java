@@ -1,59 +1,9 @@
 package com._7aske.grain.util.classloader;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com._7aske.grain.util.ReflectionUtil.loadClass;
-
-public class GrainClassLoader {
-	private final String basePackage;
-	private final ClassLoader classLoader;
-
-	public GrainClassLoader(String basePackage) {
-		this.basePackage = basePackage;
-		this.classLoader = Thread.currentThread().getContextClassLoader();
-	}
-
-	public Set<Class<?>> loadClasses(Predicate<Class<?>> predicate) {
-		return doLoadClasses(basePackage, predicate);
-	}
-
-	public Set<Class<?>> loadClasses() {
-		return doLoadClasses(basePackage, c -> true);
-	}
-
-	private Set<Class<?>> doLoadClasses(String pkg, Predicate<Class<?>> predicate) {
-		InputStream stream = classLoader.getResourceAsStream(pkg.replaceAll("[.]", "/"));
-
-		if (stream == null) {
-			return new HashSet<>();
-		}
-
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-
-		return reader.lines()
-				.flatMap(line -> {
-					if (line.endsWith(".class")) {
-						return Stream.of(loadClass(line, pkg));
-					} else {
-						if (pkg.equals("")) {
-							return doLoadClasses(line, predicate).stream();
-						} else {
-							return doLoadClasses(pkg + "." + line, predicate).stream();
-						}
-					}
-				})
-				.filter(Objects::nonNull)
-				.filter(predicate)
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-	}
-
+public interface GrainClassLoader {
+	Set<Class<?>> loadClasses(Predicate<Class<?>> predicate);
+	Set<Class<?>> loadClasses();
 }

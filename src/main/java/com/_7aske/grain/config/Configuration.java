@@ -1,14 +1,13 @@
 package com._7aske.grain.config;
 
-import com._7aske.grain.component.Grain;
-
 import java.util.Properties;
 
 import static com._7aske.grain.config.Configuration.Key.*;
 import static com._7aske.grain.constants.ServerConstants.PORT_MAX_VALUE;
 import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 
-@Grain
+// @Warning we manually add this class in the dependency injection pipeline
+// do not mark it with @Grain
 public class Configuration {
 	private final Properties properties;
 

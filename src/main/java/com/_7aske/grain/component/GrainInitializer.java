@@ -25,7 +25,11 @@ public class GrainInitializer {
 	}
 
 	public Map<Class<?>, Object> initialize(Set<Class<?>> classes) {
-		this.dependencies.addAll(classes.stream().map(Dependency::new).collect(Collectors.toList()));
+		// We filter out all the dependencies that are already been added to the
+		// dependency list
+		this.dependencies.addAll(classes.stream()
+				.filter(c -> this.dependencies.stream().noneMatch(d -> c.equals(d.clazz)))
+				.map(Dependency::new).collect(Collectors.toList()));
 		this.dependencies.forEach(this::initializeConstructors);
 		this.dependencies.forEach(this::loadOwnDependencies);
 		this.dependencies.forEach(this::partiallyInitialize);
@@ -68,7 +72,8 @@ public class GrainInitializer {
 			if (dependency.clazz.isInterface()) {
 				Dependency resolved = dependencies.stream()
 						.filter(dep -> {
-							if (dep.clazz.equals(dependency.clazz)) return false;
+							if (dep.clazz.equals(dependency.clazz))
+								return false;
 							return haveCommonInterfaces(dep.clazz, dependency.clazz);
 						})
 						.findFirst()

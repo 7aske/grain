@@ -1,11 +1,10 @@
 package com._7aske.grain.context;
 
+import com._7aske.grain.GrainApp;
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.orm.connection.ConnectionManager;
-import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 public class ApplicationContextImpl implements ApplicationContext {
@@ -21,12 +20,8 @@ public class ApplicationContextImpl implements ApplicationContext {
 		this.configuration = configuration;
 		this.grainRegistry = new GrainRegistry();
 		this.grainRegistry.registerGrain(configuration);
-		// @Temporary proper loading of classes inside the Grain framework should replace
-		// this hack of ad-hoc registering of grains. Grains originating from the framework
-		// itself should be loaded with the same mechanism as user-created classes.
-		this.grainRegistry.registerGrain(ConnectionManager.class);
-		this.grainRegistry.registerGrain(DatabaseExecutor.class);
 		// @Note We load user defined classes last
+		this.grainRegistry.registerGrains(GrainApp.class.getPackageName());
 		this.grainRegistry.registerGrains(basePackage);
 		logger.info("Loaded {} Grain classes", grainRegistry.getGrains().size());
 	}
