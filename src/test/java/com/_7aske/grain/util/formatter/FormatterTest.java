@@ -8,42 +8,42 @@ class FormatterTest {
 
 	@Test
 	void testFormat() {
-		String res = new Formatter("test {}").format("test");
+		String res = StringFormat.format("test {}", "test");
 
 		assertEquals("test test", res);
 	}
 
 	@Test
 	void testFormat_indexedParams() {
-		String res = new Formatter("test {1}").format("test", "hello");
+		String res = StringFormat.format("test {1}", "test", "hello");
 
 		assertEquals("test hello", res);
 	}
 
 	@Test
 	void testFormat_indexedParamsContinuation() {
-		String res = new Formatter("test {1} {}").format("test", "hello");
+		String res = StringFormat.format("test {1} {}", "test", "hello");
 
 		assertEquals("test hello test", res);
 	}
 
 	@Test
 	void testFormat_padding() {
-		String res = new Formatter("test {:10}").format("hello");
+		String res = StringFormat.format("test {:10}", "hello");
 
 		assertEquals("test      hello", res);
 	}
 
 	@Test
 	void testFormat_paddingRight() {
-		String res = new Formatter("test {:-10}test").format("hello");
+		String res = StringFormat.format("test {:-10}test", "hello");
 
 		assertEquals("test hello     test", res);
 	}
 
 	@Test
 	void testFormat_decimal() {
-		String res = new Formatter("test {:-.2}").format(2.12345);
+		String res = StringFormat.format("test {:-.2}", 2.12345);
 		assertEquals("test 2.12", res);
 	}
 }

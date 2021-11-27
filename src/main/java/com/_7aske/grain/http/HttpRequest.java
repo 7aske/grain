@@ -34,15 +34,15 @@ public class HttpRequest {
 		this.body = other.body;
 	}
 
-	public Cookie getCookie() {
+	public Cookie getCookie(String name) {
 		String cookieData = headers.get(HttpHeaders.COOKIE);
 		if (cookieData == null) {
 			return null;
 		}
-		return parseCookie(cookieData);
+		return parseCookie(cookieData).get(name);
 	}
 
-	private Cookie parseCookie(String data) {
+	private Map<String, Cookie> parseCookie(String data) {
 		return Cookie.parse(data);
 	}
 

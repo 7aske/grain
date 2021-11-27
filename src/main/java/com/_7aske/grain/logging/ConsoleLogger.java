@@ -1,6 +1,6 @@
 package com._7aske.grain.logging;
 
-import com._7aske.grain.util.formatter.Formatter;
+import com._7aske.grain.util.formatter.StringFormat;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +17,7 @@ class ConsoleLogger extends Logger {
 		// @Incomplete allow to change format
 		String FORMAT = "{0} {1:5} - [{2:15}] {3:-41}: {4}";
 		String date = DATE_TIME_FORMATTER.format(LocalDateTime.now());
-		String message = new Formatter(s).format(params);
+		String message = StringFormat.format(s, params);
 		String threadName = Thread.currentThread().getName();
 		if (threadName.length() > 15) {
 			threadName = threadName.substring(0, 15);
@@ -40,7 +40,7 @@ class ConsoleLogger extends Logger {
 			default:
 				levelStr = level.getName();
 		}
-		System.out.println(new Formatter(FORMAT).format(date, levelStr, threadName, cyan(name), message));
+		System.out.println(StringFormat.format(FORMAT, date, levelStr, threadName, cyan(name), message));
 	}
 
 	@Override

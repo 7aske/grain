@@ -24,7 +24,7 @@ public class SessionMiddleware implements Middleware {
 		if (!Objects.equals(configuration.getProperty(Configuration.Key.SESSION_ENABLED), true)) {
 			return false;
 		}
-		if (request.getCookie() == null) {
+		if (request.getCookie("GSID") == null) {
 			response.setCookie(new Cookie("GSID", UUID.randomUUID().toString()));
 		}
 		return false;

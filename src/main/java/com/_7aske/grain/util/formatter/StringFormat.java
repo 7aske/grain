@@ -3,16 +3,12 @@ package com._7aske.grain.util.formatter;
 import java.util.NoSuchElementException;
 
 // @Incomplete missing decimal format
-public class Formatter {
-	private final String format;
+public class StringFormat {
+	private StringFormat(){}
 
-	public Formatter(String format) {
-		this.format = format;
-	}
-
-	public String format(Object... params) {
+	public static String format(String format, Object... params) {
 		StringBuilder builder = new StringBuilder();
-		FormatIterator iter = new FormatIterator(this.format);
+		FormatIterator iter = new FormatIterator(format);
 		int currParam = 0;
 		try {
 			while (iter.hasNext()) {
