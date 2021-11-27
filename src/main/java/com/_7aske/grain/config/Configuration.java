@@ -1,5 +1,7 @@
 package com._7aske.grain.config;
 
+import com._7aske.grain.http.session.SessionConstants;
+
 import java.util.Properties;
 
 import static com._7aske.grain.config.Configuration.Key.*;
@@ -19,6 +21,7 @@ public class Configuration {
 		setProperty(REQUEST_HANDLER_ACCESS_LOG, true);
 		setProperty(DATABASE_EXECUTOR_PRINT_SQL, true);
 		setProperty(SESSION_ENABLED, true);
+		setProperty(SESSION_MAX_AGE, SessionConstants.SESSION_DEFAULT_MAX_AGE);
 	}
 
 	public static Configuration createDefault() {
@@ -36,6 +39,10 @@ public class Configuration {
 
 	public Object getProperty(Configuration.Key prop) {
 		return properties.get(prop.getKey());
+	}
+
+	public <T> T getProperty(Configuration.Key prop, T _default) {
+		return (T) properties.getOrDefault(prop, _default);
 	}
 
 	// Allows to get any arbitrary key
@@ -74,6 +81,7 @@ public class Configuration {
 	public enum Key {
 		// @formatter:off
 	    SESSION_ENABLED             ("session.enabled"),
+		SESSION_MAX_AGE             ("session.max-age"),
 		SERVER_PORT                 ("server.port"),
 		SERVER_HOST                 ("server.host"),
 		SERVER_THREADS              ("server.threads"),

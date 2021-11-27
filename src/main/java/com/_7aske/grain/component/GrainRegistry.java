@@ -41,7 +41,17 @@ public class GrainRegistry {
 	}
 
 	public <T> T getGrain(Class<T> clazz) {
-		return clazz.cast(grains.get(clazz));
+		// If the class we're looking for an interface we check to find first class
+		// that is assignable to the interface.
+		// @Incomplete we probably need to not allow classes such as Object, List etc.
+		if (clazz.isInterface()) {
+			return grains.values().stream()
+					.filter(g -> clazz.isAssignableFrom(g.getClass()))
+					.map(clazz::cast)
+					.findFirst().orElse(null);
+		} else {
+			return clazz.cast(grains.get(clazz));
+		}
 	}
 
 	public Set<Middleware> getMiddlewares() {

@@ -1,6 +1,7 @@
 package com._7aske.grain.http;
 
 import com._7aske.grain.exception.http.HttpParsingException;
+import com._7aske.grain.http.session.Cookie;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -67,6 +68,10 @@ public class HttpRequestParser {
 
 		} while (true);
 
+		if (request.hasHeader(COOKIE)) {
+			request.getCookies().putAll(Cookie.parse(request.getHeader(COOKIE)));
+		}
+
 		if (lastIndex == crlfIndex - CRLF_LEN) {
 			String contentLength;
 			if ((contentLength = request.getHeader(CONTENT_LENGTH)) != null) {
@@ -78,6 +83,7 @@ public class HttpRequestParser {
 				}
 			}
 		}
+
 
 		return new HttpRequest(request);
 	}

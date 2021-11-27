@@ -4,6 +4,7 @@ import com._7aske.grain.http.session.Cookie;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com._7aske.grain.http.HttpConstants.CRLF;
 import static com._7aske.grain.http.HttpConstants.HTTP_V1;
@@ -14,6 +15,7 @@ public class HttpResponse {
 	private HttpStatus status;
 	private String body;
 	private String cachedHttpString;
+	private final Map<String, Cookie> cookies;
 
 	public HttpResponse() {
 		this(HttpStatus.OK, null);
@@ -27,6 +29,7 @@ public class HttpResponse {
 		this.status = status;
 		this.body = body;
 		this.headers = new HashMap<>();
+		this.cookies = new HashMap<>();
 		this.body = null;
 		this.cachedHttpString = null;
 	}
@@ -40,6 +43,10 @@ public class HttpResponse {
 					.append(" ")
 					.append(status.getReason())
 					.append(CRLF);
+
+			if (!cookies.isEmpty()) {
+				headers.put(HttpHeaders.SET_COOKIE, cookies.values().stream().map(Cookie::toString).collect(Collectors.joining("")));
+			}
 
 			for (Map.Entry<String, String> kv : headers.entrySet()) {
 				builder.append(kv.getKey()).append(": ").append(kv.getValue()).append(CRLF);
@@ -55,7 +62,7 @@ public class HttpResponse {
 	}
 
 	public void setCookie(Cookie cookie) {
-		this.headers.put(HttpHeaders.SET_COOKIE, cookie.toString());
+		this.cookies.put(cookie.getName(), cookie);
 	}
 
 	public String getVersion() {

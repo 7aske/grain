@@ -16,12 +16,14 @@ public class HttpRequest {
 	private HttpMethod method;
 	private final Map<String, String> headers;
 	private final Map<String, Object> parameters;
+	private final Map<String, Cookie> cookies;
 	private String queryString;
 	private Object body;
 
 	public HttpRequest() {
 		this.headers = new HashMap<>();
 		this.parameters = new HashMap<>();
+		this.cookies = new HashMap<>();
 	}
 
 	public HttpRequest(HttpRequest other) {
@@ -30,24 +32,21 @@ public class HttpRequest {
 		this.method = other.method;
 		this.headers = other.headers;
 		this.parameters = other.parameters;
+		this.cookies = other.cookies;
 		this.queryString = other.queryString;
 		this.body = other.body;
 	}
 
 	public Cookie getCookie(String name) {
-		String cookieData = headers.get(HttpHeaders.COOKIE);
-		if (cookieData == null) {
-			return null;
+		if (cookies.isEmpty()) {
+			String cookieData = headers.get(HttpHeaders.COOKIE);
+			this.cookies.putAll(Cookie.parse(cookieData));
 		}
-		return parseCookie(cookieData).get(name);
-	}
-
-	private Map<String, Cookie> parseCookie(String data) {
-		return Cookie.parse(data);
+		return cookies.get(name);
 	}
 
 	private void setCookie(Cookie cookie) {
-		this.headers.put(HttpHeaders.SET_COOKIE, cookie.toString());
+		this.cookies.put(HttpHeaders.SET_COOKIE, cookie);
 	}
 
 	public String getVersion() {
@@ -95,6 +94,10 @@ public class HttpRequest {
 				}
 			}
 		}
+	}
+
+	public Map<String, Cookie> getCookies() {
+		return cookies;
 	}
 
 	public HttpMethod getMethod() {

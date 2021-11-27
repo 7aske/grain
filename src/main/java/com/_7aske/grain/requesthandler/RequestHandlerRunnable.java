@@ -4,10 +4,8 @@ import com._7aske.grain.config.Configuration;
 import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.exception.ErrorPageBuilder;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpRequestParser;
-import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.HttpStatus;
+import com._7aske.grain.http.*;
+import com._7aske.grain.http.session.*;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
@@ -25,11 +23,15 @@ import java.util.Objects;
 import static com._7aske.grain.config.Configuration.Key.REQUEST_HANDLER_ACCESS_LOG;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
-public class RequestHandlerRunnable implements Runnable {
+public class RequestHandlerRunnable implements Runnable, RequestContextAware {
 	private final Socket socket;
 	private final Configuration configuration;
 	private final HandlerRunner<?> handlerRunner;
 	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
+	private final ApplicationContext context;
+	private HttpRequest httpRequest;
+	private HttpResponse httpResponse;
+	private Session session;
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
@@ -38,6 +40,7 @@ public class RequestHandlerRunnable implements Runnable {
 		ControllerHandlerRegistry controllerRegistry = context.getGrain(ControllerHandlerRegistry.class);
 		MiddlewareHandlerRegistry middlewareRegistry = context.getGrain(MiddlewareHandlerRegistry.class);
 		this.configuration = context.getConfiguration();
+		this.context = context;
 
 
 		this.handlerRunner = HandlerRunnerFactory.getRunner()
@@ -55,9 +58,17 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
 
+
+			httpRequest = request;
+			httpResponse = response;
+
+			// @Refactor awful hack
+			SessionStore sessionStore = context.getGrain(SessionStore.class);
+			session = new CookieSessionInitializer(configuration, sessionStore).initialize(request, response);
+
 			try {
 
-				handlerRunner.run(request, response);
+				handlerRunner.run(request, response, session);
 
 			} catch (HttpException ex) {
 				response.setStatus(ex.getStatus());
@@ -81,5 +92,20 @@ public class RequestHandlerRunnable implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public HttpRequest getRequest() {
+		return httpRequest;
+	}
+
+	@Override
+	public HttpResponse getResponse() {
+		return httpResponse;
+	}
+
+	@Override
+	public Session getSession() {
+		return session;
 	}
 }

@@ -8,6 +8,7 @@ import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
 import com._7aske.grain.http.json.*;
+import com._7aske.grain.http.session.Session;
 import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.http.view.DataView;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
@@ -27,7 +28,7 @@ public class ControllerHandler implements RequestHandler {
 	}
 
 	@Override
-	public boolean handle(HttpRequest request, HttpResponse response) throws HttpException {
+	public boolean handle(HttpRequest request, HttpResponse response, Session session) throws HttpException {
 		ControllerMethodWrapper method = controller.getMethod(request.getPath(), request.getMethod())
 				.orElseThrow(() -> new HttpException.NotFound(request.getPath()));
 
@@ -43,6 +44,8 @@ public class ControllerHandler implements RequestHandler {
 				params[i] = request;
 			} else if (param.getType().equals(HttpResponse.class)) {
 				params[i] = response;
+			} else if (param.getType().equals(Session.class)) {
+				params[i] = session;
 			} else if (param.isAnnotationPresent(JsonBody.class)) {
 				params[i] = new JsonDeserializer<>(param.getType()).deserialize((JsonObject) request.getBody());
 			} else if (param.isAnnotationPresent(FormBody.class)) {
@@ -91,6 +94,7 @@ public class ControllerHandler implements RequestHandler {
 		} else if (result instanceof DataView) {
 			((DataView) result).setData("request", request);
 			((DataView) result).setData("response", response);
+			((DataView) result).setData("session", session);
 			response.setBody(((AbstractView) result).getContent());
 			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
 		} else if (result instanceof AbstractView) {

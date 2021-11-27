@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * CLass representation of RFC6265 cookie
  */
-public class Cookie {
+public class Cookie implements SessionToken {
 	// @formatter:off
 	private String  name     = null;
 	private String  value    = null;
@@ -49,6 +49,8 @@ public class Cookie {
 	// @Refactor this can be made much more concise
 	public static Map<String, Cookie> parse(String data) {
 		Map<String, Cookie> cookies = new HashMap<>();
+		if (data == null)
+			return cookies;
 		Cookie cookie = new Cookie();
 		for (String kv : data.split(";\\s?")) {
 			String[] parts = kv.split("\\s*=\\s*");
@@ -160,6 +162,11 @@ public class Cookie {
 
 	public void setHttpOnly(boolean httpOnly) {
 		this.httpOnly = httpOnly;
+	}
+
+	@Override
+	public String getId() {
+		return value;
 	}
 
 	public enum Attr {
