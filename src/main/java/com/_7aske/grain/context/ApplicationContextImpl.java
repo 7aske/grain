@@ -1,6 +1,5 @@
 package com._7aske.grain.context;
 
-import com._7aske.grain.GrainApp;
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.logging.Logger;
@@ -20,8 +19,6 @@ public class ApplicationContextImpl implements ApplicationContext {
 		this.configuration = configuration;
 		this.grainRegistry = new GrainRegistry();
 		this.grainRegistry.registerGrain(configuration);
-		// @Note We load user defined classes last
-		this.grainRegistry.registerGrains(GrainApp.class.getPackageName());
 		this.grainRegistry.registerGrains(basePackage);
 		logger.info("Loaded {} Grain classes", grainRegistry.getGrains().size());
 	}
