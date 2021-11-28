@@ -10,7 +10,7 @@ import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HandlerRunner<T extends HandlerRegistry> {
+public class HandlerRunner<T extends HandlerRegistry> implements Handler {
 	private final List<T> handlerRegistries;
 
 	protected HandlerRunner(List<T> handlerRegistries) {
@@ -22,7 +22,7 @@ public class HandlerRunner<T extends HandlerRegistry> {
 		return this;
 	}
 
-	public void run(HttpRequest request, HttpResponse response, Session session) {
+	public boolean handle(HttpRequest request, HttpResponse response, Session session) {
 		for(T registry : handlerRegistries) {
 			List<Handler> handlers = registry.getHandlers(request.getPath(), request.getMethod());
 			if (!handlers.isEmpty()) {
@@ -33,7 +33,7 @@ public class HandlerRunner<T extends HandlerRegistry> {
 					if (res) handled.set(true);
 				});
 				if (handled.get())
-					return;
+					return true;
 			}
 		}
 

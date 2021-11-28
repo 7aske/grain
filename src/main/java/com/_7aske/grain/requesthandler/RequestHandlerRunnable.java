@@ -23,12 +23,13 @@ import java.util.Objects;
 import static com._7aske.grain.config.Configuration.Key.REQUEST_HANDLER_ACCESS_LOG;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
-public class RequestHandlerRunnable implements Runnable, RequestContextAware {
+public class RequestHandlerRunnable implements Runnable {
 	private final Socket socket;
 	private final Configuration configuration;
 	private final HandlerRunner<?> handlerRunner;
 	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
 	private final ApplicationContext context;
+	private final SessionInitializer sessionInitializer;
 	private HttpRequest httpRequest;
 	private HttpResponse httpResponse;
 	private Session session;
@@ -39,6 +40,7 @@ public class RequestHandlerRunnable implements Runnable, RequestContextAware {
 		StaticHandlerRegistry staticHandlerRegistry = new StaticHandlerRegistry(context.getStaticLocationsRegistry());
 		ControllerHandlerRegistry controllerRegistry = context.getGrain(ControllerHandlerRegistry.class);
 		MiddlewareHandlerRegistry middlewareRegistry = context.getGrain(MiddlewareHandlerRegistry.class);
+		this.sessionInitializer = context.getGrain(SessionInitializer.class);
 		this.configuration = context.getConfiguration();
 		this.context = context;
 
@@ -54,32 +56,30 @@ public class RequestHandlerRunnable implements Runnable, RequestContextAware {
 		long start = System.currentTimeMillis();
 		try (BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
 		     PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
+
 			HttpRequestParser parser = new HttpRequestParser(reader);
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
+			Session session = sessionInitializer.initialize(request, response);
 
-
-			httpRequest = request;
-			httpResponse = response;
-
-			// @Refactor awful hack
-			SessionStore sessionStore = context.getGrain(SessionStore.class);
-			session = new CookieSessionInitializer(configuration, sessionStore).initialize(request, response);
+			this.httpRequest = request;
+			this.httpResponse = response;
+			this.session = session;
 
 			try {
 
-				handlerRunner.run(request, response, session);
+				handlerRunner.handle(request, response, session);
 
 			} catch (HttpException ex) {
 				response.setStatus(ex.getStatus());
 				if (response.getBody() == null) {
-					response.setHeader(CONTENT_TYPE, "text/html")
+					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
 							.setBody(ex.getHtmlMessage());
 				}
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
 				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-						.setHeader(CONTENT_TYPE, "text/html")
+						.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
 						.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
 			} finally {
 				long end = System.currentTimeMillis();
@@ -92,20 +92,5 @@ public class RequestHandlerRunnable implements Runnable, RequestContextAware {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public HttpRequest getRequest() {
-		return httpRequest;
-	}
-
-	@Override
-	public HttpResponse getResponse() {
-		return httpResponse;
-	}
-
-	@Override
-	public Session getSession() {
-		return session;
 	}
 }

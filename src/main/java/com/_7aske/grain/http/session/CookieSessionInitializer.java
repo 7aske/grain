@@ -1,5 +1,7 @@
 package com._7aske.grain.http.session;
 
+import com._7aske.grain.component.Grain;
+import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
@@ -7,18 +9,16 @@ import com._7aske.grain.http.HttpResponse;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com._7aske.grain.config.Configuration.*;
-import static com._7aske.grain.http.session.SessionConstants.*;
+import static com._7aske.grain.config.Configuration.Key;
+import static com._7aske.grain.http.session.SessionConstants.SESSION_COOKIE_NAME;
+import static com._7aske.grain.http.session.SessionConstants.SESSION_DEFAULT_MAX_AGE;
 
-// @Refactor should be an interface
-public class CookieSessionInitializer {
-	private final Configuration configuration;
-	private final SessionStore sessionStore;
-
-	public CookieSessionInitializer(Configuration configuration, SessionStore sessionStore) {
-		this.configuration = configuration;
-		this.sessionStore = sessionStore;
-	}
+@Grain
+public class CookieSessionInitializer implements SessionInitializer {
+	@Inject
+	private Configuration configuration;
+	@Inject
+	private SessionStore sessionStore;
 
 	public Session initialize(HttpRequest request, HttpResponse response) {
 		if (!Objects.equals(configuration.getProperty(Key.SESSION_ENABLED), true)) {

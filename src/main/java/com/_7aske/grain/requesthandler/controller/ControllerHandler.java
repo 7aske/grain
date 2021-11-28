@@ -2,6 +2,7 @@ package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.controller.PathVariable;
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
@@ -106,16 +107,16 @@ public class ControllerHandler implements RequestHandler {
 			response.addHeaders(((JsonResponse<?>) result).getHeaders());
 		} else if (result instanceof JsonObject) {
 			response.setBody(((JsonObject) result).toJsonString());
-			response.setHeader(CONTENT_TYPE, "application/json");
+			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof Object[]) {
 			response.setBody(new JsonArray((Object[]) result).toJsonString());
-			response.setHeader(CONTENT_TYPE, "application/json");
+			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof String) {
 			response.setBody((String) result);
-			response.setHeader(CONTENT_TYPE, "text/plain");
+			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 		} else {
 			response.setBody(result.toString());
-			response.setHeader(CONTENT_TYPE, "text/plain");
+			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 		}
 		return true;
 	}
