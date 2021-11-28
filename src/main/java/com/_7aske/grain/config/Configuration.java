@@ -22,6 +22,7 @@ public class Configuration {
 		setProperty(DATABASE_EXECUTOR_PRINT_SQL, true);
 		setProperty(SESSION_ENABLED, true);
 		setProperty(SESSION_MAX_AGE, SessionConstants.SESSION_DEFAULT_MAX_AGE);
+		setProperty(SECURITY_ENABLED, false);
 	}
 
 	public static Configuration createDefault() {
@@ -80,7 +81,8 @@ public class Configuration {
 
 	public enum Key {
 		// @formatter:off
-	    SESSION_ENABLED             ("session.enabled"),
+		SECURITY_ENABLED            ("security.enabled"),
+		SESSION_ENABLED             ("session.enabled"),
 		SESSION_MAX_AGE             ("session.max-age"),
 		SERVER_PORT                 ("server.port"),
 		SERVER_HOST                 ("server.host"),

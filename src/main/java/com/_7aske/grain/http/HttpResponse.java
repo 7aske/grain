@@ -30,7 +30,6 @@ public class HttpResponse {
 		this.body = body;
 		this.headers = new HashMap<>();
 		this.cookies = new HashMap<>();
-		this.body = null;
 		this.cachedHttpString = null;
 	}
 

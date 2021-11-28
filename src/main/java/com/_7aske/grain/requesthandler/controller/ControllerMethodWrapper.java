@@ -35,7 +35,10 @@ public class ControllerMethodWrapper {
 	public Object invoke(Object instance, Object... args) {
 		try {
 			return method.invoke(instance, args);
-		} catch (IllegalAccessException | InvocationTargetException e) {
+		} catch (IllegalAccessException | InvocationTargetException | HttpException e) {
+			if (e.getCause() instanceof HttpException) {
+				throw (HttpException) e.getCause();
+			}
 			throw new HttpException.InternalServerError(e, path);
 		}
 	}

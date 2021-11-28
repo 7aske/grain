@@ -5,7 +5,8 @@ import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.exception.ErrorPageBuilder;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
-import com._7aske.grain.http.session.*;
+import com._7aske.grain.http.session.Session;
+import com._7aske.grain.http.session.SessionInitializer;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
@@ -13,6 +14,11 @@ import com._7aske.grain.requesthandler.handler.runner.HandlerRunner;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
+import com._7aske.grain.security.Authentication;
+import com._7aske.grain.security.authentication.AuthenticationManager;
+import com._7aske.grain.security.authentication.AuthorizationManager;
+import com._7aske.grain.security.context.SecurityContextHolder;
+import com._7aske.grain.security.exception.GrainSecurityException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -62,11 +68,23 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpResponse response = new HttpResponse();
 			Session session = sessionInitializer.initialize(request, response);
 
+
 			this.httpRequest = request;
 			this.httpResponse = response;
 			this.session = session;
 
 			try {
+
+				// @Refactor We create coupling here.
+				// @Refactor We need to conditionally preform this for endpoints
+				// that require authentication.
+				if (Objects.equals(configuration.getProperty(Configuration.Key.SECURITY_ENABLED), true)) {
+					Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+					if (authentication != null) {
+						authentication = context.getGrain(AuthenticationManager.class).authenticate(authentication);
+						context.getGrain(AuthorizationManager.class).authorize(authentication);
+					}
+				}
 
 				handlerRunner.handle(request, response, session);
 
@@ -76,6 +94,7 @@ public class RequestHandlerRunnable implements Runnable {
 					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
 							.setBody(ex.getHtmlMessage());
 				}
+				// @Refactor we create coupling here
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
 				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)

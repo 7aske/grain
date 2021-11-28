@@ -67,6 +67,7 @@ public class GrainInitializer {
 		return object;
 	}
 
+	// @Bug this fails with interface Grains with default method implementations
 	private void initializeConstructors(Dependency dependency) {
 		try {
 			// If the class is an interface we find the first dependency which
