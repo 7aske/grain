@@ -20,6 +20,7 @@ class HttpPathUtilTest {
 
 	@Test
 	void testArePathsAntMatching() {
+		assertTrue(antMatching("/**", "/test/foo/bar/baz/something/quux/test/works"));
 		assertFalse(antMatching("/test/**/something/*/works", "/test/foo/bar/baz/something/quux/test/works"));
 		assertTrue(antMatching("/test/**/something/**/works", "/test/foo/bar/baz/something/quux/test/works"));
 		assertFalse(antMatching("/test/*/123", "/test"));

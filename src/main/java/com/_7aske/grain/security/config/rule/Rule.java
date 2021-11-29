@@ -68,11 +68,7 @@ public class Rule {
 	}
 
 	public boolean matches(String path, HttpMethod method) {
-		if (this.httpMethods.size() != 0 && !this.httpMethods.contains(method)) {
-			return false;
-		}
-
-		return HttpPathUtil.antMatching(pattern, path) && httpMethods.contains(method);
+		return HttpPathUtil.antMatching(pattern, path) && (httpMethods.isEmpty() || httpMethods.contains(method));
 	}
 
 	public static final class Builder {
@@ -126,13 +122,17 @@ public class Rule {
 		}
 
 		public Builder and() {
+			if (this.pattern == null)
+				throw new IllegalStateException("Cannot finalize a rule without a pattern");
 			this.rules.add(new Rule(methods, pattern, rolesRequired, authenticationRequired));
 			resetFields();
 			return this;
 		}
 
 		public List<Rule> build() {
-			this.and();
+			// We only finalize the rule if pattern is set
+			if (this.pattern != null)
+				this.and();
 			ArrayList<Rule> result = new ArrayList<>(this.rules);
 			this.rules.clear();
 			return result;

@@ -8,13 +8,12 @@ import com._7aske.grain.security.context.SecurityContextHolder;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RuleUrlPatternMatcher {
-	private final Set<Rule> rules;
+	private final List<Rule> rules;
 
-	public RuleUrlPatternMatcher(Set<Rule> rules) {
+	public RuleUrlPatternMatcher(List<Rule> rules) {
 		this.rules = rules;
 	}
 
@@ -37,7 +36,7 @@ public class RuleUrlPatternMatcher {
 
 			if (authentication != null && rule.isAuthenticationRequired()) {
 				List<String> roles = authentication.getAuthorities().stream().map(Authority::getName).collect(Collectors.toList());
-				return rule.getRolesRequired().stream().anyMatch(roles::contains);
+				return rule.getRolesRequired().isEmpty() || rule.getRolesRequired().stream().anyMatch(roles::contains);
 			}
 		}
 

@@ -1,5 +1,9 @@
 package com._7aske.grain.util;
 
+import com._7aske.grain.GrainApp;
+import com._7aske.grain.component.Default;
+import com._7aske.grain.component.Primary;
+import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 
 import java.lang.annotation.Annotation;
@@ -7,9 +11,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ReflectionUtil {
 	private ReflectionUtil() {
@@ -109,5 +113,52 @@ public class ReflectionUtil {
 
 	public static <T> Class<T> getGenericListTypeArgument(Field f) {
 		return (Class<T>) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+	}
+
+
+	public static <T> Optional<T> findClassByClass(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
+		List<T> result = classes.stream()
+				.filter(d -> extractor.apply(d).equals(clazz) || clazz.isAssignableFrom(extractor.apply(d)))
+				.collect(Collectors.toList());
+
+		if (result.size() > 1) {
+			// User defined dependencies are the ones that do not start
+			// with grain library base package which is the package of
+			// GrainApp.class.
+			List<T> userDefined = result.stream()
+					.filter(dep -> {
+						String basePackage = GrainApp.class.getPackageName();
+						String depPackage = extractor.apply(dep).getPackageName();
+
+						// If the package is not starting with package but if it is make sure by checking whether the next
+						// letter after the basePackage is a dot since in case of com._7aske.grain as basePackge and
+						// com._7aske.graintest only by checking starts with would return true. This can be refactored
+						// to match paths like we do it for url path matching.
+						return !(depPackage.startsWith(basePackage) &&
+								depPackage.charAt(basePackage.length()) == '.');
+					})
+					.collect(Collectors.toList());
+			if (userDefined.size() > 1) {
+				if (userDefined.stream().noneMatch(g -> isAnnotationPresent(g.getClass(), Primary.class))) {
+					throw new GrainMultipleImplementationsException(clazz);
+				} else {
+					// @Incomplete Handle the case where use has defined
+					// multiple @Primary grains
+					return userDefined.stream()
+							.filter(g -> isAnnotationPresent(g.getClass(), Primary.class))
+							.findFirst();
+				}
+			} else if (userDefined.size() == 1) {
+				return Optional.of(userDefined.get(0));
+			} else {
+				// We have multiple library defined dependencies
+				return result.stream().filter(c -> !c.getClass().isAnnotationPresent(Default.class)).findFirst();
+			}
+		} else if (result.isEmpty()) {
+			return Optional.empty();
+		} else {
+			// in any other case just return the first found dependency
+			return Optional.of(result.get(0));
+		}
 	}
 }

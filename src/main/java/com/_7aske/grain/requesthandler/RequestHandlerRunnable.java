@@ -17,6 +17,7 @@ import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.authentication.provider.HttpRequestAuthenticationProviderStrategy;
+import com._7aske.grain.security.context.SecurityContextHolder;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -67,9 +68,10 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpResponse response = new HttpResponse();
 			Session session = sessionInitializer.initialize(request, response);
 
+			// @Refactor to authentication manager or something
 			HttpRequestAuthenticationProviderStrategy provider = context.getGrain(HttpRequestAuthenticationProviderStrategy.class);
 			Authentication authentication = provider.getAuthentication(request);
-			logger.debug("Authentication {}", authentication);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 
 			this.httpRequest = request;
 			this.httpResponse = response;

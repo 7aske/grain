@@ -1,6 +1,5 @@
 package com._7aske.grain.security.authentication.provider;
 
-import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.http.HttpRequest;
@@ -11,14 +10,18 @@ import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.CookieAuthentication;
 
+/**
+ * Provides Authentication from a valid cookie based session
+ */
 @Grain
 public class CookieHttpRequestAuthenticationProviderStrategy implements HttpRequestAuthenticationProviderStrategy {
 	@Inject
 	private SessionStore store;
+	@Inject
+	private HttpRequestTokenProvider provider;
 
 	@Override
 	public Authentication getAuthentication(HttpRequest request) {
-		HttpRequestTokenProvider provider = ApplicationContextHolder.getContext().getGrain(HttpRequestTokenProvider.class);
 		SessionToken cookie = provider.getSessionToken(request);
 		if (cookie == null) return null;
 

@@ -38,7 +38,9 @@ public class HttpPathUtil {
 				return false;
 			}
 
-			if (patternSegment.equals(MULTIPLE_SEGMENT_WILDCARD) && i < len - 1) {
+			if (patternSegment.equals(MULTIPLE_SEGMENT_WILDCARD)) {
+				// If wildcard is the last segment
+				if (i + 1 >= len) return true;
 				String next = patternSegments[i + 1];
 				int index = Arrays.asList(Arrays.copyOfRange(pathSegments, ip, pathSegments.length)).indexOf(next);
 				if (index == -1) {

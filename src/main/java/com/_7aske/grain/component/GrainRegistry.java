@@ -1,7 +1,6 @@
 package com._7aske.grain.component;
 
 import com._7aske.grain.GrainApp;
-import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
@@ -11,6 +10,7 @@ import com._7aske.grain.util.classloader.GrainJarClassLoader;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com._7aske.grain.util.ReflectionUtil.findClassByClass;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class GrainRegistry {
@@ -41,50 +41,7 @@ public class GrainRegistry {
 	}
 
 	public <T> T getGrain(Class<T> clazz) {
-		List<T> result = grains.values().stream()
-				.filter(g -> clazz.isAssignableFrom(g.getClass()))
-				.map(clazz::cast)
-				.collect(Collectors.toList());
-
-		// @CopyPasta GrainInitializer
-		if (result.size() > 1) {
-			// User defined dependencies are the ones that do not start
-			// with grain library base package which is the package of
-			// GrainApp.class.
-			List<T> userDefined = result.stream()
-					.filter(g -> {
-						String basePackage = GrainApp.class.getPackageName();
-						String depPackage = g.getClass().getPackageName();
-
-						// If the package is not starting with package but if it is make sure by checking whether the next
-						// letter after the basePackage is a dot since in case of com._7aske.grain as basePackge and
-						// com._7aske.graintest only by checking starts with would return true. This can be refactored
-						// to match paths like we do it for url path matching.
-						return !(depPackage.startsWith(basePackage) &&
-								depPackage.charAt(basePackage.length()) == '.');
-					})
-					.collect(Collectors.toList());
-			if (userDefined.size() > 1) {
-				if (userDefined.stream().noneMatch(g -> isAnnotationPresent(g.getClass(), Primary.class))) {
-					throw new GrainMultipleImplementationsException(clazz);
-				} else {
-					// @Incomplete Handle the case where use has defined
-					// multiple @Primary grains
-					return userDefined.stream()
-							.filter(g -> isAnnotationPresent(g.getClass(), Primary.class))
-							.findFirst().orElse(null);
-				}
-			} else if (userDefined.size() == 1) {
-				return userDefined.get(0);
-			}
-		}
-
-		if (result.isEmpty()) {
-			return null;
-		}
-
-		// in any other case just return the first found dependency
-		return result.get(0);
+		return clazz.cast(findClassByClass(clazz, grains.values(), Object::getClass).orElse(null));
 	}
 
 	public Set<Middleware> getMiddlewares() {
