@@ -5,7 +5,7 @@ import com._7aske.grain.security.config.rule.Rule;
 /**
  * Interface for configuring Security.
  */
-public interface SecurityConfigurerAdapter {
+public interface SecurityConfigurer {
 	/**
 	 * Called during SecurityConfigurer lifecycle. User to configure
 	 * Security.

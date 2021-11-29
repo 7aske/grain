@@ -10,7 +10,7 @@ import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 
 // @Warning we manually add this class in the dependency injection pipeline
 // do not mark it with @Grain
-public class Configuration {
+public final class Configuration {
 	private final Properties properties;
 
 	private Configuration(){
