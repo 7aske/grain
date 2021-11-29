@@ -211,16 +211,20 @@ public class GrainInitializer {
 
 	// @Note Lifecycle method parameters if any only be other Grains
 	private void callLifecycleMethods(Dependency dependency) {
-		for (Method method : dependency.instance.getClass().getDeclaredMethods()) {
-			if (method.isAnnotationPresent(AfterInit.class)) {
-				try {
-					// We call the lifecycle methods with any other Grain instances as parameters
-					method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
-				} catch (IllegalAccessException | InvocationTargetException e) {
-					// @Incomplete should we throw
-					e.printStackTrace();
+		if (!dependency.lifecycleMethodCalled) {
+			for (Method method : dependency.instance.getClass().getDeclaredMethods()) {
+				if (method.isAnnotationPresent(AfterInit.class)) {
+					try {
+						method.setAccessible(true);
+						// We call the lifecycle methods with any other Grain instances as parameters
+						method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
+					} catch (IllegalAccessException | InvocationTargetException e) {
+						// @Incomplete should we throw
+						e.printStackTrace();
+					}
 				}
 			}
+			dependency.lifecycleMethodCalled = true;
 		}
 	}
 
@@ -248,6 +252,7 @@ public class GrainInitializer {
 		private Constructor<?> constructor;
 		private Class<?>[] params;
 		private Object instance;
+		private boolean lifecycleMethodCalled;
 
 		public Dependency(Class<?> clazz) {
 			this.constructor = null;
@@ -256,6 +261,7 @@ public class GrainInitializer {
 			this.visited = false;
 			this.instance = null;
 			this.initialized = false; // for manually initialized grains
+			this.lifecycleMethodCalled = false;
 		}
 
 		public Class<?> getClazz() {

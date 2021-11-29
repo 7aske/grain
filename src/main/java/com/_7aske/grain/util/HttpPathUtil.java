@@ -3,13 +3,52 @@ package com._7aske.grain.util;
 
 import com._7aske.grain.controller.PathVariable;
 
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HttpPathUtil {
 	public final static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("(\\{([\\w_]*(?=[\\w]+)[\\w\\d_]+)})", Pattern.MULTILINE);
 	public static final char PATH_SEP = '/';
+	public static final String SEGMENT_WILDCARD = "*";
+	public static final String MULTIPLE_SEGMENT_WILDCARD = "**";
+
 	private HttpPathUtil() {
+	}
+
+	/**
+	 * Matches request paths in Ant format
+	 * @param pattern pattern to match
+	 * @param path request path to match the pattern to
+	 * @return whether path matches pattern
+	 */
+	public static boolean antMatching(String pattern, String path) {
+		String[] patternSegments = trimFront(pattern, "/").split("/+");
+		String[] pathSegments = trimFront(path, "/").split("/+");
+
+		int len = patternSegments.length;
+		int pathLen = pathSegments.length;
+		if (len > pathLen) return false;
+		for (int i = 0, ip = 0; i < len && ip < pathLen; i++, ip++) {
+			String patternSegment = patternSegments[i];
+			String pathSegment = pathSegments[ip];
+			if (!Objects.equals(patternSegment, pathSegment) &&
+					(!patternSegment.equals(SEGMENT_WILDCARD) && !patternSegment.equals(MULTIPLE_SEGMENT_WILDCARD))) {
+				return false;
+			}
+
+			if (patternSegment.equals(MULTIPLE_SEGMENT_WILDCARD) && i < len - 1) {
+				String next = patternSegments[i + 1];
+				int index = Arrays.asList(Arrays.copyOfRange(pathSegments, ip, pathSegments.length)).indexOf(next);
+				if (index == -1) {
+					return false;
+				}
+				i += 1;
+				ip += index;
+			}
+		}
+		return true;
 	}
 
 	public static boolean arePathsMatching(String httpPath, String controllerPath) {

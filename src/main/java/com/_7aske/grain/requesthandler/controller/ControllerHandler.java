@@ -113,10 +113,12 @@ public class ControllerHandler implements RequestHandler {
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof String) {
 			response.setBody((String) result);
-			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
+			if (response.getHeader(CONTENT_TYPE) == null)
+				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 		} else {
 			response.setBody(result.toString());
-			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
+			if (response.getHeader(CONTENT_TYPE) == null)
+				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 		}
 		return true;
 	}

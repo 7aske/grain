@@ -15,10 +15,7 @@ import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
 import com._7aske.grain.security.Authentication;
-import com._7aske.grain.security.authentication.AuthenticationManager;
-import com._7aske.grain.security.authentication.AuthorizationManager;
-import com._7aske.grain.security.context.SecurityContextHolder;
-import com._7aske.grain.security.exception.GrainSecurityException;
+import com._7aske.grain.security.authentication.provider.HttpRequestAuthenticationProviderStrategy;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -68,23 +65,15 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpResponse response = new HttpResponse();
 			Session session = sessionInitializer.initialize(request, response);
 
+			HttpRequestAuthenticationProviderStrategy provider = context.getGrain(HttpRequestAuthenticationProviderStrategy.class);
+			Authentication authentication = provider.getAuthentication(request);
+			logger.debug("Authentication {}", authentication);
 
 			this.httpRequest = request;
 			this.httpResponse = response;
 			this.session = session;
 
 			try {
-
-				// @Refactor We create coupling here.
-				// @Refactor We need to conditionally preform this for endpoints
-				// that require authentication.
-				if (Objects.equals(configuration.getProperty(Configuration.Key.SECURITY_ENABLED), true)) {
-					Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-					if (authentication != null) {
-						authentication = context.getGrain(AuthenticationManager.class).authenticate(authentication);
-						context.getGrain(AuthorizationManager.class).authorize(authentication);
-					}
-				}
 
 				handlerRunner.handle(request, response, session);
 
