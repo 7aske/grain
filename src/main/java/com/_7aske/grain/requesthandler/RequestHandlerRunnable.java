@@ -10,6 +10,7 @@ import com._7aske.grain.http.session.SessionInitializer;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
+import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunner;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
 import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
@@ -29,7 +30,7 @@ import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 public class RequestHandlerRunnable implements Runnable {
 	private final Socket socket;
 	private final Configuration configuration;
-	private final HandlerRunner<?> handlerRunner;
+	private final HandlerRunner handlerRunner;
 	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
 	private final ApplicationContext context;
 	private final SessionInitializer sessionInitializer;
@@ -46,9 +47,10 @@ public class RequestHandlerRunnable implements Runnable {
 		this.sessionInitializer = context.getGrain(SessionInitializer.class);
 		this.configuration = context.getConfiguration();
 		this.context = context;
+		HandlerProxyFactory proxyFactory = context.getGrain(HandlerProxyFactory.class);
 
 
-		this.handlerRunner = HandlerRunnerFactory.getRunner()
+		this.handlerRunner = HandlerRunnerFactory.getRunner(proxyFactory)
 				.addRegistry(middlewareRegistry)
 				.addRegistry(controllerRegistry)
 				.addRegistry(staticHandlerRegistry);

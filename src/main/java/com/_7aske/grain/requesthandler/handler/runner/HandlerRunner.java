@@ -6,30 +6,35 @@ import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
+import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HandlerRunner<T extends HandlerRegistry> implements Handler {
-	private final List<T> handlerRegistries;
+public class HandlerRunner implements Handler {
+	private final List<HandlerRegistry> handlerRegistries;
+	private final HandlerProxyFactory proxyFactory;
 
-	protected HandlerRunner(List<T> handlerRegistries) {
-		this.handlerRegistries = handlerRegistries;
+	protected HandlerRunner(HandlerProxyFactory proxyFactory) {
+		this.handlerRegistries = new ArrayList<>();
+		this.proxyFactory = proxyFactory;
 	}
 
-	public HandlerRunner<T> addRegistry(T registry) {
+	public <T extends HandlerRegistry> HandlerRunner addRegistry(HandlerRegistry registry) {
 		this.handlerRegistries.add(registry);
 		return this;
 	}
 
 	public boolean handle(HttpRequest request, HttpResponse response, Session session) {
-		for(T registry : handlerRegistries) {
+		for (HandlerRegistry registry : handlerRegistries) {
 			List<Handler> handlers = registry.getHandlers(request.getPath(), request.getMethod());
 			if (!handlers.isEmpty()) {
 				AtomicBoolean handled = new AtomicBoolean(false);
 				handlers.forEach(handler -> {
 					if (handled.get()) return;
-					boolean res = handler.handle(request, response, session);
+					Handler proxy = proxyFactory.createProxy(handler);
+					boolean res = proxy.handle(request, response, session);
 					if (res) handled.set(true);
 				});
 				if (handled.get())
