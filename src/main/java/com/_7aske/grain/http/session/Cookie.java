@@ -27,6 +27,7 @@ public class Cookie implements SessionToken {
 	public static final long DEFAULT_EXPIRY_VALUE = 0L;
 
 	private Cookie() {
+		this.path = "/";
 	}
 
 	public Cookie(String name, String value, Long expires, Long maxAge, String domain, String path, boolean secure, boolean httpOnly) {
@@ -41,7 +42,7 @@ public class Cookie implements SessionToken {
 	}
 
 	public Cookie(String name, String value) {
-		this.setPath("/");
+		this();
 		this.name = name;
 		this.value = value;
 	}
