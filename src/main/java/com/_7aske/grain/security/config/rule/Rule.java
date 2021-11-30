@@ -76,10 +76,10 @@ public class Rule {
 		private String pattern;
 		private Set<String> rolesRequired;
 		private boolean authenticationRequired;
-		private final Set<Rule> rules;
+		private final List<Rule> rules;
 
 		public Builder() {
-			this.rules = new HashSet<>();
+			this.rules = new ArrayList<>();
 			this.resetFields();
 		}
 

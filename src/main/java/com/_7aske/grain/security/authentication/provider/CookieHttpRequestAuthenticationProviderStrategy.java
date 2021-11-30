@@ -3,12 +3,10 @@ package com._7aske.grain.security.authentication.provider;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.session.Cookie;
 import com._7aske.grain.http.session.SessionStore;
 import com._7aske.grain.http.session.SessionToken;
 import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.security.Authentication;
-import com._7aske.grain.security.CookieAuthentication;
 import com._7aske.grain.security.SecurityConstants;
 
 /**
@@ -35,6 +33,6 @@ public class CookieHttpRequestAuthenticationProviderStrategy implements HttpRequ
 		if (authentication == null || !authentication.isAuthenticated())
 			return null;
 
-		return new CookieAuthentication((Cookie) gsid);
+		return authentication;
 	}
 }

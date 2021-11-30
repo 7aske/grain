@@ -7,6 +7,7 @@ import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
+import com._7aske.grain.requesthandler.middleware.Middleware;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +34,15 @@ public class HandlerRunner implements Handler {
 				AtomicBoolean handled = new AtomicBoolean(false);
 				handlers.forEach(handler -> {
 					if (handled.get()) return;
-					Handler proxy = proxyFactory.createProxy(handler);
-					boolean res = proxy.handle(request, response, session);
+					boolean res = false;
+					// We don't proxy middlewares because proxy throws
+					// security exception.
+					if (Middleware.class.isAssignableFrom(handler.getClass())) {
+						res = handler.handle(request, response, session);
+					} else {
+						Handler proxy = proxyFactory.createProxy(handler);
+						res = proxy.handle(request, response, session);
+					}
 					if (res) handled.set(true);
 				});
 				if (handled.get())

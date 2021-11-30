@@ -5,7 +5,8 @@ import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.Authority;
 import com._7aske.grain.security.context.SecurityContextHolder;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,7 +15,10 @@ public class RuleUrlPatternMatcher {
 	private final List<Rule> rules;
 
 	public RuleUrlPatternMatcher(List<Rule> rules) {
-		this.rules = rules;
+		this.rules = new ArrayList<>(rules);
+		// @Refactor figure out how to more deterministically
+		// order rules
+		Collections.reverse(this.rules);
 	}
 
 	public boolean matches(HttpRequest request) {
@@ -22,10 +26,7 @@ public class RuleUrlPatternMatcher {
 
 		Optional<Rule> matching = rules.stream()
 				.filter(r -> r.matches(request.getPath(), request.getMethod()))
-				// We use the length of the pattern as a way to determine
-				// the narrowness of the match. We want the narrowest possible
-				// match
-				.max(Comparator.comparingInt(r -> r.getPattern().length()));
+				.findFirst();
 
 
 		if (matching.isPresent()) {
