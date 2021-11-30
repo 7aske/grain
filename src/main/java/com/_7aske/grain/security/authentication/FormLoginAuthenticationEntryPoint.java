@@ -9,6 +9,7 @@ import com._7aske.grain.http.session.SessionConstants;
 import com._7aske.grain.http.session.SessionStore;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.CookieAuthentication;
+import com._7aske.grain.security.SecurityConstants;
 import com._7aske.grain.security.User;
 import com._7aske.grain.security.crypto.PasswordEncoder;
 import com._7aske.grain.security.exception.CredentialsExpiredException;
@@ -52,10 +53,12 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 
 		Cookie gsid = new Cookie(SESSION_COOKIE_NAME, UUID.randomUUID().toString());
 		gsid.setMaxAge(System.currentTimeMillis() / 1000 + SessionConstants.SESSION_DEFAULT_MAX_AGE);
+		Authentication authentication = new CookieAuthentication(username, gsid, user.getAuthorities());
 		sessionStore.setToken(gsid.getId(), gsid);
+		sessionStore.put(gsid.getId(), SecurityConstants.AUTHENTICATION_KEY, authentication);
 		// @Incomplete invalidate the session of the incoming request if it had one
 		response.setCookie(gsid);
 
-		return new CookieAuthentication(username, gsid, user.getAuthorities());
+		return authentication;
 	}
 }

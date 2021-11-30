@@ -9,6 +9,7 @@ import com._7aske.grain.http.session.SessionToken;
 import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.CookieAuthentication;
+import com._7aske.grain.security.SecurityConstants;
 
 /**
  * Provides Authentication from a valid cookie based session
@@ -29,6 +30,10 @@ public class CookieHttpRequestAuthenticationProviderStrategy implements HttpRequ
 
 		SessionToken gsid = store.getToken(cookie.getId());
 		if (gsid.isExpired()) return null;
+		Authentication authentication = (Authentication) store.get(gsid.getId(), SecurityConstants.AUTHENTICATION_KEY);
+
+		if (authentication == null || !authentication.isAuthenticated())
+			return null;
 
 		return new CookieAuthentication((Cookie) gsid);
 	}
