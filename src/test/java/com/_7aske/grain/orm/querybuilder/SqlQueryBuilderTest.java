@@ -5,6 +5,7 @@ import com._7aske.grain.GrainApp;
 import com._7aske.grain.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.model.Model;
+import com._7aske.grain.orm.page.DefaultPageable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -198,5 +199,15 @@ class SqlQueryBuilderTest {
 	void testNewJoins() {
 		List<Join<?,?>> joins = getJoins(User.class, new Stack<>());
 		assertFalse(joins.isEmpty());
+	}
+
+	@Test
+	void testPageable() {
+		QueryBuilder queryBuilder = new SqlQueryBuilder(category);
+		String selectSql = queryBuilder.select().join().page(new DefaultPageable(10, 10)).build();
+		String regex = "select category.category_id, category.name from category limit 10 offset 100 ";
+		Pattern pattern = Pattern.compile(regex);
+		System.err.println(selectSql);
+		assertTrue(pattern.matcher(selectSql).matches());
 	}
 }

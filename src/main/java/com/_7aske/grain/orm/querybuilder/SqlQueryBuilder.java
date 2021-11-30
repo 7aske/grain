@@ -6,6 +6,7 @@ import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.exception.GrainDbUpdateIdMissingException;
 import com._7aske.grain.orm.model.Model;
+import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.util.QueryBuilderUtil;
 
 import java.lang.reflect.Field;
@@ -28,6 +29,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	protected String[] groupBy = null;
 	protected String[] orderBy = null;
 	protected List<Join<?, ?>> joins = null;
+	protected Pageable pageable;
 
 	public SqlQueryBuilder(Model model) {
 		super(model);
@@ -72,6 +74,12 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	@Override
 	public QueryBuilder join(OneToMany relation) {
 		return null;
+	}
+
+	@Override
+	public QueryBuilder page(Pageable pageable) {
+		this.pageable = pageable;
+		return this;
 	}
 
 	@Override
@@ -146,16 +154,24 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				}
 				builder.append(" from ");
 				builder.append(thisTableName).append(" ");
-				if (joins != null) {
+				if (joins != null && !joins.isEmpty()) {
 					builder.append(joins.stream()
 							.map(Join::getSql)
 							.collect(Collectors.joining(" ")));
+					builder.append(" ");
 				}
 				if (where != null) {
 					builder.append("where ");
 					builder.append(where.entrySet().stream()
 							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
 							.collect(Collectors.joining(", ")));
+					builder.append(" ");
+				}
+				if (pageable != null) {
+					builder.append("limit ")
+							.append(pageable.getCount())
+							.append(" offset ")
+							.append(pageable.getPage() * pageable.getCount());
 					builder.append(" ");
 				}
 				break;

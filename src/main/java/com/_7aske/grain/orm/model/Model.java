@@ -6,6 +6,7 @@ import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbNoSuchRowException;
 import com._7aske.grain.orm.exception.GrainDbNonUniqueResultException;
+import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.orm.querybuilder.QueryBuilder;
 import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.util.ReflectionUtil;
@@ -91,6 +92,11 @@ public class Model {
 		return instance.doFindById(clazz, id);
 	}
 
+	public static <T extends Model> List<T> findAll(Class<T> clazz, Pageable pageable) {
+		Model instance = newInstance(clazz);
+		return instance.doFindAll(clazz, pageable);
+	}
+
 	public static <T extends Model> List<T> findAll(Class<T> clazz) {
 		Model instance = newInstance(clazz);
 		return instance.doFindAll(clazz);
@@ -114,6 +120,11 @@ public class Model {
 	// @Temporary
 	public <T extends Model> List<T> doFindAll(Class<T> clazz) {
 		return executeQuery(clazz, queryBuilder.select().join().build());
+	}
+
+	// @Temporary
+	public <T extends Model> List<T> doFindAll(Class<T> clazz, Pageable pageable) {
+		return executeQuery(clazz, queryBuilder.select().join().page(pageable).build());
 	}
 
 	public <T extends Model> T save() {

@@ -1,6 +1,10 @@
 package com._7aske.grain.requesthandler.controller;
 
+import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.controller.PathVariable;
+import com._7aske.grain.controller.RequestParam;
+import com._7aske.grain.controller.converter.Converter;
+import com._7aske.grain.controller.converter.ConverterRegistry;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.http.HttpMethod;
@@ -36,6 +40,8 @@ public class ControllerHandler implements RequestHandler {
 		// @CopyPaste from ControllerWrapper
 		String fullControllerMapping = HttpPathUtil.join(controller.getPath(), method.getPath());
 
+		ConverterRegistry converterRegistry = ApplicationContextHolder.getContext().getGrain(ConverterRegistry.class);
+
 		// Here we handle Controller method parameter parsing
 		Parameter[] declaredParams = method.getParameters();
 		Object[] params = new Object[declaredParams.length];
@@ -61,24 +67,39 @@ public class ControllerHandler implements RequestHandler {
 				} else {
 					params[i] = new FormDataMapper<>(param.getType()).parse(request.getParameters());
 				}
+			} else if (param.isAnnotationPresent(RequestParam.class)) {
+				RequestParam requestParam = param.getAnnotation(RequestParam.class);
+				RequestParams requestParams = new RequestParams(request.getParameters());
+				String paramName = requestParam.value();
+				if (param.getType().equals(String.class)) {
+					String stringParam = String.join(",", requestParams.getArrayParameter(paramName));
+					params[i] = stringParam;
+				} else if (param.getType().isArray()) {
+					params[i] = requestParams.getArrayParameter(paramName);
+				} else if (converterRegistry.hasConverter(param.getType())) {
+					// RequestParams stores values as an array and returns only the
+					// first element when getStringParameter is called, so we need to
+					// join them back to a string in order to properly pass it to
+					// converter for conversion.
+					Converter<?> converter = converterRegistry.getConverter(param.getType());
+					String[] requestParamArray = requestParams.getArrayParameter(paramName);
+					if (requestParamArray != null) {
+						String stringParam = String.join(",", requestParamArray);
+						params[i] = converter.convert(stringParam);
+					} else {
+						params[i] = converter.convert("");
+					}
+				} else {
+					params[i] = requestParams.getStringParameter(paramName);
+				}
 			} else if (param.isAnnotationPresent(PathVariable.class)) {
 				PathVariable pathVariable = param.getAnnotation(PathVariable.class);
 				String value = HttpPathUtil.resolvePathVariableValue(request.getPath(), fullControllerMapping, pathVariable);
 				// @Refactor move this to converter registry
 				if (value == null) {
 					params[i] = null;
-				} else if (Integer.class.isAssignableFrom(param.getType())) {
-					params[i] = Integer.parseInt(value);
-				} else if (Float.class.isAssignableFrom(param.getType())) {
-					params[i] = Float.parseFloat(value);
-				} else if (Long.class.isAssignableFrom(param.getType())) {
-					params[i] = Long.parseLong(value);
-				} else if (Boolean.class.isAssignableFrom(param.getType())) {
-					params[i] = Boolean.parseBoolean(value);
-				} else if (Short.class.isAssignableFrom(param.getType())) {
-					params[i] = Short.parseShort(value);
-				} else if (Byte.class.isAssignableFrom(param.getType())) {
-					params[i] = Byte.parseByte(value);
+				} else if (converterRegistry.hasConverter(param.getType())) {
+					params[i] = converterRegistry.getConverter(param.getType()).convert(value);
 				} else {
 					params[i] = value;
 				}

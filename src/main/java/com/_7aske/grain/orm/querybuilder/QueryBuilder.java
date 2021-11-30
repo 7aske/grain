@@ -2,6 +2,7 @@ package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
+import com._7aske.grain.orm.page.Pageable;
 
 public interface QueryBuilder {
 	QueryBuilder insert();
@@ -11,6 +12,7 @@ public interface QueryBuilder {
 	QueryBuilder join();
 	QueryBuilder join(ManyToOne relation);
 	QueryBuilder join(OneToMany relation);
+	QueryBuilder page(Pageable pageable);
 
 	QueryBuilder byId();
 	QueryBuilder byId(Object id);
