@@ -4,7 +4,6 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.LexerException;
 
-import java.nio.channels.AsynchronousByteChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -12,9 +11,9 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.util.regex.Pattern.*;
+import static java.util.regex.Pattern.compile;
 
-public class DataView extends AbstractView {
+public class DataView extends FileView {
 	private final Pattern VARIABLE_PATTERN = compile("<%=\\s*?(.*?)\\s*?%>");
 	private final Pattern CODE_SEGMENT = compile("<%[^=]\\s*?(.*?)\\s*?%>");
 	private final Pattern COMMENT_PATTERN = compile("((<!--).*?(-->))");

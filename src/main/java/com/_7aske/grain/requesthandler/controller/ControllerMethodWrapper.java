@@ -39,6 +39,9 @@ public class ControllerMethodWrapper {
 			if (e.getCause() instanceof HttpException) {
 				throw (HttpException) e.getCause();
 			}
+			if (e instanceof InvocationTargetException) {
+				throw (RuntimeException) e.getCause();
+			}
 			throw new HttpException.InternalServerError(e, path);
 		}
 	}

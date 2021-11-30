@@ -1,6 +1,6 @@
 package com._7aske.grain.exception.http;
 
-import com._7aske.grain.exception.ErrorPageBuilder;
+import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpStatus;
 
@@ -48,7 +48,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	public String getHtmlMessage() {
-		return new ErrorPageBuilder(this).build();
+		return new ErrorPage(this).getContent();
 	}
 
 	public static final class BadRequest extends HttpException {

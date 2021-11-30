@@ -6,13 +6,13 @@ import java.nio.file.Paths;
 
 import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 
-public class AbstractView {
+public class FileView implements View {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private final String path;
 	private final String contentType;
 	private String cachedContent = null;
 
-	protected AbstractView(String path) {
+	public FileView(String path) {
 		this.path = path;
 		// @Optimization cache content type for given path
 		this.contentType = probeContentTypeNoThrow(Paths.get(path), "text/html");

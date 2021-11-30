@@ -2,7 +2,7 @@ package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.exception.ErrorPageBuilder;
+import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
 import com._7aske.grain.http.session.Session;
@@ -92,7 +92,7 @@ public class RequestHandlerRunnable implements Runnable {
 				ex.printStackTrace();
 				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 						.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
-						.setBody(ErrorPageBuilder.getDefaultErrorPage(ex, request.getPath()));
+						.setBody(ErrorPage.getDefault(ex, request.getPath()));
 			} finally {
 				long end = System.currentTimeMillis();
 				writer.write(response.getHttpString());

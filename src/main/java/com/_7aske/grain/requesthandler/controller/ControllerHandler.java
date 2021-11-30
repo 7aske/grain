@@ -10,11 +10,11 @@ import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
 import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.session.Session;
-import com._7aske.grain.http.view.AbstractView;
 import com._7aske.grain.http.view.DataView;
+import com._7aske.grain.http.view.View;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
-import com._7aske.grain.util.RequestParams;
 import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.util.RequestParams;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -96,11 +96,11 @@ public class ControllerHandler implements RequestHandler {
 			((DataView) result).setData("request", request);
 			((DataView) result).setData("response", response);
 			((DataView) result).setData("session", session);
-			response.setBody(((AbstractView) result).getContent());
-			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
-		} else if (result instanceof AbstractView) {
-			response.setBody(((AbstractView) result).getContent());
-			response.setHeader(CONTENT_TYPE, ((AbstractView) result).getContentType());
+			response.setBody(((View) result).getContent());
+			response.setHeader(CONTENT_TYPE, ((DataView) result).getContentType());
+		} else if (View.class.isAssignableFrom(result.getClass())) {
+			response.setBody(((View) result).getContent());
+			response.setHeader(CONTENT_TYPE, ((View) result).getContentType());
 		} else if (result instanceof JsonResponse) {
 			response.setStatus(((JsonResponse<?>) result).getStatus());
 			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());

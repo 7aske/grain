@@ -23,6 +23,7 @@ public final class Configuration {
 		setProperty(SESSION_ENABLED, true);
 		setProperty(SESSION_MAX_AGE, SessionConstants.SESSION_DEFAULT_MAX_AGE);
 		setProperty(SECURITY_ENABLED, false);
+		setProperty(LOG_LEVEL, "info");
 	}
 
 	public static Configuration createDefault() {
@@ -95,7 +96,8 @@ public final class Configuration {
 		DATABASE_URL                ("database.url"),
 		DATABASE_DRIVER_CLASS       ("database.driver_class"),
 		DATABASE_EXECUTOR_PRINT_SQL ("database.executor.print-sql"),
-		REQUEST_HANDLER_ACCESS_LOG  ("request-handler.access-log");
+		REQUEST_HANDLER_ACCESS_LOG  ("request-handler.access-log"),
+		LOG_LEVEL                   ("logging.level");
 		// @formatter:on
 
 		private final String key;

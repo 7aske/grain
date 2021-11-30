@@ -1,22 +1,25 @@
-package com._7aske.grain.exception;
+package com._7aske.grain.ui.impl;
 
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.http.HttpContentType;
+import com._7aske.grain.http.view.View;
+import com._7aske.grain.ui.util.Styles;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-public class ErrorPageBuilder {
+public class ErrorPage implements View {
 	private final HttpException exception;
 
-	public ErrorPageBuilder(HttpException exception) {
+	public ErrorPage(HttpException exception) {
 		this.exception = exception;
 	}
 
-	public static String getDefaultErrorPage(Throwable exception, String path) {
-		return new ErrorPageBuilder(new HttpException.InternalServerError(exception, path)).build();
+	public static String getDefault(Throwable exception, String path) {
+		return new ErrorPage(new HttpException.InternalServerError(exception, path)).getContent();
 	}
 
-	public String build() {
+	public String getContent() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<html>");
 		builder.append("<head>");
@@ -25,14 +28,13 @@ public class ErrorPageBuilder {
 		builder.append("<title>").append(getTitle()).append("</title>");
 		builder.append("</head>");
 		builder.append("<body>");
+		builder.append("<div class=\"error-page\"><div class=\"form\">");
 		builder.append("<h1>").append(getTitle()).append("</h1>");
-		builder.append("<hr>");
 		if (exception.getPath() != null)
-			builder.append("<p>").append(getRequestPath()).append("</p>");
+			builder.append(getRequestPath());
 		builder.append(getDescription());
-		builder.append("<hr>");
 		if (exception instanceof HttpException.InternalServerError) {
-			builder.append("<pre>");
+			builder.append("<hr/>").append("<pre>");
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			PrintStream stream = new PrintStream(bos);
 			exception.printStackTrace(stream);
@@ -40,9 +42,15 @@ public class ErrorPageBuilder {
 			builder.append("</pre>");
 		}
 		builder.append(getStatusBar());
+		builder.append("</div></div>");
 		builder.append("</body>");
 		builder.append("</html>");
 		return builder.toString();
+	}
+
+	@Override
+	public String getContentType() {
+		return HttpContentType.TEXT_HTML;
 	}
 
 	private String getStatusBar() {
@@ -50,7 +58,7 @@ public class ErrorPageBuilder {
 	}
 
 	private String getDescription() {
-		return String.format("<p><b>Description </b>%s</p>", exception.getMessage() == null ? exception.getStatus().getReason() : exception.getMessage());
+		return String.format("<h2>Description</h2><p>%s</p>", exception.getMessage() == null ? exception.getStatus().getReason() : exception.getMessage());
 	}
 
 	private String getTitle() {
@@ -58,10 +66,10 @@ public class ErrorPageBuilder {
 	}
 
 	private String getRequestPath() {
-		return String.format("<b>Path </b> %s", exception.getPath());
+		return String.format("<h2>Path %s</h2>", exception.getPath());
 	}
 
 	private static String getStyle() {
-		return "<style type=\"text/css\">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} b {margin-right:.25em} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style>";
+		return "<style type=\"text/css\">" + Styles.getCommonStyles() + "</style>";
 	}
 }
