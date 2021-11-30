@@ -27,6 +27,7 @@ import java.util.Map;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class ControllerHandler implements RequestHandler {
+	public static final String REDIRECT_PREFIX = "redirect:";
 	private final ControllerWrapper controller;
 
 	public ControllerHandler(ControllerWrapper wrapper) {
@@ -135,9 +136,13 @@ public class ControllerHandler implements RequestHandler {
 			response.setBody(new JsonArray((Object[]) result).toJsonString());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof String) {
-			response.setBody((String) result);
-			if (response.getHeader(CONTENT_TYPE) == null)
-				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
+			if (((String) result).startsWith(REDIRECT_PREFIX)) {
+				response.sendRedirect(((String) result).substring(REDIRECT_PREFIX.length()));
+			} else {
+				response.setBody((String) result);
+				if (response.getHeader(CONTENT_TYPE) == null)
+					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
+			}
 		} else {
 			response.setBody(result.toString());
 			if (response.getHeader(CONTENT_TYPE) == null)

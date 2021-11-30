@@ -14,6 +14,7 @@ import com._7aske.grain.security.config.rule.Rule;
 	public void configure(Rule.Builder builder) {
 		builder
 				.authenticated().urlPattern("/**").and()
-				.unauthenticated().urlPattern("/login").method(HttpMethod.GET, HttpMethod.POST);
+				.unauthenticated().urlPattern("/login").method(HttpMethod.GET, HttpMethod.POST).and()
+				.unauthenticated().urlPattern("/logout").method(HttpMethod.GET).and();
 	}
 }

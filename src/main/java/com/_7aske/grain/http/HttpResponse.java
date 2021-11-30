@@ -106,6 +106,11 @@ public class HttpResponse {
 		return this;
 	}
 
+	public void sendRedirect(String location) {
+		this.setHeader(HttpHeaders.LOCATION, location);
+		this.setStatus(HttpStatus.FOUND);
+	}
+
 	public String getBody() {
 		return body;
 	}
