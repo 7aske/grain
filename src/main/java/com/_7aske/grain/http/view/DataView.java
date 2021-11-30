@@ -3,6 +3,7 @@ package com._7aske.grain.http.view;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.LexerException;
+import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +38,15 @@ public class DataView extends FileView {
 					.replaceAll("\n", "")
 					.replaceAll(COMMENT_PATTERN.pattern(), "");
 
+			StringBuilder preCode = new StringBuilder();
+			Matcher variableSegments = VARIABLE_PATTERN.matcher(content);
+			while (variableSegments.find()) {
+				variableSegments.appendReplacement(preCode, StringFormat.format("<% print({}); %>", variableSegments.group(1)));
+			}
+			variableSegments.appendTail(preCode);
+
+
+			content = preCode.toString();
 			StringBuilder code = new StringBuilder();
 			Matcher codeSegments = CODE_SEGMENT.matcher(content);
 
