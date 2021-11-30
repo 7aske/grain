@@ -95,7 +95,6 @@ public class ControllerHandler implements RequestHandler {
 			} else if (param.isAnnotationPresent(PathVariable.class)) {
 				PathVariable pathVariable = param.getAnnotation(PathVariable.class);
 				String value = HttpPathUtil.resolvePathVariableValue(request.getPath(), fullControllerMapping, pathVariable);
-				// @Refactor move this to converter registry
 				if (value == null) {
 					params[i] = null;
 				} else if (converterRegistry.hasConverter(param.getType())) {
