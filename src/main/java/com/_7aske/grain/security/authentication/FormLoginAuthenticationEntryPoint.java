@@ -12,10 +12,7 @@ import com._7aske.grain.security.CookieAuthentication;
 import com._7aske.grain.security.SecurityConstants;
 import com._7aske.grain.security.User;
 import com._7aske.grain.security.crypto.PasswordEncoder;
-import com._7aske.grain.security.exception.CredentialsExpiredException;
-import com._7aske.grain.security.exception.InvalidCredentialsException;
-import com._7aske.grain.security.exception.UserDisabledException;
-import com._7aske.grain.security.exception.UserNotFoundException;
+import com._7aske.grain.security.exception.*;
 import com._7aske.grain.security.service.UserService;
 
 import java.util.UUID;
@@ -32,7 +29,7 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 	private SessionStore sessionStore;
 
 	@Override
-	public Authentication authenticate(HttpRequest request, HttpResponse response) throws SecurityException {
+	public Authentication authenticate(HttpRequest request, HttpResponse response) throws GrainSecurityException {
 		String username = request.getStringParameter("username");
 		String password = request.getStringParameter("password");
 
