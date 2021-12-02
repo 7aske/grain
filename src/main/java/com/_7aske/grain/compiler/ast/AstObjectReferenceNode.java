@@ -1,11 +1,12 @@
 package com._7aske.grain.compiler.ast;
 
 import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 import java.lang.reflect.Field;
 
-public class AstObjectReferenceNode extends AstSymbolNode {
+public class AstObjectReferenceNode extends AstNode {
 	private AstNode reference;
 	private Object backReference;
 	private String name;

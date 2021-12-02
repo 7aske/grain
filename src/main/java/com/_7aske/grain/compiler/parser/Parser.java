@@ -11,8 +11,10 @@ import com._7aske.grain.compiler.parser.exception.ParserOperationNotSupportedExc
 import com._7aske.grain.compiler.parser.exception.ParserSyntaxErrorException;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.BinaryOperator;
 
 import static com._7aske.grain.compiler.lexer.TokenType.*;
 
@@ -238,8 +240,29 @@ public class Parser {
 		} else if (ref instanceof AstSymbolNode) {
 			objectNode.setReference(ref);
 		} else {
-			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s' or '%s' but found '%s'",
-					AstSymbolNode.class, AstFunctionCallNode.class, ref.getClass());
+			// Fix precedence in cases where we are preforming operations
+			// on the reference e.g. obj.info.name + 'Test'. In that case
+			// parseExpression returns a AstArithmeticNode object for which
+			// we need to adjust the left node to point to the root of the
+			// object reference chain namely in the example it would be 'obj'.
+			if (ref instanceof AstBinaryNode) {
+				Object backRef = objectNode.getBackReference();
+				do {
+					if (backRef instanceof AstObjectReferenceNode) {
+						backRef = ((AstObjectReferenceNode) backRef).getBackReference();
+					} else if (backRef instanceof AstFunctionCallNode) {
+						backRef = ((AstFunctionCallNode) backRef).getBackReference();
+					} else {
+						backRef = null;
+					}
+				} while (backRef != null);
+				objectNode.setReference(((AstBinaryNode) ref).getLeft());
+				((AstBinaryNode) ref).setLeft(objectNode);
+				return ref;
+			} else {
+				throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Unexpected type '%s'", ref.getClass());
+			}
+
 		}
 		return objectNode;
 	}
