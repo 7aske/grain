@@ -404,4 +404,12 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("test", interpreter.getContent());
 	}
+
+	@Test
+	void test_postIncrementDecrement() {
+		String code = "i = 0; i++; i--;";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals(0, interpreter.getSymbolValue("i"));
+	}
 }
