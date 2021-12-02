@@ -226,11 +226,16 @@ public class Parser {
 		AstObjectReferenceNode objectNode = new AstObjectReferenceNode(token.getValue());
 		iter.next(); // skip DOT
 		AstNode ref = parseSubExpression(Integer.MIN_VALUE);
+		// If the parsed expression is the instance of ObjectReference or
+		// FunctionCall we need to provide it with a backreference
+		// for the interpretation step.
 		if (ref instanceof AstObjectReferenceNode) {
 			objectNode.setReference(ref);
-		} else if (ref instanceof AstSymbolNode) {
-			objectNode.setReference(ref);
+			((AstObjectReferenceNode) ref).setBackReference(objectNode);
 		} else if (ref instanceof AstFunctionCallNode) {
+			objectNode.setReference(ref);
+			((AstFunctionCallNode) ref).setBackReference(objectNode);
+		} else if (ref instanceof AstSymbolNode) {
 			objectNode.setReference(ref);
 		} else {
 			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s' or '%s' but found '%s'",

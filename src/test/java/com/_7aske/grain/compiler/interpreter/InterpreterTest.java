@@ -3,6 +3,11 @@ package com._7aske.grain.compiler.interpreter;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
+import com._7aske.grain.orm.annotation.Column;
+import com._7aske.grain.orm.annotation.Id;
+import com._7aske.grain.orm.annotation.ManyToOne;
+import com._7aske.grain.orm.annotation.Table;
+import com._7aske.grain.orm.model.Model;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -293,6 +298,32 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, debugSymbols);
 		interpreter.run();
 		assertEquals("2020-10-10-10", interpreter.getSymbolValue("a"));
+	}
+
+	static class Category {
+		private Long id;
+		private String name;
+	}
+
+	static class Post {
+		private Long id;
+		private String title;
+		private Category category;
+	}
+
+	@Test
+	void test_chainedObjectReference() {
+		Post post = new Post();
+		Category category = new Category();
+		category.name = "Test";
+		post.category = category;
+		String code = "a = post.category.name";
+
+		Interpreter interpreter = new Interpreter(code, debugSymbols);
+		interpreter.putSymbol("post", post);
+		interpreter.run();
+
+		assertEquals("Test", interpreter.getSymbolValue("a"));
 	}
 
 	@Test

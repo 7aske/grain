@@ -49,29 +49,42 @@ public class AstObjectReferenceNode extends AstSymbolNode {
 		return this.reference;
 	}
 
-	// TODO: refactor
+	// @Refactor can keep a state information about whether the node has been
+	// evaluated or not so that the node that is referencing doesn't need to
+	// call .run() method. Also since the parser is now properly setting back
+	// reference attrs we shouldn't ever forward current node value to its
+	// reference by setting the back reference field ourselves.
 	@Override
 	public Object run(Interpreter interpreter) {
 		Object value = null;
 		if (this.backReference == null) {
 			value = interpreter.getSymbolValue(this.name);
 		} else {
-			if (this.backReference instanceof AstObjectReferenceNode) {
-				Object backReferenceValue = ((AstObjectReferenceNode) this.backReference).run(interpreter);
+			if (!(this.backReference instanceof AstNode)) {
 				try {
-					value = backReferenceValue.getClass().getField(this.name).get(backReferenceValue);
+					Field field = this.backReference.getClass().getDeclaredField(this.name);
+					field.setAccessible(true);
+					value = field.get(this.backReference);
 				} catch (IllegalAccessException | NoSuchFieldException e) {
-					throw new RuntimeException(e);
+					e.printStackTrace();
 				}
+			} else {
+				// Wierd
+				throw new RuntimeException(String.format("Unable to parse reference %s", this.backReference.getClass()));
 			}
 		}
 
-		if (value == null) {
+		// After parsing our value we run the reference
+		if (value == null && this.reference != null) {
+			throw new NullPointerException(String.format("Cannot read attribute '%s' of null", this.name));
+		} else if (value == null) {
 			return null;
 		} else if (this.reference instanceof AstObjectReferenceNode) {
+			// @Refactor avoid forwarding the value to the referencing node
 			((AstObjectReferenceNode) this.reference).setBackReference(value);
 			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstFunctionCallNode) {
+			// @Refactor avoid forwarding the value to the referencing node
 			((AstFunctionCallNode) this.reference).setBackReference(value);
 			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstSymbolNode) {

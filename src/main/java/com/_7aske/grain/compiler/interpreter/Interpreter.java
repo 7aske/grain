@@ -66,16 +66,13 @@ public class Interpreter {
 		scopeStack.getFirst().putAll(data);
 	}
 
-	public void putSymbol(String data, Object value) {
-		scopeStack.getFirst().put(data, value);
+	public void putSymbol(String name, Object value) {
+		scopeStack.getFirst().put(name, value);
 	}
 
-	public void putScopedSymbol(String symbol, Object value) {
-		Map<String, Object> scope = scopeStack.stream()
-				.filter(s -> s.containsKey(symbol))
-				.findFirst().orElse(scopeStack.peek());
-		// scope stack cannot be empty (global scope)
-		scope.put(symbol, value);
+	public void putScopedSymbol(String name, Object value) {
+		Map<String, Object> scope = getScopeThatContains(name);
+		scope.put(name, value);
 	}
 
 	public void pushScope() {
@@ -86,23 +83,27 @@ public class Interpreter {
 		this.scopeStack.pop();
 	}
 
-	public Object getSymbolValue(String symbolName) {
+	public Object getSymbolValue(String name) {
 		Object o = null;
-		Map<String, Object> scope = scopeStack.stream()
-				.filter(s -> s.containsKey(symbolName))
-				.findFirst().orElse(scopeStack.getFirst());
+		Map<String, Object> scope = getScopeThatContains(name);
 
-		if (scope.containsKey(symbolName)) {
-			o = scope.get(symbolName);
+		if (scope.containsKey(name)) {
+			o = scope.get(name);
 		} else {
-			Optional<Class<?>> clazz = tryLoadClass("java.lang." + symbolName.replaceAll("java.lang.", ""));
+			Optional<Class<?>> clazz = tryLoadClass("java.lang." + name.replaceAll("java.lang.", ""));
 			if (clazz.isPresent()) {
 				o = clazz.get();
-				putScopedSymbol(symbolName, o);
+				putScopedSymbol(name, o);
 			}
 		}
 
 		return o;
+	}
+
+	private Map<String, Object> getScopeThatContains(String name) {
+		return scopeStack.stream()
+				.filter(s -> s.containsKey(name))
+				.findFirst().orElse(scopeStack.getFirst());
 	}
 
 	public String getContent() {
@@ -116,6 +117,7 @@ public class Interpreter {
 		}
 		return value;
 	}
+	
 
 	Optional<Class<?>> tryLoadClass(String classPath) {
 		try {
