@@ -17,7 +17,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 		this.basePackage = basePackage;
 		this.staticLocationsRegistry = staticLocationsRegistry;
 		this.configuration = configuration;
-		this.grainRegistry = new GrainRegistry();
+		this.grainRegistry = new GrainRegistry(configuration);
 		this.grainRegistry.registerGrain(configuration);
 		this.grainRegistry.registerGrains(basePackage);
 		logger.info("Loaded {} Grain classes", grainRegistry.getGrains().size());

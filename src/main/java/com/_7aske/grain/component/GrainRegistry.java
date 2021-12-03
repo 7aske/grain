@@ -1,6 +1,8 @@
 package com._7aske.grain.component;
 
 import com._7aske.grain.GrainApp;
+import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.config.Configuration;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
@@ -14,21 +16,46 @@ import java.util.stream.Collectors;
 import static com._7aske.grain.util.ReflectionUtil.findClassByClass;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
+/**
+ * Class responsible for loading all classes that are the part of the
+ * dependency injection system.
+ */
 public class GrainRegistry {
 	private final Map<Class<?>, Object> grains = new HashMap<>();
 	private final GrainInitializer grainInitializer;
 	private final Logger logger = LoggerFactory.getLogger(GrainRegistry.class);
+	private final Interpreter interpreter;
 
-	public GrainRegistry() {
-		this.grainInitializer = new GrainInitializer();
+	public GrainRegistry(Configuration configuration) {
+		this.grainInitializer = new GrainInitializer(configuration);
+
+		this.interpreter = new Interpreter();
+		interpreter.putProperties(configuration.getProperties());
+
 		registerGrain(this);
 	}
 
 	public void registerGrains(String basePkg) {
 		Set<Class<?>> classes = Arrays.stream(new String[]{GrainApp.class.getPackageName(), basePkg})
-				.flatMap(pkg -> new GrainJarClassLoader(pkg).loadClasses(cl -> !cl.isAnnotation() && isAnnotationPresent(cl, Grain.class)).stream())
+				.flatMap(pkg -> new GrainJarClassLoader(pkg).loadClasses(this::shouldBeLoaded).stream())
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 		grains.putAll(grainInitializer.initialize(classes));
+	}
+
+	public boolean shouldBeLoaded(Class<?> cl) {
+		boolean isMarked = !cl.isAnnotation() && isAnnotationPresent(cl, Grain.class);
+		if (cl.isAnnotationPresent(Condition.class)) {
+			Condition condition = cl.getAnnotation(Condition.class);
+			if (condition.value() == null || condition.value().isBlank()) {
+				return isMarked;
+			} else {
+				String code = condition.value();
+				boolean result = Boolean.parseBoolean(String.valueOf(interpreter.evaluate(code)));
+				return isMarked && result;
+			}
+		} else {
+			return isMarked;
+		}
 	}
 
 	public Set<Object> getControllers() {

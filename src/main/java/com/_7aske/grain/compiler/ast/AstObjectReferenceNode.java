@@ -1,10 +1,11 @@
 package com._7aske.grain.compiler.ast;
 
 import com._7aske.grain.compiler.ast.basic.AstNode;
-import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.compiler.interpreter.exception.InterpreterNullPointerException;
 
 import java.lang.reflect.Field;
+import java.util.Map;
 
 public class AstObjectReferenceNode extends AstNode {
 	private AstNode reference;
@@ -69,6 +70,8 @@ public class AstObjectReferenceNode extends AstNode {
 				} catch (IllegalAccessException | NoSuchFieldException e) {
 					e.printStackTrace();
 				}
+			} else if (Map.class.isAssignableFrom(this.backReference.getClass())) {
+				value = ((Map)this.backReference).get(this.name);
 			} else {
 				// Wierd
 				throw new RuntimeException(String.format("Unable to parse reference %s", this.backReference.getClass()));
@@ -77,7 +80,7 @@ public class AstObjectReferenceNode extends AstNode {
 
 		// After parsing our value we run the reference
 		if (value == null && this.reference != null) {
-			throw new NullPointerException(String.format("Cannot read attribute '%s' of null", this.name));
+			throw new InterpreterNullPointerException(String.format("Cannot read attribute '%s' of null", this.name));
 		} else if (value == null) {
 			return null;
 		} else if (this.reference instanceof AstObjectReferenceNode) {
@@ -89,12 +92,16 @@ public class AstObjectReferenceNode extends AstNode {
 			((AstFunctionCallNode) this.reference).setBackReference(value);
 			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstSymbolNode) {
-			try {
-				Field field = value.getClass().getDeclaredField(((AstSymbolNode) this.reference).symbolName);
-				field.setAccessible(true);
-				value = field.get(value);
-			} catch (IllegalAccessException | NoSuchFieldException e) {
-				e.printStackTrace();
+			if (Map.class.isAssignableFrom(value.getClass())) {
+				value = ((Map)value).get(((AstSymbolNode) this.reference).symbolName);
+			} else {
+				try {
+					Field field = value.getClass().getDeclaredField(((AstSymbolNode) this.reference).symbolName);
+					field.setAccessible(true);
+					value = field.get(value);
+				} catch (IllegalAccessException | NoSuchFieldException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

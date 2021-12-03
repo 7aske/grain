@@ -7,19 +7,19 @@ import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.context.ApplicationContextImpl;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GrainRegistryTest {
 	static final class TestApp extends GrainApp {
 
 	}
+
 	interface TestService {
 		void doSomething();
 	}
 
 	@Grain
-	static final class AfterInitService  {
+	static final class AfterInitService {
 		public String getSomething() {
 			return "something";
 		}
@@ -45,6 +45,7 @@ class GrainRegistryTest {
 	@Grain
 	static class TestController {
 		private TestService testService;
+
 		public TestController(TestService testService) {
 			this.testService = testService;
 		}
@@ -56,7 +57,7 @@ class GrainRegistryTest {
 
 	@Test
 	void test_grainRegistry() {
-		GrainRegistry registry = new GrainRegistry();
+		GrainRegistry registry = new GrainRegistry(Configuration.createDefault());
 		// one of the manually added dependencies
 		registry.registerGrain(Configuration.createDefault());
 		registry.registerGrains(GrainApp.class.getPackageName());
@@ -70,5 +71,57 @@ class GrainRegistryTest {
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName());
 		TestServiceImpl testService = applicationContext.getGrainRegistry().getGrain(TestServiceImpl.class);
 		assertEquals("something", testService.something);
+	}
+
+	@Grain
+	@Condition("false")
+	static final class TestCondition {
+
+	}
+
+	@Grain
+	@Condition("test.prop")
+	static final class TestConditionTrue {
+		@Value("options.number")
+		private Integer number;
+	}
+
+	@Grain
+	@Condition("profile.active == 'test'")
+	static final class TestConditionActiveProfile {
+
+	}
+
+	@Grain
+	static final class TestValue {
+		@Value("options.number")
+		private Integer number;
+		@Value("options.string")
+		private String string;
+	}
+
+	@Test
+	void testConditionalLoad() {
+		Configuration configuration = Configuration.createDefault();
+		configuration.setPropertyUnsafe("test.prop", true);
+		configuration.setPropertyUnsafe("profile.active", "test");
+		GrainRegistry registry = new GrainRegistry(configuration);
+		registry.registerGrain(configuration);
+		registry.registerGrains(GrainApp.class.getPackageName());
+		assertNull(registry.getGrain(TestCondition.class));
+		assertNotNull(registry.getGrain(TestConditionTrue.class));
+	}
+
+	@Test
+	void testValue() {
+		Configuration configuration = Configuration.createDefault();
+		configuration.setPropertyUnsafe("options.number", 42);
+		configuration.setPropertyUnsafe("options.string", "test");
+		GrainRegistry registry = new GrainRegistry(configuration);
+		registry.registerGrain(configuration);
+		registry.registerGrains(GrainApp.class.getPackageName());
+		TestValue obj = registry.getGrain(TestValue.class);
+		assertEquals(42, obj.number);
+		assertEquals("test", obj.string);
 	}
 }

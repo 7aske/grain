@@ -52,6 +52,10 @@ public final class Configuration {
 		return properties.get(prop);
 	}
 
+	public Properties getProperties() {
+		return properties;
+	}
+
 	public int getThreads() {
 		return (int) getProperty(SERVER_THREADS);
 	}

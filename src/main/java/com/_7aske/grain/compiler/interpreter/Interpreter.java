@@ -3,8 +3,10 @@ package com._7aske.grain.compiler.interpreter;
 import com._7aske.grain.compiler.ast.AstBlockNode;
 import com._7aske.grain.compiler.ast.AstFunctionCallNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.interpreter.exception.InterpreterException;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
+import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.*;
 
@@ -62,6 +64,58 @@ public class Interpreter {
 		output.write(text);
 	}
 
+	public void putProperties(Properties properties) {
+
+		for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+			Object k = entry.getKey();
+			Object v = entry.getValue();
+			String key = (String) k;
+			String[] parts = key.split("\\.");
+			Map<String, Object> lastMap = null;
+			Map<String, Object> firstMap = null;
+			if (parts.length > 1)
+				for (int i = 0; i < parts.length - 1; i++) {
+					String part = parts[i];
+
+					// Handling actual data in the symbol table
+					// The problem here is merging existing data otherwise
+					// this would be a simple loop. We always need to check
+					// whether the last reference contains the current key.
+					// If it does then we update but if not we crate a new
+					// HashMap with empty values.
+					Map<String, Object> ref;
+					if (lastMap == null) {
+						// first iteration
+						Object existing = getSymbolValue(part);
+
+						if (existing != null && !Map.class.isAssignableFrom(existing.getClass()))
+							throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
+
+						firstMap = existing == null ? new HashMap<>() : (Map<String, Object>) existing;
+						ref = firstMap;
+					} else {
+						if (lastMap.containsKey(part)) {
+							Object existing = getSymbolValue(part);
+
+							if (existing != null && !Map.class.isAssignableFrom(existing.getClass()))
+								throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
+							ref = (Map<String, Object>) lastMap.get(part);
+						} else {
+							ref = new HashMap<>();
+							lastMap.put(part, ref);
+						}
+					}
+					lastMap = ref;
+				}
+			if (lastMap == null) {
+				lastMap = new HashMap<>();
+			}
+			// In the end we re-wire the maps to their corresponding symbols
+			lastMap.put(parts[parts.length - 1], v);
+			putSymbol(parts[0], firstMap);
+		}
+	}
+
 	public void putSymbols(Map<String, Object> data) {
 		scopeStack.getFirst().putAll(data);
 	}
@@ -117,7 +171,23 @@ public class Interpreter {
 		}
 		return value;
 	}
-	
+
+	public Object evaluate(String code) {
+		this.nodes.clear();
+		Lexer lexer = new Lexer(code);
+		Parser parser = new Parser(lexer);
+		addNode(parser.parse());
+		Object value = null;
+		for (AstNode node : this.nodes) {
+			try {
+				value = node.run(this);
+			} catch (InterpreterException ignored) {
+				value = null;
+			}
+		}
+		return value;
+	}
+
 
 	Optional<Class<?>> tryLoadClass(String classPath) {
 		try {

@@ -1,7 +1,10 @@
 package com._7aske.grain.component;
 
+import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.config.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
+import com._7aske.grain.exception.GrainInvalidInjectException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 
@@ -22,9 +25,13 @@ public class GrainInitializer {
 	// Set of parsed dependencies
 	private final Set<Dependency> dependencies;
 	private final Logger logger = LoggerFactory.getLogger(GrainInitializer.class);
+	private final Interpreter interpreter;
 
-	public GrainInitializer() {
+	public GrainInitializer(Configuration configuration) {
 		this.dependencies = new HashSet<>();
+
+		this.interpreter = new Interpreter();
+		interpreter.putProperties(configuration.getProperties());
 	}
 
 	public Map<Class<?>, Object> initialize(Set<Class<?>> classes) {
@@ -37,8 +44,40 @@ public class GrainInitializer {
 		this.dependencies.forEach(this::loadOwnDependencies);
 		this.dependencies.forEach(this::partiallyInitialize);
 		this.dependencies.forEach(this::initializeMissingFields);
+		this.dependencies.forEach(this::initializeValues);
 		this.dependencies.forEach(this::callLifecycleMethods);
 		return this.dependencies.stream().collect(Collectors.toMap(Dependency::getClazz, Dependency::getInstance));
+	}
+
+	// We do this pass after initializing all the fields since fields can
+	// hopefully reference other Grains
+	private void initializeValues(Dependency dep) {
+		Class<?> clazz = dep.clazz;
+		Field[] fields = clazz.getDeclaredFields();
+		for (Field field : fields) {
+			field.setAccessible(true);
+
+			try {
+
+				// If the field is annotated with @Value we parse the expression
+				// and set its value. Fields should not contain both @Value and
+				// @Inject annotations
+				if (field.isAnnotationPresent(Value.class)) {
+					if (field.isAnnotationPresent(Inject.class))
+						throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
+					Value value = field.getAnnotation(Value.class);
+					// @Temporary need a better way to handle property keys
+					String code = value.value();
+					// We cast the result to confirm that we have a valid value
+					Object result = field.getType().cast(interpreter.evaluate(code));
+					field.set(dep.instance, result);
+				}
+
+			} catch (IllegalAccessException e) {
+				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);
+			}
+			field.setAccessible(false);
+		}
 	}
 
 	public Object initialize(Class<?> clazz) {
@@ -114,7 +153,24 @@ public class GrainInitializer {
 		Field[] fields = clazz.getDeclaredFields();
 		for (Field field : fields) {
 			field.setAccessible(true);
+
 			try {
+
+				// If the field is annotated with @Value we parse the expression
+				// and set its value. Fields should not contain both @Value and
+				// @Inject annotations
+				if (field.isAnnotationPresent(Value.class)) {
+					if (field.isAnnotationPresent(Inject.class))
+						throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
+					Value value = field.getAnnotation(Value.class);
+					// @Temporary need a better way to handle property keys
+					String code = value.value().replace(".", "$");
+					// We cast the result to confirm that we have a valid value
+					Object result = field.getType().cast(interpreter.evaluate(code));
+					field.set(dep.instance, result);
+					continue;
+				}
+
 				// If the field is already initialized(some will be) we don't do
 				// anything.
 				if (field.get(dep.instance) != null) continue;
