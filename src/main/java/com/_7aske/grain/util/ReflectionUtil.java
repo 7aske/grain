@@ -6,26 +6,17 @@ import com._7aske.grain.component.Primary;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
+import java.lang.annotation.*;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Collection of utilities related for reflective operations and type inspections.
+ */
 public class ReflectionUtil {
 	private ReflectionUtil() {
-	}
-
-	// RuntimeException version of getAnyConstructor
-	public static <T> Constructor<T> getAnyConstructorNoThrow(Class<T> clazz) {
-		try {
-			return getAnyConstructor(clazz);
-		} catch (NoSuchMethodException e) {
-			throw new GrainReflectionException(e);
-		}
 	}
 
 	public static <T> Constructor<T> getAnyConstructor(Class<T> clazz) throws NoSuchMethodException {
@@ -84,6 +75,10 @@ public class ReflectionUtil {
 	}
 
 
+	/**
+	 * Class.forName wrapper
+	 * @return Successfully loaded class. Null if failed.
+	 */
 	public static Class<?> loadClass(String className, String packageName) {
 		try {
 			String fullClassName = packageName + "." + className.substring(0, className.lastIndexOf('.'));
@@ -93,16 +88,44 @@ public class ReflectionUtil {
 		}
 	}
 
+	/**
+	 * @param clazz type on which to search annotation for
+	 * @param annotation annotation to search for
+	 * @return if annotation is present in the type or recursively in any of
+	 * the annotated types
+	 */
 	public static boolean isAnnotationPresent(Class<?> clazz, Class<? extends Annotation> annotation) {
+		if (clazz.equals(annotation)) return true;
 		if (clazz.isAnnotationPresent(annotation)) return true;
-		// check if annotation is inherited
-		return Arrays.stream(clazz.getAnnotations()).anyMatch(a -> a.annotationType().isAnnotationPresent(annotation));
+		// Prevent infinite recursion
+		if (List.of(Target.class, Retention.class, Documented.class).contains(clazz)) {
+			return false;
+		}
+		// Check if annotation is composited in other annotations
+		return Arrays.stream(clazz.getAnnotations()).anyMatch(a -> isAnnotationPresent(a.annotationType(), annotation));
 	}
 
-	public static boolean isAnnotationPresent(Field field, Class<? extends Annotation> annotation) {
-		return field.isAnnotationPresent(annotation);
+	/**
+	 * @param object Field or Method on which to search annotation for
+	 * @param annotation annotation to search for
+	 * @return if annotation is present in the object or recursively in any of
+	 * the annotated types
+	 */
+	public static boolean isAnnotationPresent(AccessibleObject object, Class<? extends Annotation> annotation) {
+		if (object.isAnnotationPresent(annotation)) return true;
+
+		return Arrays.stream(object.getAnnotations()).anyMatch(a -> isAnnotationPresent(a.annotationType(), annotation));
 	}
 
+	/**
+	 * Utility method to find any constructor for the class and create
+	 * an instance of it
+	 * @param clazz Class to create the instance of
+	 * @param <T> Type of the instance
+	 * @return created instance
+	 * @throws GrainReflectionException thrown if in any of the cases
+	 * the instance could not have been created.
+	 */
 	public static <T> T newInstance(Class<T> clazz) throws GrainReflectionException {
 		try {
 			return getAnyConstructor(clazz).newInstance();
@@ -111,11 +134,62 @@ public class ReflectionUtil {
 		}
 	}
 
+	/**
+	 * Returns the class representing the generic type in a container class
+	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
+	 * @param f Generic container field
+	 * @param <T> Generic type
+	 * @return generic type class
+	 */
 	public static <T> Class<T> getGenericListTypeArgument(Field f) {
 		return (Class<T>) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
 	}
 
+	/**
+	 * See {@link ReflectionUtil#compareLibraryAndUserPackage(String, String)}
+	 */
+	public static int compareLibraryAndUserPackage(Object o1, Object o2) {
+		return compareLibraryAndUserPackage(o1.getClass().getPackageName(), o2.getClass().getPackageName());
+	}
 
+	/**
+	 * See {@link ReflectionUtil#compareLibraryAndUserPackage(String, String)}
+	 */
+	public static int compareLibraryAndUserPackage(Class<?> c1, Class<?> c2) {
+		return compareLibraryAndUserPackage(c1.getPackageName(), c2.getPackageName());
+	}
+
+	/**
+	 * Comparator that is used for sorting classes or objects by its packageName
+	 * so that the resulting sorted list starts with classes or objects that are
+	 * not grain-library defined.
+	 * @param c1Package comparable first argument package
+	 * @param c2Package comparable second argument package
+	 * @return compared packages
+	 */
+	public static int compareLibraryAndUserPackage(String c1Package, String c2Package) {
+		String basePackagePrefix = GrainApp.class.getPackageName() + ".";
+		// @Refactor can this be done better?
+		if (!c1Package.startsWith(basePackagePrefix) && !c2Package.startsWith(basePackagePrefix)) return 0;
+		if (c1Package.startsWith(basePackagePrefix) && c2Package.startsWith(basePackagePrefix)) return 0;
+		if (c1Package.startsWith(basePackagePrefix)) return 1;
+		if (c2Package.startsWith(basePackagePrefix)) return -1;
+		return 0;
+	}
+
+	/**
+	 * Method used to search a collection of items for the appropriate class.
+	 * Used when given a collection of Grains or Dependencies we want to find
+	 * an object or dependency that matches provided search class. It prioritizes
+	 * on the objects or dependencies of types defined by the user rather than
+	 * the library itself.
+	 * @param clazz Class we search for.
+	 * @param classes Collection of items where to search for a given class.
+	 * @param extractor Lambda that defined how the class is extracted from the
+	 *                  generic Collection item.
+	 * @param <T> Type of the list items.
+	 * @return Optional of the found class.
+	 */
 	public static <T> Optional<T> findClassByClass(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
 		List<T> result = classes.stream()
 				.filter(d -> extractor.apply(d).equals(clazz) || clazz.isAssignableFrom(extractor.apply(d)))
@@ -131,7 +205,7 @@ public class ReflectionUtil {
 						String depPackage = extractor.apply(dep).getPackageName();
 
 						// If the package is not starting with package but if it is make sure by checking whether the next
-						// letter after the basePackage is a dot since in case of com._7aske.grain as basePackge and
+						// letter after the basePackage is a dot since in case of com._7aske.grain as basePackage and
 						// com._7aske.graintest only by checking starts with would return true. This can be refactored
 						// to match paths like we do it for url path matching.
 						return !(depPackage.startsWith(basePackage) &&

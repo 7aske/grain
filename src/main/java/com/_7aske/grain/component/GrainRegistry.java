@@ -5,6 +5,7 @@ import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.middleware.Middleware;
+import com._7aske.grain.util.ReflectionUtil;
 import com._7aske.grain.util.classloader.GrainJarClassLoader;
 
 import java.util.*;
@@ -32,8 +33,11 @@ public class GrainRegistry {
 
 	public Set<Object> getControllers() {
 		return grains.values().stream()
+				// @Note this should be implemented everywhere where grains
+				// are fetched as a list
+				.sorted(ReflectionUtil::compareLibraryAndUserPackage)
 				.filter(g -> g.getClass().isAnnotationPresent(Controller.class))
-				.collect(Collectors.toSet());
+				.collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
 	public Set<Object> getGrains() {
