@@ -11,10 +11,8 @@ import com._7aske.grain.compiler.parser.exception.ParserOperationNotSupportedExc
 import com._7aske.grain.compiler.parser.exception.ParserSyntaxErrorException;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Stack;
-import java.util.function.BinaryOperator;
 
 import static com._7aske.grain.compiler.lexer.TokenType.*;
 

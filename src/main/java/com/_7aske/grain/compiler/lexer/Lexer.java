@@ -96,9 +96,25 @@ public class Lexer extends IndexedStringIterator {
 			Optional<Token> operator = tryParseOperator();
 			if (operator.isPresent()) {
 				Token token = operator.get();
-				token.setStartChar(start);
-				token.setRow(getRow());
-				emit(token);
+				// @Temporary @Refactor this should probably be an AstNode
+				// rather then code modification hack.
+				if (token.isOfType(INC)) {
+					emit(createToken(ASSN, "="));
+					Token iden = this.tokens.get(this.tokens.size() - 2);
+					emit(createToken(iden.getType(), iden.getValue()));
+					emit(createToken(ADD, "+"));
+					emit(createToken(LIT_INT, "1"));
+				} else if (token.isOfType(DEC)) {
+						emit(createToken(ASSN,"="));
+						Token iden = this.tokens.get(this.tokens.size() - 2);
+						emit(createToken(iden.getType(), iden.getValue()));
+						emit(createToken(SUB, "+"));
+						emit(createToken(LIT_INT, "1"));
+				} else {
+					token.setStartChar(start);
+					token.setRow(getRow());
+					emit(token);
+				}
 			} else {
 				printSourceCodeLocation();
 				throw new LexerException("Invalid token '" + peek() + "' " + getInfo());
