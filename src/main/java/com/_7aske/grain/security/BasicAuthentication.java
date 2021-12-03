@@ -4,9 +4,9 @@ import java.util.Collection;
 
 public class BasicAuthentication implements Authentication {
 	private final User user;
-	private Collection<? extends Authority> authorities;
+	private Collection<? super Authority> authorities;
 
-	public BasicAuthentication(User user, Collection<? extends Authority> authorities) {
+	public BasicAuthentication(User user, Collection<? super Authority> authorities) {
 		this.user = user;
 		this.authorities = authorities;
 	}
@@ -37,11 +37,11 @@ public class BasicAuthentication implements Authentication {
 	}
 
 	@Override
-	public Collection<? extends Authority> getAuthorities() {
+	public Collection<? super Authority> getAuthorities() {
 		return user.getAuthorities();
 	}
 
-	public void setAuthorities(Collection<? extends Authority> authorities) {
+	public void setAuthorities(Collection<? super Authority> authorities) {
 		this.authorities = authorities;
 	}
 }

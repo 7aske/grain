@@ -29,12 +29,12 @@ public interface Authentication {
 	/**
 	 * @return Authenticated user roles.
 	 */
-	Collection<? extends Authority> getAuthorities();
+	Collection<? super Authority> getAuthorities();
 
 	/**
 	 * Sets authentication authorities. Does not modify user's authorities.
 	 *
 	 * @param authorities authorities to be set to the authentication.
 	 */
-	void setAuthorities(Collection<? extends Authority> authorities);
+	void setAuthorities(Collection<? super Authority> authorities);
 }

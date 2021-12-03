@@ -71,7 +71,8 @@ public class Rule {
 		return HttpPathUtil.antMatching(pattern, path) && (httpMethods.isEmpty() || httpMethods.contains(method));
 	}
 
-	public static final class Builder {
+	// @Refactor this can be moved to a separate file. But how to name it?
+	public static final class Builder implements RulePatternBuilder, RuleBuilder {
 		private Set<HttpMethod> methods;
 		private String pattern;
 		private Set<String> rolesRequired;
@@ -90,38 +91,38 @@ public class Rule {
 			this.authenticationRequired = true;
 		}
 
-		public Builder authenticated() {
+		public RulePatternBuilder authenticated() {
 			authenticationRequired = true;
 			return this;
 		}
 
-		public Builder unauthenticated() {
+		public RulePatternBuilder unauthenticated() {
 			authenticationRequired = false;
 			return this;
 		}
 
-		public Builder method(HttpMethod... methods) {
+		public RulePatternBuilder method(HttpMethod... methods) {
 			if (!this.methods.isEmpty())
 				throw new IllegalStateException("HttpMethods already set");
 			this.methods.addAll(List.of(methods));
 			return this;
 		}
 
-		public Builder urlPattern(String pattern) {
+		public RulePatternBuilder urlPattern(String pattern) {
 			if (this.pattern != null)
 				throw new IllegalStateException("Pattern already set");
 			this.pattern = pattern;
 			return this;
 		}
 
-		public Builder roles(String... roles) {
+		public RulePatternBuilder roles(String... roles) {
 			if (!this.rolesRequired.isEmpty())
 				throw new IllegalStateException("Roles already set");
 			this.rolesRequired.addAll(List.of(roles));
 			return this;
 		}
 
-		public Builder and() {
+		public RuleBuilder and() {
 			if (this.pattern == null)
 				throw new IllegalStateException("Cannot finalize a rule without a pattern");
 			this.rules.add(new Rule(methods, pattern, rolesRequired, authenticationRequired));
@@ -137,5 +138,6 @@ public class Rule {
 			this.rules.clear();
 			return result;
 		}
+
 	}
 }

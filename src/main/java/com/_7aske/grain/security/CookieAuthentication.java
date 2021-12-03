@@ -9,9 +9,9 @@ import java.util.Collection;
 public class CookieAuthentication implements Authentication {
 	private String username;
 	private Cookie credentials;
-	private Collection<? extends Authority> authorities;
+	private Collection<? super Authority> authorities;
 
-	public CookieAuthentication(String username, Cookie credentials, Collection<? extends Authority> authorities) {
+	public CookieAuthentication(String username, Cookie credentials, Collection<? super Authority> authorities) {
 		this.username = username;
 		this.credentials = credentials;
 		this.authorities = authorities;
@@ -43,12 +43,12 @@ public class CookieAuthentication implements Authentication {
 	}
 
 	@Override
-	public Collection<? extends Authority> getAuthorities() {
+	public Collection<? super Authority> getAuthorities() {
 		return authorities;
 	}
 
 	@Override
-	public void setAuthorities(Collection<? extends Authority> authorities) {
+	public void setAuthorities(Collection<? super Authority> authorities) {
 		this.authorities = authorities;
 	}
 }

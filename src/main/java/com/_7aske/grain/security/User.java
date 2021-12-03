@@ -24,7 +24,7 @@ public interface User {
 	 * Gets the user's authorities (roles).
 	 * @return user's authorities.
 	 */
-	Collection<? extends Authority> getAuthorities();
+	Collection<? super Authority> getAuthorities();
 
 	/**
 	 * @return user account locked status.

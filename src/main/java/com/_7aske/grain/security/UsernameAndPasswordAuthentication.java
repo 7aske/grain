@@ -6,19 +6,19 @@ public class UsernameAndPasswordAuthentication implements Authentication {
 	private String username;
 	private Object credentials;
 	private boolean authenticated;
-	private Collection<? extends Authority> authorities;
+	private Collection<? super Authority> authorities;
 
 	private UsernameAndPasswordAuthentication() {
 		authenticated = true;
 	}
 
-	public UsernameAndPasswordAuthentication(String username, Object credentials, Collection<? extends Authority> authorities) {
+	public UsernameAndPasswordAuthentication(String username, Object credentials, Collection<? super Authority> authorities) {
 		this.username = username;
 		this.credentials = credentials;
 		this.authorities = authorities;
 	}
 
-	public UsernameAndPasswordAuthentication(User user, Collection<? extends Authority> authorities) {
+	public UsernameAndPasswordAuthentication(User user, Collection<? super Authority> authorities) {
 		this();
 		this.username = user.getUsername();
 		this.credentials = user.getPassword();
@@ -53,12 +53,12 @@ public class UsernameAndPasswordAuthentication implements Authentication {
 	}
 
 	@Override
-	public Collection<? extends Authority> getAuthorities() {
+	public Collection<? super Authority> getAuthorities() {
 		return authorities;
 	}
 
 	@Override
-	public void setAuthorities(Collection<? extends Authority> authorities) {
+	public void setAuthorities(Collection<? super Authority> authorities) {
 		this.authorities = authorities;
 	}
 }

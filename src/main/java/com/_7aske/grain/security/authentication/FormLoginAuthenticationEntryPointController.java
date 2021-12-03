@@ -12,6 +12,7 @@ import com._7aske.grain.http.session.SessionToken;
 import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.http.view.View;
 import com._7aske.grain.security.Authentication;
+import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.context.SecurityContextHolder;
 import com._7aske.grain.security.exception.GrainSecurityException;
 import com._7aske.grain.ui.LoginPage;
@@ -20,7 +21,7 @@ import com._7aske.grain.ui.LoginPage;
  * Default authentication entry point handling form POST requests to /login
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping
 public class FormLoginAuthenticationEntryPointController {
 	@Inject
 	private AuthenticationEntryPoint entryPoint;
@@ -30,6 +31,8 @@ public class FormLoginAuthenticationEntryPointController {
 	private SessionStore store;
 	@Inject
 	private HttpRequestTokenProvider provider;
+	@Inject
+	private SecurityConfiguration configuration;
 
 	// @Todo handle redirect after successful or unsuccessful login
 	@RequestMapping(value = "/login", method = HttpMethod.POST)
@@ -37,9 +40,9 @@ public class FormLoginAuthenticationEntryPointController {
 		try {
 			Authentication authentication = entryPoint.authenticate(request, response);
 			SecurityContextHolder.getContext().setAuthentication(authentication);
-			return "redirect:/";
+			return "redirect:" + configuration.getAuthenticationSuccessUrl();
 		} catch (GrainSecurityException e) {
-			throw new HttpException.Forbidden(e);
+			return "redirect:" + configuration.getAuthenticationFailureUrl();
 		}
 	}
 

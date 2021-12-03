@@ -1,6 +1,6 @@
 package com._7aske.grain.security.config;
 
-import com._7aske.grain.security.config.rule.Rule;
+import com._7aske.grain.security.config.builder.SecurityConfigurationBuilder;
 
 /**
  * Interface for configuring Security.
@@ -11,5 +11,5 @@ public interface SecurityConfigurer {
 	 * Security.
 	 * @param builder for authentication rules.
 	 */
-	void configure(Rule.Builder builder);
+	void configure(SecurityConfigurationBuilder builder);
 }

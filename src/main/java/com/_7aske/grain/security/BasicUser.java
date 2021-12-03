@@ -1,16 +1,35 @@
 package com._7aske.grain.security;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class BasicUser implements User {
-	private final String username;
-	private final String password;
+	private String username;
+	private String password;
 	// @Note do we want to set roles after object creation?
-	private final Collection<? extends Authority> authorities;
+	private Collection<? super Authority> authorities;
 
-	public BasicUser(String username, String password, Collection<? extends Authority> authorities) {
+	public BasicUser() {
+		this.username = null;
+		this.password = null;
+		this.authorities = new ArrayList<>();
+	}
+
+	public BasicUser(String username, String password, Collection<? super Authority> authorities) {
 		this.username = username;
 		this.password = password;
+		this.authorities = authorities;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public void setAuthorities(Collection<? super Authority> authorities) {
 		this.authorities = authorities;
 	}
 
@@ -25,7 +44,7 @@ public class BasicUser implements User {
 	}
 
 	@Override
-	public Collection<? extends Authority> getAuthorities() {
+	public Collection<? super Authority> getAuthorities() {
 		return authorities;
 	}
 

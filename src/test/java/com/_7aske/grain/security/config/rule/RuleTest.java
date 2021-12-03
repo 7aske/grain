@@ -13,8 +13,9 @@ class RuleTest {
 	@Test
 	void testBuilder(){
 		Rule.Builder builder = new Rule.Builder();
-		List<Rule> rules = builder.unauthenticated()
+		List<Rule> rules = builder
 				.urlPattern("/test/*/test")
+				.unauthenticated()
 				.roles("TEST_ROLE")
 				.method(HttpMethod.GET)
 				.build();

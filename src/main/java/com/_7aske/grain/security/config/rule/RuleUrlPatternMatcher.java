@@ -36,7 +36,7 @@ public class RuleUrlPatternMatcher {
 			}
 
 			if (authentication != null && rule.isAuthenticationRequired()) {
-				List<String> roles = authentication.getAuthorities().stream().map(Authority::getName).collect(Collectors.toList());
+				List<String> roles = authentication.getAuthorities().stream().map(a -> ((Authority)a).getName()).collect(Collectors.toList());
 				return rule.getRolesRequired().isEmpty() || rule.getRolesRequired().stream().anyMatch(roles::contains);
 			}
 		}

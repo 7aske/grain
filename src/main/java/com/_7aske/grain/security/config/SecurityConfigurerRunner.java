@@ -4,7 +4,9 @@ import com._7aske.grain.component.AfterInit;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
-import com._7aske.grain.security.config.rule.Rule;
+import com._7aske.grain.security.config.builder.SecurityConfigurationBuilder;
+
+import java.util.Objects;
 
 /**
  * Class responsible for initializing user or default {@link SecurityConfiguration}.
@@ -14,14 +16,16 @@ final class SecurityConfigurerRunner {
 	@Inject
 	private SecurityConfigurer securityConfigurer;
 	@Inject
-	private Configuration configuration;
+	private SecurityConfigurationBuilder builder;
 	@Inject
-	private SecurityConfiguration securityConfiguration;
+	private Configuration configuration;
 
 	@AfterInit
 	private void setup() {
-		Rule.Builder builder = new Rule.Builder();
-		securityConfigurer.configure(builder);
-		securityConfiguration.setRules(builder.build());
+		if (Objects.equals(configuration.getProperty(Configuration.Key.SECURITY_ENABLED), true)) {
+			securityConfigurer.configure(builder);
+		} else {
+
+		}
 	}
 }
