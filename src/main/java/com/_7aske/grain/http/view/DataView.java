@@ -16,6 +16,7 @@ import static java.util.regex.Pattern.compile;
 
 public class DataView extends FileView {
 	private final Pattern VARIABLE_PATTERN = compile("<%=\\s*?(.*?)\\s*?%>");
+	private final Pattern INTERPOLATION_PATTERN = compile("\\$\\{\\s*?(.*?)\\s*?}");
 	private final Pattern CODE_SEGMENT = compile("<%[^=]\\s*?(.*?)\\s*?%>");
 	private final Pattern COMMENT_PATTERN = compile("((<!--).*?(-->))");
 	private Map<String, Object> data = null;
@@ -44,6 +45,14 @@ public class DataView extends FileView {
 				variableSegments.appendReplacement(preCode, StringFormat.format("<% print({}); %>", variableSegments.group(1)));
 			}
 			variableSegments.appendTail(preCode);
+
+			// @Optimization probably we don't need to do two passes
+			Matcher interpolationSegments = INTERPOLATION_PATTERN.matcher(preCode.toString());
+			preCode = new StringBuilder();
+			while (interpolationSegments.find()) {
+				interpolationSegments.appendReplacement(preCode, StringFormat.format("<% print({}); %>", interpolationSegments.group(1)));
+			}
+			interpolationSegments.appendTail(preCode);
 
 
 			content = preCode.toString();
