@@ -74,6 +74,7 @@ public class GrainInitializer {
 	// @Hack @Temporary there should be better way to determine which fields
 	// to initialize instead of a pass counter.
 	private static int pass = 1;
+
 	// We do this pass after initializing all the fields since fields can
 	// hopefully reference other Grains
 	private void initializeValues(Dependency dep) {
@@ -167,14 +168,11 @@ public class GrainInitializer {
 	// types.
 	private void loadOwnDependencies(Dependency dependency) {
 		if (dependency.initialized) return;
-		try {
-			Dependency[] deps = mapParamsToDependencies(dependency, this.dependencies);
-			// All dependencies should be satisfied before starting the initialization
-			if (Arrays.stream(deps).anyMatch(Objects::isNull)) {
-				throw new GrainDependencyUnsatisfiedException(dependency.clazz, dependency.params);
-			}
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
+
+		Dependency[] deps = mapParamsToDependencies(dependency, this.dependencies);
+		// All dependencies should be satisfied before starting the initialization
+		if (Arrays.stream(deps).anyMatch(Objects::isNull)) {
+			throw new GrainDependencyUnsatisfiedException(dependency.clazz, dependency.params);
 		}
 	}
 
@@ -218,20 +216,17 @@ public class GrainInitializer {
 		if (dep.visited || dep.initialized) return;
 		dep.visited = true;
 		if (dep.instance == null) {
-			try {
-				Dependency[] deps = mapParamsToDependencies(dep.params, dependencies);
+			Dependency[] deps = mapParamsToDependencies(dep.params, dependencies);
 
-				Object[] realParams = new Object[dep.params.length];
-				for (int i = 0; i < dep.params.length; i++) {
-					partiallyInitialize(deps[i]);
-					realParams[i] = deps[i].instance;
-				}
-				// create a new instance
-				dep.instance = dep.constructor.newInstance(realParams);
-				dep.initialized = true;
-			} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-				throw new GrainInitializationException(String.format("Could not instantiate grain %s.", dep.clazz), e);
+			Object[] realParams = new Object[dep.params.length];
+			for (int i = 0; i < dep.params.length; i++) {
+				partiallyInitialize(deps[i]);
+				realParams[i] = deps[i].instance;
 			}
+			// create a new instance
+			dep.instance = newInstance(dep.constructor, realParams)
+					.orElseThrow(() -> new GrainInitializationException(String.format("Could not instantiate grain %s.", dep.clazz)));
+			dep.initialized = true;
 		}
 	}
 
@@ -270,7 +265,7 @@ public class GrainInitializer {
 				.toArray(Dependency[]::new);
 	}
 
-	private Dependency[] mapParamsToDependencies(Dependency dependency, Set<Dependency> allDependencies) throws NoSuchMethodException {
+	private Dependency[] mapParamsToDependencies(Dependency dependency, Set<Dependency> allDependencies) {
 		return mapParamsToDependencies(dependency.constructor.getParameterTypes(), allDependencies);
 	}
 

@@ -3,6 +3,7 @@ package com._7aske.grain.util;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.component.Default;
 import com._7aske.grain.component.Primary;
+import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 
@@ -143,6 +144,14 @@ public class ReflectionUtil {
 			return getAnyConstructor(clazz).newInstance();
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			throw new GrainReflectionException(e);
+		}
+	}
+
+	public static <T> Optional<T> newInstance(Constructor<T> constructor, Object... params) {
+		try {
+			return Optional.of(constructor.newInstance(params));
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			return Optional.empty();
 		}
 	}
 
