@@ -25,7 +25,7 @@ public class Interpreter {
 	public static final Pattern VARIABLE_PATTERN = compile("<%=\\s*?(.*?)\\s*?%>");
 	public static final Pattern INTERPOLATION_PATTERN = compile("\\$\\{\\s*?(.*?)\\s*?}");
 	public static final Pattern CODE_SEGMENT = compile("<%[^=]\\s*?(.*?)\\s*?%>");
-	public static final Pattern COMMENT_PATTERN = compile("((<!--).*?(-->))");
+	public static final Pattern COMMENT_PATTERN = compile("((<[%!]--).*?(--%?>))");
 	private final List<AstNode> nodes;
 	private final InterpreterOutput output;
 	private final Deque<Map<String, Object>> scopeStack;
