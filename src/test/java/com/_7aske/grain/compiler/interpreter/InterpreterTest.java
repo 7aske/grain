@@ -416,7 +416,7 @@ class InterpreterTest {
 	@Test
 	void test_forEach() {
 		List<String> list = List.of("Test1", "Test2", "Test3", "Test4");
-		String code = "foreach (item in list) { if (item == 'Test2') {continue;} print(item); }";
+		String code = "foreach item in list { if (item == 'Test2') {continue;} print(item); }";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.putSymbol("list", list);
 		interpreter.run();
@@ -425,7 +425,7 @@ class InterpreterTest {
 
 	@Test
 	void test_forEachString() {
-		String code = "foreach (char in 'list of characters') { print(char); }";
+		String code = "foreach char in 'list of characters' { print(char); }";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		assertEquals("list of characters", interpreter.getContent());
@@ -474,7 +474,7 @@ class InterpreterTest {
 
 	@Test
 	void test_range() {
-		String code = "foreach(num in range(10)) {print(num);}";
+		String code = "foreach num in range(10) { print(num); }";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		assertEquals("0123456789", interpreter.getContent());
@@ -506,7 +506,7 @@ class InterpreterTest {
 
 	@Test
 	void test_oneLineForEach() {
-		String code = "foreach(num in range(10)) print(num);";
+		String code = "foreach num in range(10) print(num);";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		assertEquals("0123456789", interpreter.getContent());

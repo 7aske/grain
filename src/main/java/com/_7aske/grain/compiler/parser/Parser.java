@@ -375,21 +375,27 @@ public class Parser {
 	private AstNode parseForEachStatement() {
 		Token forEachToken = iter.next();
 		AstForEachNode forEachNode = (AstForEachNode) createNode(forEachToken);
-		if (!iter.isPeekOfType(LPAREN))
-			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", LPAREN.getValue());
-		iter.next(); // skip LPAREN
+
+		// Parenthesis are not necessary
+		if (iter.isPeekOfType(LPAREN))
+			iter.next(); // skip LPAREN
+
+		if (!iter.isPeekOfType(IDEN))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", IDEN.getValue());
 
 		AstForEachIteratorNode astForEachIteratorNode = new AstForEachIteratorNode();
 		astForEachIteratorNode.setSymbol((AstSymbolNode) createNode(iter.next()));
+
 		if (!iter.isPeekOfType(IN))
 			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", IN.getValue());
+
 		iter.next(); // skip IN
 		astForEachIteratorNode.setIterator(parseSubExpression(0));
 		forEachNode.setIterator(astForEachIteratorNode);
 
-		while (iter.isPeekOfType(RPAREN, SCOL)) {
-			iter.next();
-		}
+		// Parenthesis are not necessary
+		if (iter.isPeekOfType(RPAREN))
+			iter.next(); // skip LPAREN
 
 		forEachNode.setBody(parseBlockStatement());
 		return forEachNode;
