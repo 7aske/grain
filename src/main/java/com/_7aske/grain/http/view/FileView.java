@@ -15,7 +15,7 @@ public class FileView implements View {
 	public FileView(String path) {
 		this.path = path;
 		// @Optimization cache content type for given path
-		this.contentType = probeContentTypeNoThrow(Paths.get(path), "text/html");
+		this.contentType = probeContentTypeNoThrow(path, "text/html");
 	}
 
 	public String getContent() {

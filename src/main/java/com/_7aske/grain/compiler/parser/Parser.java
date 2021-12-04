@@ -90,9 +90,15 @@ public class Parser {
 						"Cannot assign to '%s'", curr.getType());
 			node = createNode(curr);
 			node = parseAssignmentNode(iter.next(), node);
+		} else if (curr.isOfType(INCLUDE)) {
+			node = parseIncludeStatement(curr);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
 			node = createNode(curr);
-			node = parseFunctionCall((AstSymbolNode) node);
+			if (((AstSymbolNode) node).getName().startsWith("#")) {
+				node = parseFragmentCall((AstSymbolNode) node);
+			} else {
+				node = parseFunctionCall((AstSymbolNode) node);
+			}
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(DOT)) {
 			node = parseObject(curr);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LBRACK)) {
@@ -132,6 +138,7 @@ public class Parser {
 		return node;
 	}
 
+
 	private AstNode parseMinus() {
 		AstMinusNode astMinusNode = new AstMinusNode();
 		AstNode parsed;
@@ -151,6 +158,23 @@ public class Parser {
 					"Expected token LIT_STR got '%s'", iter.peek().getValue());
 		astImportNode.setPackage(parseSubExpression(Integer.MIN_VALUE));
 		return astImportNode;
+	}
+
+	private AstNode parseIncludeStatement(Token curr) {
+		AstIncludeNode astIncludeNode = (AstIncludeNode) createNode(curr);
+		AstLiteralNode importPath = (AstLiteralNode) createNode(iter.next());
+		if (!iter.isPeekOfType(AS))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()),
+					"Expected token '%s'", AS.getValue());
+		iter.next(); // skip AS
+		AstSymbolNode astSymbolNode = (AstSymbolNode) createNode(iter.next());
+		if (!iter.isPeekOfType(SCOL))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()),
+					"Expected token '%s'", SCOL.getValue());
+		iter.next(); // skip SCOL
+		astIncludeNode.setPath((String) importPath.getValue());
+		astIncludeNode.setIdentifier(astSymbolNode);
+		return astIncludeNode;
 	}
 
 	private AstNode parseArrayIndex(Token curr) {
@@ -190,6 +214,24 @@ public class Parser {
 
 		astAssignmentNode.setValue(value);
 		return astAssignmentNode;
+	}
+
+
+	private AstNode parseFragmentCall(AstSymbolNode left) {
+		iter.next(); // skip LPAREN
+		AstFragmentCallNode fragmentCallNode = new AstFragmentCallNode();
+		fragmentCallNode.setSymbol(left);
+		List<AstNode> arguments = new ArrayList<>();
+		while (!iter.isPeekOfType(RPAREN) && !iter.isPeekOfType(SCOL) && !iter.isPeekOfType(_END)) {
+			AstNode node = parseExpression();
+			arguments.add(node);
+		}
+		fragmentCallNode.setArguments(arguments);
+		if (iter.isPeekOfType(RPAREN))
+			iter.next();
+		if (iter.isPeekOfType(SCOL))
+			iter.next();
+		return fragmentCallNode;
 	}
 
 	private AstNode parseFunctionCall(AstSymbolNode left) {
@@ -400,7 +442,7 @@ public class Parser {
 
 	private AstNode createNode(Token token) {
 		if (token.isOfType(RPAREN)) {
-			return parsedStack.pop();
+			// return parsedStack.pop();
 		}
 		return doCreateNode(token);
 	}
@@ -459,6 +501,8 @@ public class Parser {
 				return new AstBlockNode();
 			case IMPORT:
 				return new AstImportNode();
+			case INCLUDE:
+				return new AstIncludeNode();
 			case DFLT:
 				return new AstDefaultNode();
 			case _END:

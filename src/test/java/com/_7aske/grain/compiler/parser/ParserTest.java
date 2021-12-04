@@ -104,7 +104,7 @@ class ParserTest {
 		Parser parser = new Parser(lexer);
 		AstNode ast = parser.parse();
 		Interpreter interpreter = new Interpreter();
-		AstFunctionCallNode.AstFunctionCallback print = (args) -> args[0];
+		AstFunctionCallback print = (args) -> args[0];
 		interpreter.putSymbol("print", print);
 		interpreter.addNode(ast);
 		interpreter.run();

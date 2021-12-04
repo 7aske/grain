@@ -1,12 +1,14 @@
 package com._7aske.grain.compiler.interpreter;
 
 import com._7aske.grain.compiler.ast.AstBlockNode;
-import com._7aske.grain.compiler.ast.AstFunctionCallNode;
+import com._7aske.grain.compiler.ast.AstFragmentNode;
+import com._7aske.grain.compiler.ast.AstFunctionCallback;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.exception.InterpreterException;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import com._7aske.grain.compiler.util.AstUtil;
+import com._7aske.grain.http.view.FileView;
 import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.*;
@@ -23,24 +25,24 @@ public class Interpreter {
 		this.scopeStack = new ArrayDeque<>();
 		this.scopeStack.push(new HashMap<>());
 		this.output = new InterpreterOutput();
-		this.scopeStack.getFirst().put("print", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+		this.scopeStack.getFirst().put("print", (AstFunctionCallback) (args) -> {
 			String value = (args[0] == null ? "null" : args[0].toString());
 			write(value);
 			return value;
 		});
-		this.scopeStack.getFirst().put("println", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+		this.scopeStack.getFirst().put("println", (AstFunctionCallback) (args) -> {
 			String value = (args[0] == null ? "null" : args[0].toString()) + "<br/>";
 			write(value);
 			return value;
 		});
 
-		this.scopeStack.getFirst().put("printf", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+		this.scopeStack.getFirst().put("printf", (AstFunctionCallback) (args) -> {
 			String value = String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length));
 			write(value);
 			return value;
 		});
 
-		this.scopeStack.getFirst().put("range", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+		this.scopeStack.getFirst().put("range", (AstFunctionCallback) (args) -> {
 			int value = Integer.parseInt(args[0].toString());
 			return IntStream.range(0, value).boxed().collect(Collectors.toList());
 		});
@@ -224,6 +226,16 @@ public class Interpreter {
 		} catch (ClassNotFoundException e) {
 			return Optional.empty();
 		}
+	}
+
+	public Optional<AstFragmentNode> tryIncludeFragment(String path) {
+		if (path == null)
+			return Optional.empty();
+		FileView fileView = new FileView(path);
+		if (fileView.getContent().isEmpty())
+			return Optional.empty();
+
+		return Optional.of(new AstFragmentNode(fileView));
 	}
 
 	public Map<String, Object> getSymbols() {

@@ -13,10 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AstFunctionCallNode extends AstUnaryNode {
-	@FunctionalInterface
-	public interface AstFunctionCallback {
-		Object call(Object... args);
-	}
 
 	private AstSymbolNode symbol;
 	private List<AstNode> arguments;

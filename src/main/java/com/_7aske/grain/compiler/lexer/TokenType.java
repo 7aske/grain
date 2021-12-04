@@ -24,6 +24,8 @@ public enum TokenType {
 	FALSE("false"),
 	NULL("null"),
 	IMPORT("import"),
+	INCLUDE("include"),
+	AS("as"),
 
 	// operators
 	ASSN("="),

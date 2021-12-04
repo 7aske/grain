@@ -123,7 +123,7 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private String eatIdentifier() {
-		return eatWhile(ch -> ch.matches("[a-zA-Z0-9_$]+"));
+		return eatWhile(ch -> ch.matches("[a-zA-Z0-9_$#]+"));
 	}
 
 	public void begin() {
@@ -139,7 +139,7 @@ public class Lexer extends IndexedStringIterator {
 	}
 
 	private boolean isStartOfIdentifier() {
-		return peek().matches("[a-zA-Z$_]");
+		return peek().matches("[a-zA-Z$_#]");
 	}
 
 	private boolean isStartOfNumberLiteral() {

@@ -48,4 +48,12 @@ class DataViewTest {
 		assertTrue(content.contains("Result is:20"));
 		assertTrue(content.contains("String is:test"));
 	}
+
+	@Test
+	void test_include() {
+		DataView dataView = new DataView("include.html");
+		String content = dataView.getContent();
+		assertTrue(content.contains("<div class=\"container\">"));
+		assertTrue(content.contains("<div>this is a card</div>"));
+	}
 }

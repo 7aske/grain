@@ -1,6 +1,6 @@
 package com._7aske.grain.compiler.interpreter;
 
-import com._7aske.grain.compiler.ast.AstFunctionCallNode;
+import com._7aske.grain.compiler.ast.AstFunctionCallback;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
 import org.junit.jupiter.api.Disabled;
@@ -15,7 +15,7 @@ class InterpreterTest {
 	private static Map<String, Object> debugSymbols = new HashMap<>();
 
 	static {
-		debugSymbols.put("dbg", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+		debugSymbols.put("dbg", (AstFunctionCallback) (args) -> {
 			System.err.println(Arrays.toString(args));
 			return args;
 		});
@@ -43,7 +43,7 @@ class InterpreterTest {
 		String code = "a = dbgln(dbgln('45'))";
 		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
-		AstFunctionCallNode.AstFunctionCallback dbgln = (args) -> {
+		AstFunctionCallback dbgln = (args) -> {
 			System.out.println(args[0]);
 			return args[0];
 		};
@@ -57,7 +57,7 @@ class InterpreterTest {
 		String code = "a = date; a = a('2020-10-10')";
 		Lexer lexer = new Lexer(code);
 		Parser parser = new Parser(lexer);
-		AstFunctionCallNode.AstFunctionCallback now = (args) -> {
+		AstFunctionCallback now = (args) -> {
 			if (args.length == 1) {
 				return LocalDate.parse((String) args[0]).toString();
 			} else {
@@ -445,8 +445,8 @@ class InterpreterTest {
 	void test_defaultExpressionMethodCall() {
 		String code = "a = nullable() ?? ('hello' + 'world'); c = (callable() ?? 'test') + 'hello';";
 		Interpreter interpreter = new Interpreter(code, null);
-		interpreter.putSymbol("nullable", (AstFunctionCallNode.AstFunctionCallback) (args) -> null);
-		interpreter.putSymbol("callable", (AstFunctionCallNode.AstFunctionCallback) (args) -> "world");
+		interpreter.putSymbol("nullable", (AstFunctionCallback) (args) -> null);
+		interpreter.putSymbol("callable", (AstFunctionCallback) (args) -> "world");
 		interpreter.run();
 		assertEquals("helloworld", interpreter.getSymbolValue("a"));
 		assertEquals("worldhello", interpreter.getSymbolValue("c"));
@@ -466,8 +466,8 @@ class InterpreterTest {
 		String code = "a = callable() ? nullable() : 2";
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.putSymbol("test", true);
-		interpreter.putSymbol("nullable", (AstFunctionCallNode.AstFunctionCallback) (args) -> null);
-		interpreter.putSymbol("callable", (AstFunctionCallNode.AstFunctionCallback) (args) -> "world");
+		interpreter.putSymbol("nullable", (AstFunctionCallback) (args) -> null);
+		interpreter.putSymbol("callable", (AstFunctionCallback) (args) -> "world");
 		interpreter.run();
 		assertNull(interpreter.getSymbolValue("a"));
 	}
@@ -478,5 +478,21 @@ class InterpreterTest {
 		Interpreter interpreter = new Interpreter(code, null);
 		interpreter.run();
 		assertEquals("0123456789", interpreter.getContent());
+	}
+
+
+	@Test
+	void test_include() {
+		String code = "include 'card.html' as card;";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+	}
+
+	@Test
+	void test_fragment() {
+		String code = "include 'card.html' as card; #card();";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("<div>this is a card</div>", interpreter.getContent());
 	}
 }
