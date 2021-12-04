@@ -207,6 +207,8 @@ public class Parser {
 			node = parseBlockStatement();
 		} else if (iter.isPeekOfType(IF)) {
 			node = parseIfStatement();
+		} else if (iter.isPeekOfType(FOREACH)) {
+			node = parseForEachStatement();
 		} else if (iter.isPeekOfType(FOR)) {
 			node = parseForStatement();
 		} else {
@@ -313,6 +315,29 @@ public class Parser {
 		return forNode;
 	}
 
+	private AstNode parseForEachStatement() {
+		Token forEachToken = iter.next();
+		AstForEachNode forEachNode = (AstForEachNode) createNode(forEachToken);
+		if (!iter.isPeekOfType(LPAREN))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", LPAREN.getValue());
+		iter.next(); // skip LPAREN
+
+		AstForEachIteratorNode astForEachIteratorNode = new AstForEachIteratorNode();
+		astForEachIteratorNode.setSymbol((AstSymbolNode) createNode(iter.next()));
+		if (!iter.isPeekOfType(IN))
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", IN.getValue());
+		iter.next(); // skip IN
+		astForEachIteratorNode.setIterator((AstSymbolNode) createNode(iter.next()));
+		forEachNode.setIterator(astForEachIteratorNode);
+
+		while (iter.isPeekOfType(RPAREN, SCOL)) {
+			iter.next();
+		}
+
+		forEachNode.setBody(parseBlockStatement());
+		return forEachNode;
+	}
+
 	private AstNode parseIfStatement() {
 		Token ifToken = iter.next();
 		if (!iter.isPeekOfType(LPAREN)) {
@@ -366,6 +391,8 @@ public class Parser {
 				break;
 			case FOR:
 				return new AstForNode();
+			case FOREACH:
+				return new AstForEachNode();
 			case CONTINUE:
 				return new AstContinueNode();
 			case BREAK:

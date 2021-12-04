@@ -412,4 +412,15 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals(0, interpreter.getSymbolValue("i"));
 	}
+
+	@Test
+	void test_forEach() {
+		List<String> list = List.of("Test1", "Test2", "Test3", "Test4");
+		String code = "foreach (item in list) { if (item == 'Test2') {continue;} print(item); }";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("list", list);
+		interpreter.run();
+		assertEquals("Test1Test3Test4", interpreter.getContent());
+	}
+
 }

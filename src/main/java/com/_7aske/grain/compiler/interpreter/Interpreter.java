@@ -131,6 +131,11 @@ public class Interpreter {
 		scope.put(name, value);
 	}
 
+	public void putCurrentScopeSymbol(String name, Object value) {
+		Map<String, Object> scope = this.scopeStack.peek();
+		scope.put(name, value);
+	}
+
 	public void pushScope() {
 		this.scopeStack.push(new HashMap<>());
 	}

@@ -16,6 +16,7 @@ public enum TokenType {
 	THEN("then"),
 	ELSE("else"),
 	FOR("for"),
+	FOREACH("foreach"),
 	IN("in"),
 	CONTINUE("continue"),
 	BREAK("break"),
