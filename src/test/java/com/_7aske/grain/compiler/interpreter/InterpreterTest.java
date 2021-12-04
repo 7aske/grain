@@ -503,4 +503,20 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("<div>\t<h2>Title</h2>\t<p>Body</p></div>", interpreter.getContent());
 	}
+
+	@Test
+	void test_oneLineForEach() {
+		String code = "foreach(num in range(10)) print(num);";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("0123456789", interpreter.getContent());
+	}
+
+	@Test
+	void test_oneLineIf() {
+		String code = "if (false) print('test') else print('test2'); print('test1');";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("test2test1", interpreter.getContent());
+	}
 }
