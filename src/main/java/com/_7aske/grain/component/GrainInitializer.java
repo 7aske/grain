@@ -5,13 +5,9 @@ import com._7aske.grain.config.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
-import com._7aske.grain.logging.Logger;
-import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.util.ReflectionUtil;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,12 +20,10 @@ import static com._7aske.grain.util.ReflectionUtil.*;
 public class GrainInitializer {
 	// Set of parsed dependencies
 	private final Set<Dependency> dependencies;
-	private final Logger logger = LoggerFactory.getLogger(GrainInitializer.class);
 	private final Interpreter interpreter;
 
 	public GrainInitializer(Configuration configuration) {
 		this.dependencies = new HashSet<>();
-
 		this.interpreter = new Interpreter();
 		interpreter.putProperties(configuration.getProperties());
 	}
@@ -44,39 +38,74 @@ public class GrainInitializer {
 		this.dependencies.forEach(this::loadOwnDependencies);
 		this.dependencies.forEach(this::partiallyInitialize);
 		this.dependencies.forEach(this::initializeMissingFields);
+
+		// @Temporary
+		// Before running code segments in @Value annotations we need to load
+		// the interpreter with initialized Grains.
+		HashMap<String, Object> tmp = new HashMap<>();
+		for (Dependency dependency : this.dependencies) {
+			String clazzName = dependency.getClazz().getSimpleName();
+			Grain grain = dependency.getClazz().getAnnotation(Grain.class);
+			String grainName;
+			// If the grain annotation has a valid 'name' property we use that
+			// as the key for the given grain. Otherwise, we use lower-case
+			// class name.
+			if (grain == null || grain.name().isBlank()) {
+				grainName = clazzName.substring(0, 1).toLowerCase(Locale.ROOT) + clazzName.substring(1);
+			} else {
+				grainName = grain.name();
+			}
+			tmp.put(grainName, dependency.instance);
+		}
+		interpreter.putSymbols(tmp);
+
+		// @Refactor Disgusting double call of initializeValues. In the first
+		// pass we initialize only the dependency values which has code that
+		// references exclusively values from loaded from the configuration and
+		// not from other Grains. After we initialized everything that we've
+		// skipped in HOPES (sorry Bryan) that we've initialized everything.
+		this.dependencies.forEach(this::initializeValues);
+		pass++;
 		this.dependencies.forEach(this::initializeValues);
 		this.dependencies.forEach(this::callLifecycleMethods);
 		return this.dependencies.stream().collect(Collectors.toMap(Dependency::getClazz, Dependency::getInstance));
 	}
 
+	// @Hack @Temporary there should be better way to determine which fields
+	// to initialize instead of a pass counter.
+	private static int pass = 1;
 	// We do this pass after initializing all the fields since fields can
 	// hopefully reference other Grains
 	private void initializeValues(Dependency dep) {
-		Class<?> clazz = dep.clazz;
-		Field[] fields = clazz.getDeclaredFields();
-		for (Field field : fields) {
-			field.setAccessible(true);
+		for (DependencyField field : dep.fields) {
+			field.field.setAccessible(true);
 
 			try {
 
-				// If the field is annotated with @Value we parse the expression
-				// and set its value. Fields should not contain both @Value and
-				// @Inject annotations
-				if (field.isAnnotationPresent(Value.class)) {
-					if (field.isAnnotationPresent(Inject.class))
-						throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
-					Value value = field.getAnnotation(Value.class);
-					// @Temporary need a better way to handle property keys
-					String code = value.value();
+				if (field.initialized) continue;
+
+				if (field.field.isAnnotationPresent(Inject.class))
+					throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
+				Value value = field.field.getAnnotation(Value.class);
+				String code = value.value();
+				// We're analyzing the code to find Values that are referencing
+				// only values from properties to initialize them first.
+				boolean onlyProperties = interpreter.analyze(code);
+
+				// First pass initializes Values that are referencing only
+				// props. Second pass initializes everything else.
+				if (onlyProperties || pass == 2) {
+					field.initialized = true;
+
 					// We cast the result to confirm that we have a valid value
-					Object result = field.getType().cast(interpreter.evaluate(code));
-					field.set(dep.instance, result);
+					Object result = field.field.getType().cast(interpreter.evaluate(code));
+					field.field.set(dep.instance, result);
 				}
 
 			} catch (IllegalAccessException e) {
 				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);
 			}
-			field.setAccessible(false);
+			field.field.setAccessible(false);
 		}
 	}
 
@@ -89,6 +118,7 @@ public class GrainInitializer {
 		// another pass to initialize fields that are possibly
 		// subjects to circular dependencies
 		initializeMissingFields(dependency);
+		initializeValues(dependency);
 		callLifecycleMethods(dependency);
 		dependencies.add(dependency);
 		return dependency.instance;
@@ -155,21 +185,6 @@ public class GrainInitializer {
 			field.setAccessible(true);
 
 			try {
-
-				// If the field is annotated with @Value we parse the expression
-				// and set its value. Fields should not contain both @Value and
-				// @Inject annotations
-				if (field.isAnnotationPresent(Value.class)) {
-					if (field.isAnnotationPresent(Inject.class))
-						throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
-					Value value = field.getAnnotation(Value.class);
-					// @Temporary need a better way to handle property keys
-					String code = value.value().replace(".", "$");
-					// We cast the result to confirm that we have a valid value
-					Object result = field.getType().cast(interpreter.evaluate(code));
-					field.set(dep.instance, result);
-					continue;
-				}
 
 				// If the field is already initialized(some will be) we don't do
 				// anything.
@@ -269,6 +284,7 @@ public class GrainInitializer {
 		private Class<?>[] params;
 		private Object instance;
 		private boolean lifecycleMethodCalled;
+		private final List<DependencyField> fields;
 
 		public Dependency(Class<?> clazz) {
 			this.constructor = null;
@@ -278,6 +294,14 @@ public class GrainInitializer {
 			this.instance = null;
 			this.initialized = false; // for manually initialized grains
 			this.lifecycleMethodCalled = false;
+			this.fields = Arrays.stream(clazz.getDeclaredFields())
+					.filter(f -> isAnnotationPresent(f, Value.class))
+					.map(DependencyField::new)
+					.collect(Collectors.toList());
+		}
+
+		public List<DependencyField> getFields() {
+			return fields;
 		}
 
 		public Class<?> getClazz() {
@@ -286,6 +310,17 @@ public class GrainInitializer {
 
 		public Object getInstance() {
 			return instance;
+		}
+	}
+
+
+	public static class DependencyField {
+		private Field field;
+		private boolean initialized;
+
+		public DependencyField(Field field) {
+			this.field = field;
+			this.initialized = false;
 		}
 	}
 }

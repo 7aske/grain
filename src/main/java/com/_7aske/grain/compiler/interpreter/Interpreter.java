@@ -6,9 +6,11 @@ import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.exception.InterpreterException;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.parser.Parser;
+import com._7aske.grain.compiler.util.AstUtil;
 import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Interpreter {
 	private final List<AstNode> nodes;
@@ -186,6 +188,22 @@ public class Interpreter {
 			}
 		}
 		return value;
+	}
+
+	public boolean analyze(String code) {
+		this.nodes.clear();
+		Lexer lexer = new Lexer(code);
+		Parser parser = new Parser(lexer);
+		AstNode root = parser.parse();
+		List<String> symbolsNames = new ArrayList<>();
+		AstUtil.getSymbols(root, symbolsNames);
+		return symbolsNames.stream().filter(s -> {
+			if (this.getSymbols().containsKey(s)) {
+				Object val = this.getSymbols().get(s);
+				return val != null && Map.class.isAssignableFrom(val.getClass());
+			}
+			return false;
+		}).count() == symbolsNames.size();
 	}
 
 

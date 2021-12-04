@@ -3,6 +3,7 @@ package com._7aske.grain.compiler.ast;
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.compiler.interpreter.exception.InterpreterNoSuchMethodException;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -75,9 +76,10 @@ public class AstFunctionCallNode extends AstUnaryNode {
 					Class<?> clazz = AstFunctionCallNode.this.backReference instanceof Class<?> ? (Class<?>)
 							AstFunctionCallNode.this.backReference : AstFunctionCallNode.this.backReference.getClass();
 					Method method = getMethod(clazz, getSymbol().getName(), args);
+					method.setAccessible(true);
 					return method.invoke(this.backReference, args);
 				} catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-					throw new IllegalArgumentException(e);
+					throw new InterpreterNoSuchMethodException(e);
 				}
 			};
 		} else {

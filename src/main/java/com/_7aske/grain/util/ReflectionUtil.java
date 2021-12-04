@@ -77,6 +77,7 @@ public class ReflectionUtil {
 
 	/**
 	 * Class.forName wrapper
+	 *
 	 * @return Successfully loaded class. Null if failed.
 	 */
 	public static Class<?> loadClass(String className, String packageName) {
@@ -89,7 +90,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @param clazz type on which to search annotation for
+	 * @param clazz      type on which to search annotation for
 	 * @param annotation annotation to search for
 	 * @return if annotation is present in the type or recursively in any of
 	 * the annotated types
@@ -118,13 +119,24 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * @param object Field or Method on which to search annotation for
+	 * @param annotations annotations to search for
+	 * @return if annotation is present in the object or recursively in any of
+	 * the annotated types
+	 */
+	public static boolean isAnyAnnotationPresent(AccessibleObject object, Class<? extends Annotation>... annotations) {
+		return Arrays.stream(object.getAnnotations()).anyMatch(a -> Arrays.stream(annotations).anyMatch(a1 -> a1.equals(a.annotationType())));
+	}
+
+	/**
 	 * Utility method to find any constructor for the class and create
 	 * an instance of it
+	 *
 	 * @param clazz Class to create the instance of
-	 * @param <T> Type of the instance
+	 * @param <T>   Type of the instance
 	 * @return created instance
 	 * @throws GrainReflectionException thrown if in any of the cases
-	 * the instance could not have been created.
+	 *                                  the instance could not have been created.
 	 */
 	public static <T> T newInstance(Class<T> clazz) throws GrainReflectionException {
 		try {
@@ -137,7 +149,8 @@ public class ReflectionUtil {
 	/**
 	 * Returns the class representing the generic type in a container class
 	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
-	 * @param f Generic container field
+	 *
+	 * @param f   Generic container field
 	 * @param <T> Generic type
 	 * @return generic type class
 	 */
@@ -163,6 +176,7 @@ public class ReflectionUtil {
 	 * Comparator that is used for sorting classes or objects by its packageName
 	 * so that the resulting sorted list starts with classes or objects that are
 	 * not grain-library defined.
+	 *
 	 * @param c1Package comparable first argument package
 	 * @param c2Package comparable second argument package
 	 * @return compared packages
@@ -170,8 +184,10 @@ public class ReflectionUtil {
 	public static int compareLibraryAndUserPackage(String c1Package, String c2Package) {
 		String basePackagePrefix = GrainApp.class.getPackageName() + ".";
 		// @Refactor can this be done better?
-		if (!c1Package.startsWith(basePackagePrefix) && !c2Package.startsWith(basePackagePrefix)) return 0;
-		if (c1Package.startsWith(basePackagePrefix) && c2Package.startsWith(basePackagePrefix)) return 0;
+		if (!c1Package.startsWith(basePackagePrefix) && !c2Package.startsWith(basePackagePrefix))
+			return 0;
+		if (c1Package.startsWith(basePackagePrefix) && c2Package.startsWith(basePackagePrefix))
+			return 0;
 		if (c1Package.startsWith(basePackagePrefix)) return 1;
 		if (c2Package.startsWith(basePackagePrefix)) return -1;
 		return 0;
@@ -183,11 +199,12 @@ public class ReflectionUtil {
 	 * an object or dependency that matches provided search class. It prioritizes
 	 * on the objects or dependencies of types defined by the user rather than
 	 * the library itself.
-	 * @param clazz Class we search for.
-	 * @param classes Collection of items where to search for a given class.
+	 *
+	 * @param clazz     Class we search for.
+	 * @param classes   Collection of items where to search for a given class.
 	 * @param extractor Lambda that defined how the class is extracted from the
 	 *                  generic Collection item.
-	 * @param <T> Type of the list items.
+	 * @param <T>       Type of the list items.
 	 * @return Optional of the found class.
 	 */
 	public static <T> Optional<T> findClassByClass(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {

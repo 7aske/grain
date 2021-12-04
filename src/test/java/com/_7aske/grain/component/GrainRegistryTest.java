@@ -98,6 +98,20 @@ class GrainRegistryTest {
 		private Integer number;
 		@Value("options.string")
 		private String string;
+		private static boolean called = false;
+
+		public String getValue() {
+			System.out.println("CALLED");
+			return "returned value";
+		}
+	}
+
+	@Grain
+	static final class TestValueReferenceGrain {
+		@Value("testValue.number")
+		private Integer number;
+		@Value("testValue.getValue()")
+		private String called;
 	}
 
 	@Test
@@ -124,4 +138,17 @@ class GrainRegistryTest {
 		assertEquals(42, obj.number);
 		assertEquals("test", obj.string);
 	}
+
+	@Test
+	void testValueReferenceGrain() {
+		Configuration configuration = Configuration.createDefault();
+		configuration.setPropertyUnsafe("options.number", 42);
+		GrainRegistry registry = new GrainRegistry(configuration);
+		registry.registerGrain(configuration);
+		registry.registerGrains(GrainApp.class.getPackageName());
+		TestValueReferenceGrain obj = registry.getGrain(TestValueReferenceGrain.class);
+		assertEquals(42, obj.number);
+		assertEquals("returned value", obj.called);
+	}
+
 }
