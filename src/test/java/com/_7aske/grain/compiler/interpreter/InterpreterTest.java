@@ -424,6 +424,14 @@ class InterpreterTest {
 	}
 
 	@Test
+	void test_forEachString() {
+		String code = "foreach (char in 'list of characters') { print(char); }";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("list of characters", interpreter.getContent());
+	}
+
+	@Test
 	void test_defaultExpression() {
 		String code = "a = b ?? 'hello'; c = d ?? 'test';";
 		Interpreter interpreter = new Interpreter(code, null);
@@ -461,6 +469,14 @@ class InterpreterTest {
 		interpreter.putSymbol("nullable", (AstFunctionCallNode.AstFunctionCallback) (args) -> null);
 		interpreter.putSymbol("callable", (AstFunctionCallNode.AstFunctionCallback) (args) -> "world");
 		interpreter.run();
-		assertEquals(null, interpreter.getSymbolValue("a"));
+		assertNull(interpreter.getSymbolValue("a"));
+	}
+
+	@Test
+	void test_range() {
+		String code = "foreach(num in range(10)) {print(num);}";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("0123456789", interpreter.getContent());
 	}
 }

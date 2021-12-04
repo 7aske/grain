@@ -340,7 +340,7 @@ public class Parser {
 		if (!iter.isPeekOfType(IN))
 			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", IN.getValue());
 		iter.next(); // skip IN
-		astForEachIteratorNode.setIterator((AstSymbolNode) createNode(iter.next()));
+		astForEachIteratorNode.setIterator(parseSubExpression(0));
 		forEachNode.setIterator(astForEachIteratorNode);
 
 		while (iter.isPeekOfType(RPAREN, SCOL)) {

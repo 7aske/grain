@@ -11,6 +11,7 @@ import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Interpreter {
 	private final List<AstNode> nodes;
@@ -37,6 +38,11 @@ public class Interpreter {
 			String value = String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length));
 			write(value);
 			return value;
+		});
+
+		this.scopeStack.getFirst().put("range", (AstFunctionCallNode.AstFunctionCallback) (args) -> {
+			int value = Integer.parseInt(args[0].toString());
+			return IntStream.range(0, value).boxed().collect(Collectors.toList());
 		});
 	}
 

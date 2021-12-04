@@ -2,14 +2,18 @@ package com._7aske.grain.compiler.ast;
 
 import com._7aske.grain.compiler.ast.basic.AstNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.compiler.interpreter.exception.InterpreterInvalidIteratorException;
+import com._7aske.grain.compiler.interpreter.exception.InterpreterNullPointerException;
+import com._7aske.grain.util.formatter.StringFormat;
+import com._7aske.grain.util.iterator.StringIterator;
 
-import java.util.List;
+import java.util.Iterator;
 
 public class AstForEachIteratorNode extends AstNode {
 	private AstSymbolNode symbol;
-	private AstSymbolNode iterator;
-	private List<?> value = null;
-	private int current = 0;
+	private AstNode iterator;
+	private Object value = null;
+	private Iterator<?> valueIterator = null;
 
 	public AstForEachIteratorNode() {
 	}
@@ -27,25 +31,37 @@ public class AstForEachIteratorNode extends AstNode {
 		this.symbol = symbol;
 	}
 
-	public AstSymbolNode getIterator() {
+	public AstNode getIterator() {
 		return iterator;
 	}
 
-	public void setIterator(AstSymbolNode iterator) {
+	public void setIterator(AstNode iterator) {
 		this.iterator = iterator;
 	}
 
 	@Override
 	public Object run(Interpreter interpreter) {
 		if (value == null) {
-			// @Refactor this can be an actual iterator
-			value = (List<?>) this.iterator.run(interpreter);
+			value = this.iterator.run(interpreter);
+			if (value == null){
+				throw new InterpreterNullPointerException("Cannot iterate over null value");
+			}
+			// We allow iteration over strings
+			if (value instanceof String) {
+				// Gotta love building own tools
+				valueIterator = new StringIterator((String) value);
+			} else if (!Iterable.class.isAssignableFrom(value.getClass())) {
+				throw new InterpreterInvalidIteratorException(StringFormat.format("Type {} is not a valid Iterable<?> type", value.getClass()));
+			} else {
+				valueIterator = ((Iterable<?>) value).iterator();
+			}
+
 		}
 
-		if (current == value.size()) {
+		if (!valueIterator.hasNext()) {
 			return new AstBreakNode();
 		}
 
-		return value.get(current++);
+		return valueIterator.next();
 	}
 }
