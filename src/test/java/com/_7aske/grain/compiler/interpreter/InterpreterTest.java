@@ -495,4 +495,12 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("<div>this is a card</div>", interpreter.getContent());
 	}
+
+	@Test
+	void test_keywordArguments() {
+		String code = "include 'parametrized-card.html' as card; #card(title='Title', body='Body');";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.run();
+		assertEquals("<div>\t<h2>Title</h2>\t<p>Body</p></div>", interpreter.getContent());
+	}
 }

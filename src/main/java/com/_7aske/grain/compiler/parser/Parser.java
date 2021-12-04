@@ -224,7 +224,13 @@ public class Parser {
 		List<AstNode> arguments = new ArrayList<>();
 		while (!iter.isPeekOfType(RPAREN) && !iter.isPeekOfType(SCOL) && !iter.isPeekOfType(_END)) {
 			AstNode node = parseExpression();
-			arguments.add(node);
+			// Assignments nodes apparently parse just fine in the as function
+			// arguments so, we just modify them to be new keyword arguments
+			if (node instanceof AstAssignmentNode) {
+				arguments.add(new AstKeywordArgumentNode(((AstAssignmentNode) node).getSymbol(), ((AstAssignmentNode) node).getValue()));
+			} else {
+				arguments.add(node);
+			}
 		}
 		fragmentCallNode.setArguments(arguments);
 		if (iter.isPeekOfType(RPAREN))
@@ -442,7 +448,7 @@ public class Parser {
 
 	private AstNode createNode(Token token) {
 		if (token.isOfType(RPAREN)) {
-			// return parsedStack.pop();
+			return parsedStack.pop();
 		}
 		return doCreateNode(token);
 	}
