@@ -161,12 +161,14 @@ public class Lexer extends IndexedStringIterator {
 	private Optional<Token> tryParseOperator() {
 		String curr = next();
 		switch (curr) {
+			case ":":
+				return Token.optional(TERNELSE, curr);
 			case "?":
 				if (peek().equals("?")) {
 					curr += next();
 					return Token.optional(DFLT, curr);
 				} else {
-					return Token.empty();
+					return Token.optional(TERNCOND, curr);
 				}
 			case "!":
 				if (peek().equals("=")) {

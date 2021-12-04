@@ -62,7 +62,9 @@ public class AstObjectReferenceNode extends AstNode {
 		if (this.backReference == null) {
 			value = interpreter.getSymbolValue(this.name);
 		} else {
-			if (!(this.backReference instanceof AstNode)) {
+			if (Map.class.isAssignableFrom(this.backReference.getClass())) {
+				value = ((Map) this.backReference).get(this.name);
+			} else if (!(this.backReference instanceof AstNode)) {
 				try {
 					Field field = this.backReference.getClass().getDeclaredField(this.name);
 					field.setAccessible(true);
@@ -70,8 +72,6 @@ public class AstObjectReferenceNode extends AstNode {
 				} catch (IllegalAccessException | NoSuchFieldException e) {
 					e.printStackTrace();
 				}
-			} else if (Map.class.isAssignableFrom(this.backReference.getClass())) {
-				value = ((Map)this.backReference).get(this.name);
 			} else {
 				// Wierd
 				throw new RuntimeException(String.format("Unable to parse reference %s", this.backReference.getClass()));
@@ -93,7 +93,7 @@ public class AstObjectReferenceNode extends AstNode {
 			value = this.reference.run(interpreter);
 		} else if (this.reference instanceof AstSymbolNode) {
 			if (Map.class.isAssignableFrom(value.getClass())) {
-				value = ((Map)value).get(((AstSymbolNode) this.reference).symbolName);
+				value = ((Map) value).get(((AstSymbolNode) this.reference).symbolName);
 			} else {
 				try {
 					Field field = value.getClass().getDeclaredField(((AstSymbolNode) this.reference).symbolName);

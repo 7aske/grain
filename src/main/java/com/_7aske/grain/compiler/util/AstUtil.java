@@ -40,4 +40,12 @@ public class AstUtil {
 			getSymbols(((AstBlockNode) node).getNodes(), symbolNames);
 		}
 	}
+
+	public static boolean isFalsy(Object value) {
+		if (value == null) return true;
+		if (value instanceof String && ((String) value).isEmpty()) return true;
+		if (value instanceof Number && ((Number) value).doubleValue() == 0) return true;
+		if (value instanceof Boolean) return !(boolean) value;
+		return false;
+	}
 }

@@ -58,6 +58,8 @@ public class Parser {
 			node = parseAssignmentNode(iter.next(), node);
 		} else if (iter.isPeekOfType(DFLT)) {
 			node = parseDefaultNode(iter.next(), node);
+		} else if (iter.isPeekOfType(TERNCOND)) {
+			node = parseTernaryOperatorNode(iter.next(), node);
 		}
 
 		parsedStack.push(node);
@@ -80,6 +82,8 @@ public class Parser {
 		} else if (iter.isPeekOfType(ADD, SUB, DIV, DIV, MUL)) {
 			node = createNode(curr);
 			node = parseArithmeticNode(iter.next(), node);
+		} else if (iter.isPeekOfType(TERNCOND)) {
+			node = createNode(curr);
 		} else if (iter.isPeekOfType(ASSN)) {
 			if (!curr.isOfType(IDEN))
 				throw new ParserSyntaxErrorException(getSourceCodeLocation(curr),
@@ -347,6 +351,21 @@ public class Parser {
 		return forEachNode;
 	}
 
+	private AstNode parseTernaryOperatorNode(Token next, AstNode node) {
+		AstTernaryOperatorNode ifNode = (AstTernaryOperatorNode) createNode(next);
+		ifNode.setCondition(node);
+		AstNode ifTrueNode = parseSubExpression(0);
+		ifNode.setIfTrue(ifTrueNode);
+		if (!iter.isPeekOfType(TERNELSE)) {
+			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()), "Expected '%s'", TERNELSE.getValue());
+		}
+		iter.next(); // skip TERNELSE
+		AstNode ifFalseNode = parseSubExpression(0);
+		ifNode.setIfFalse(ifFalseNode);
+
+		return ifNode;
+	}
+
 	private AstNode parseIfStatement() {
 		Token ifToken = iter.next();
 		if (!iter.isPeekOfType(LPAREN)) {
@@ -394,6 +413,8 @@ public class Parser {
 			case LIT_INT:
 			case LIT_FLT:
 				return new AstLiteralNode(AstLiteralType.from(token.getType()), token.getValue());
+			case TERNCOND:
+				return new AstTernaryOperatorNode();
 			case IF:
 				return new AstIfNode();
 			case ELSE:

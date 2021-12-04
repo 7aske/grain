@@ -433,7 +433,6 @@ class InterpreterTest {
 		assertEquals("world", interpreter.getSymbolValue("c"));
 	}
 
-
 	@Test
 	void test_defaultExpressionMethodCall() {
 		String code = "a = nullable() ?? ('hello' + 'world'); c = (callable() ?? 'test') + 'hello';";
@@ -443,5 +442,25 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("helloworld", interpreter.getSymbolValue("a"));
 		assertEquals("worldhello", interpreter.getSymbolValue("c"));
+	}
+
+	@Test
+	void test_ternaryOperator() {
+		String code = "a = (test == true) ? 1 : 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("test", true);
+		interpreter.run();
+		assertEquals(1, interpreter.getSymbolValue("a"));
+	}
+
+	@Test
+	void test_ternaryOperatorMethodCalls() {
+		String code = "a = callable() ? nullable() : 2";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("test", true);
+		interpreter.putSymbol("nullable", (AstFunctionCallNode.AstFunctionCallback) (args) -> null);
+		interpreter.putSymbol("callable", (AstFunctionCallNode.AstFunctionCallback) (args) -> "world");
+		interpreter.run();
+		assertEquals(null, interpreter.getSymbolValue("a"));
 	}
 }
