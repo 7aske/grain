@@ -56,6 +56,8 @@ public class Parser {
 			node = parseArithmeticNode(iter.next(), node);
 		} else if (iter.isPeekOfType(ASSN)) {
 			node = parseAssignmentNode(iter.next(), node);
+		} else if (iter.isPeekOfType(DFLT)) {
+			node = parseDefaultNode(iter.next(), node);
 		}
 
 		parsedStack.push(node);
@@ -166,6 +168,13 @@ public class Parser {
 			return rightBinary;
 		}
 		return start;
+	}
+
+	private AstNode parseDefaultNode(Token token, AstNode node) {
+		AstDefaultNode astDefaultNode = (AstDefaultNode) createNode(token);
+		astDefaultNode.setValue(node);
+		astDefaultNode.setDefault(parseSubExpression(0));
+		return astDefaultNode;
 	}
 
 	private AstNode parseAssignmentNode(Token token, AstNode left) {
@@ -429,6 +438,8 @@ public class Parser {
 				return new AstBlockNode();
 			case IMPORT:
 				return new AstImportNode();
+			case DFLT:
+				return new AstDefaultNode();
 			case _END:
 				throw new ParserSyntaxErrorException(getSourceCodeLocation(token), "Invalid end of expression");
 		}

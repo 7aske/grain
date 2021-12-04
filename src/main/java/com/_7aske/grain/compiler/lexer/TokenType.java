@@ -27,6 +27,7 @@ public enum TokenType {
 
 	// operators
 	ASSN("="),
+	DFLT("??"),
 
 	// arithmetic
 	ADD("+"),

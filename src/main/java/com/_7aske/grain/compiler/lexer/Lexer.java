@@ -161,6 +161,13 @@ public class Lexer extends IndexedStringIterator {
 	private Optional<Token> tryParseOperator() {
 		String curr = next();
 		switch (curr) {
+			case "?":
+				if (peek().equals("?")) {
+					curr += next();
+					return Token.optional(DFLT, curr);
+				} else {
+					return Token.empty();
+				}
 			case "!":
 				if (peek().equals("=")) {
 					curr += next();

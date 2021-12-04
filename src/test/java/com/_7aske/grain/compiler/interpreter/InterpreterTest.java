@@ -423,4 +423,25 @@ class InterpreterTest {
 		assertEquals("Test1Test3Test4", interpreter.getContent());
 	}
 
+	@Test
+	void test_defaultExpression() {
+		String code = "a = b ?? 'hello'; c = d ?? 'test';";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("d", "world");
+		interpreter.run();
+		assertEquals("hello", interpreter.getSymbolValue("a"));
+		assertEquals("world", interpreter.getSymbolValue("c"));
+	}
+
+
+	@Test
+	void test_defaultExpressionMethodCall() {
+		String code = "a = nullable() ?? ('hello' + 'world'); c = (callable() ?? 'test') + 'hello';";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("nullable", (AstFunctionCallNode.AstFunctionCallback) (args) -> null);
+		interpreter.putSymbol("callable", (AstFunctionCallNode.AstFunctionCallback) (args) -> "world");
+		interpreter.run();
+		assertEquals("helloworld", interpreter.getSymbolValue("a"));
+		assertEquals("worldhello", interpreter.getSymbolValue("c"));
+	}
 }
