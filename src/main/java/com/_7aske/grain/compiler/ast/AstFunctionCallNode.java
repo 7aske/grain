@@ -116,7 +116,7 @@ public class AstFunctionCallNode extends AstUnaryNode {
 	}
 
 	private Method getMethod(Class<?> clazz, String methodName, Object[] args) throws NoSuchMethodException {
-		Method[] methods = clazz.getMethods();
+		Method[] methods = clazz.getDeclaredMethods();
 		return Arrays.stream(methods)
 				.filter(m -> m.getName().equals(methodName) && areAllParametersCastable(m.getParameters(), args))
 				.findFirst()

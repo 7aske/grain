@@ -5,12 +5,21 @@ import com._7aske.grain.compiler.ast.basic.AstUnaryNode;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 
 public class AstImportNode extends AstUnaryNode {
+	public AstSymbolNode alias;
 	public void setPackage(AstNode node) {
 		setNode(node);
 	}
 
 	public AstNode getPackage() {
 		return super.getNode();
+	}
+
+	public AstSymbolNode getAlias() {
+		return alias;
+	}
+
+	public void setAlias(AstSymbolNode alias) {
+		this.alias = alias;
 	}
 
 	@Override
@@ -20,7 +29,11 @@ public class AstImportNode extends AstUnaryNode {
 		String[] parts = packageName.split("\\.");
 		String className = parts[parts.length - 1];
 		value = loadClass(packageName);
-		interpreter.putSymbol(className, value);
+		if (alias == null) {
+			interpreter.putSymbol(className, value);
+		} else {
+			interpreter.putSymbol(alias.getName(), value);
+		}
 		return value;
 	}
 

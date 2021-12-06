@@ -157,6 +157,14 @@ public class Parser {
 			throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()),
 					"Expected token LIT_STR got '%s'", iter.peek().getValue());
 		astImportNode.setPackage(parseSubExpression(Integer.MIN_VALUE));
+		if (iter.isPeekOfType(AS)) {
+			iter.next(); // skip as
+			if (!iter.isPeekOfType(IDEN)) {
+				throw new ParserSyntaxErrorException(getSourceCodeLocation(iter.peek()),
+						"Expected token IDEN got '%s'", iter.peek().getValue());
+			}
+			astImportNode.setAlias((AstSymbolNode) createNode(iter.next()));
+		}
 		return astImportNode;
 	}
 
