@@ -3,7 +3,6 @@ package com._7aske.grain.orm.model;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
-import com._7aske.grain.orm.querybuilder.AbstractQueryBuilder;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;

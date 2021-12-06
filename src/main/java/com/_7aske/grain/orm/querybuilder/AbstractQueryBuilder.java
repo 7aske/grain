@@ -18,9 +18,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractQueryBuilder implements QueryBuilder {
-	public final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy hh:mm:ss";
+	public final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy HH:mm:ss.S";
 	// @Refactor ugh
-	public final static String DATE_TIME_FORMAT_STRING2 = "yyyy-MM-dd hh:mm:ss";
+	public final static String DATE_TIME_FORMAT_STRING2 = "yyyy-MM-dd HH:mm:ss.S";
 	public final static String DATE_FORMAT_STRING = "dd-MM-yyyy";
 	public final static String DATE_FORMAT_STRING2 = "yyyy-MM-dd";
 	public final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_STRING);
