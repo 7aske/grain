@@ -2,6 +2,7 @@ package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.context.ApplicationContext;
+import com._7aske.grain.http.json.JsonObject;
 import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
@@ -26,6 +27,7 @@ import java.net.Socket;
 import java.util.Objects;
 
 import static com._7aske.grain.config.Configuration.Key.REQUEST_HANDLER_ACCESS_LOG;
+import static com._7aske.grain.http.HttpHeaders.*;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class RequestHandlerRunnable implements Runnable {
@@ -82,17 +84,10 @@ public class RequestHandlerRunnable implements Runnable {
 				handlerRunner.handle(request, response, session);
 
 			} catch (HttpException ex) {
-				response.setStatus(ex.getStatus());
-				if (response.getBody() == null) {
-					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
-							.setBody(ex.getHtmlMessage());
-				}
-				// @Refactor we create coupling here
+				writeHttpExceptionResponse(request, response, ex);
 			} catch (RuntimeException ex) {
 				ex.printStackTrace();
-				response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-						.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
-						.setBody(ErrorPage.getDefault(ex, request.getPath()));
+				writeRuntimeExceptionResponse(request, response, ex);
 			} finally {
 				long end = System.currentTimeMillis();
 				writer.write(response.getHttpString());
@@ -103,6 +98,39 @@ public class RequestHandlerRunnable implements Runnable {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+
+	private void writeRuntimeExceptionResponse(HttpRequest request, HttpResponse response, RuntimeException ex) {
+		response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
+				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
+			JsonObject jsonObject = new JsonObject();
+			jsonObject.putString("error", ex.getMessage());
+			jsonObject.putString("status", HttpStatus.INTERNAL_SERVER_ERROR.getReason());
+			jsonObject.putNumber("code", HttpStatus.INTERNAL_SERVER_ERROR.getValue());
+			jsonObject.putString("path", request.getPath());
+			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON)
+					.setBody(jsonObject.toJsonString());
+		} else {
+			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
+					.setBody(ErrorPage.getDefault(ex, request.getPath()));
+		}
+	}
+
+	private void writeHttpExceptionResponse(HttpRequest request, HttpResponse response, HttpException ex) {
+		response.setStatus(ex.getStatus());
+		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
+				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
+			if (response.getBody() == null) {
+				response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON)
+						.setBody(ex.getJsonMessage());
+			}
+		} else {
+			if (response.getBody() == null) {
+				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
+						.setBody(ex.getHtmlMessage());
+			}
 		}
 	}
 }
