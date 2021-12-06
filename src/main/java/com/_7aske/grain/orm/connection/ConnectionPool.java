@@ -5,10 +5,12 @@ import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com._7aske.grain.config.Configuration.Key;
 
@@ -18,14 +20,17 @@ public class ConnectionPool {
 	@Inject
 	private ConnectionManager connectionManager;
 	private static final Logger logger = LoggerFactory.getLogger(ConnectionPool.class);
+	private final Lock lock = new ReentrantLock();
+	private Integer poolConnectionWait;
 
 	public ConnectionPool(Configuration configuration) {
-		Integer numCon = configuration.getProperty(Key.DATABASE_POOL_SIZE, 10);
-		connections = new ArrayList<>(numCon);
-		for (int i = 0; i < numCon; i++) {
+		Integer numConnections = configuration.getProperty(Key.DATABASE_POOL_SIZE, 10);
+		poolConnectionWait = configuration.getProperty(Key.DATABASE_POOL_CONNECTION_WAIT, 10);
+		connections = new ArrayList<>(numConnections);
+		for (int i = 0; i < numConnections; i++) {
 			connections.add(new ConnectionWrapper());
 		}
-		logger.info("Initialized {} pool connections", numCon);
+		logger.info("Initialized {} pool connections", numConnections);
 	}
 
 	public void restartConnections() {
@@ -35,24 +40,31 @@ public class ConnectionPool {
 		}
 	}
 
-	// @Incomplete @Bug Does return null instances with null Connections
-	// in cases where tons of requests are sent.
-	public synchronized ConnectionWrapper getConnection() {
-		synchronized (connections) {
+	public ConnectionWrapper getConnection() {
+		lock.lock();
+		try {
+
 			restartConnections();
-			Optional<ConnectionWrapper> connWrap = connections.stream()
-					.filter(c -> c.isActive() && !c.isWorking())
-					.findFirst();
-			if (connWrap.isEmpty()) {
-				ConnectionWrapper newConn = new ConnectionWrapper();
-				connections.add(newConn);
-				newConn.setWorking(true);
-				logger.warn("Adding a new connection");
-				return newConn;
+			ConnectionWrapper connWrap = null;
+			while (connWrap == null) {
+				connWrap = connections.stream()
+						.filter(c -> c.isActive() && !c.isWorking())
+						.findFirst()
+						.orElse(null);
+				if (connWrap == null){
+					logger.warn(StringFormat.format("No free connection. Waiting {}ms...", poolConnectionWait));
+					try {
+						// @Temporary We sleep the main thread here :(
+						Thread.sleep(poolConnectionWait);
+					} catch (InterruptedException ignored) {
+						// ignored
+					}
+				}
 			}
-			ConnectionWrapper connectionWrapper = connWrap.get();
-			connectionWrapper.setWorking(true);
-			return connectionWrapper;
+			connWrap.setWorking(true);
+			return connWrap;
+		} finally {
+			lock.unlock();
 		}
 	}
 }
