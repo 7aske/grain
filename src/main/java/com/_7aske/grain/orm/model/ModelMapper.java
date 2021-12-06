@@ -3,12 +3,17 @@ package com._7aske.grain.orm.model;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
+import com._7aske.grain.orm.querybuilder.AbstractQueryBuilder;
 
 import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com._7aske.grain.orm.querybuilder.AbstractQueryBuilder.*;
 import static com._7aske.grain.util.QueryBuilderUtil.getColumnName;
 import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
@@ -82,6 +87,19 @@ public class ModelMapper<T extends Model> {
 			field.set(model, val.charAt(0));
 		} else if (String.class.isAssignableFrom(field.getType())) {
 			field.set(model, val);
+		} else if (LocalDate.class.isAssignableFrom(field.getType())) {
+			// @Refactor ugly
+			try {
+				field.set(model, LocalDate.parse(val, DATE_FORMAT));
+			} catch (DateTimeParseException ex) {
+				field.set(model, LocalDate.parse(val, DATE_FORMAT2));
+			}
+		} else if (LocalDateTime.class.isAssignableFrom(field.getType())) {
+			try {
+				field.set(model, LocalDateTime.parse(val, DATE_TIME_FORMAT));
+			} catch (DateTimeParseException ex) {
+				field.set(model, LocalDateTime.parse(val, DATE_TIME_FORMAT2));
+			}
 		} else {
 			if (field.isAnnotationPresent(ManyToOne.class)) {
 				setFieldModelValue(model, field, modelData);

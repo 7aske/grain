@@ -18,12 +18,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractQueryBuilder implements QueryBuilder {
-	protected final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy hh:mm:ss";
-	protected final static String DATE_FORMAT_STRING = "dd-MM-yyyy";
-	protected final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_STRING);
-	protected final static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(DATE_FORMAT_STRING);
-	protected final static SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT_STRING);
-	protected final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
+	public final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy hh:mm:ss";
+	// @Refactor ugh
+	public final static String DATE_TIME_FORMAT_STRING2 = "yyyy-MM-dd hh:mm:ss";
+	public final static String DATE_FORMAT_STRING = "dd-MM-yyyy";
+	public final static String DATE_FORMAT_STRING2 = "yyyy-MM-dd";
+	public final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_STRING);
+	public final static DateTimeFormatter DATE_TIME_FORMAT2 = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_STRING2);
+	public final static DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern(DATE_FORMAT_STRING);
+	public final static DateTimeFormatter DATE_FORMAT2 = DateTimeFormatter.ofPattern(DATE_FORMAT_STRING2);
+	public final static SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT_STRING);
+	public final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
 	private final Logger logger = LoggerFactory.getLogger(AbstractQueryBuilder.class);
 	private final ModelInspector model;
 
