@@ -7,7 +7,6 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.IntUnaryOperator;
 
 public class AstFragmentCallNode extends AstUnaryNode {
 
@@ -39,9 +38,11 @@ public class AstFragmentCallNode extends AstUnaryNode {
 		// Arguments setup
 		Map<String, Object> argMap = new HashMap<>();
 		argMap.put("arguments", this.arguments);
+		// We put all the global data to the new interpreter scope
+		argMap.putAll(interpreter.getSymbols());
 		for (AstNode arg : this.arguments) {
 			if (!(arg instanceof AstKeywordArgumentNode)) {
-				// we parse only the keyword arguments
+				// We parse only the keyword arguments
 				continue;
 			}
 			argMap.put(((AstKeywordArgumentNode) arg).getSymbol().getName(), ((AstKeywordArgumentNode) arg).getValue().run(interpreter));

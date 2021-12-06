@@ -84,7 +84,7 @@ public class HttpRequest {
 		for (String parameter : parameters) {
 			String[] kv = parameter.split("=");
 			if (kv.length == 2) {
-				String[] values = kv[1].split(",");
+				String[] values = URLDecoder.decode(kv[1], StandardCharsets.UTF_8).split(",");
 				if (this.parameters.containsKey(kv[0])) {
 					String[] existing = (String[]) this.parameters.get(kv[0]);
 					String[] updated = ArrayUtil.join(existing, values);

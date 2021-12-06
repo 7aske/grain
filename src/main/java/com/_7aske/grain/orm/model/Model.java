@@ -28,7 +28,7 @@ public class Model {
 	// @Temporary this should be injected through the dependency injection mechanism
 	// instead of relying on this hack.
 	private final ApplicationContext context = ApplicationContextHolder.getContext();
-	private final QueryBuilder queryBuilder;
+	protected final QueryBuilder queryBuilder;
 
 	final Table table;
 	final List<Field> fields;
@@ -80,7 +80,7 @@ public class Model {
 		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
 	}
 
-	protected <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
+	protected  <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
 		List<Map<String, String>> data = getDatabaseExecutor().executeQuery(query);
 		ModelDataAggregator<T> aggregator = new ModelDataAggregator<>(clazz, data);
 		return new ModelMapper<T>(clazz, aggregator.aggregate()).get();

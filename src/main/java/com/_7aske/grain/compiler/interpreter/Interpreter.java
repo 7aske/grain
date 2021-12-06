@@ -37,17 +37,20 @@ public class Interpreter {
 		this.output = new InterpreterOutput();
 		this.scopeStack.getFirst().put("print", (AstFunctionCallback) (args) -> {
 			String value = (args[0] == null ? "null" : args[0].toString());
+			value = value.replaceAll("\\\\'", "'").replaceAll("\\\\\"", "\"");
 			write(value);
 			return value;
 		});
 		this.scopeStack.getFirst().put("println", (AstFunctionCallback) (args) -> {
 			String value = (args[0] == null ? "null" : args[0].toString()) + "<br/>";
+			value = value.replaceAll("\\\\'", "'").replaceAll("\\\\\"", "\"");
 			write(value);
 			return value;
 		});
 
 		this.scopeStack.getFirst().put("printf", (AstFunctionCallback) (args) -> {
 			String value = String.format((String) args[0], Arrays.copyOfRange(args, 1, args.length));
+			value = value.replaceAll("\\\\'", "'").replaceAll("\\\\\"", "\"");
 			write(value);
 			return value;
 		});
@@ -305,7 +308,7 @@ public class Interpreter {
 	}
 
 	private static String createPrintStatement(String content, int start, int end) {
-		return String.format("print('%s');", content.substring(start, end).replaceAll("'", "\\\\'"));
+		return createPrintStatement(content.substring(start, end));
 	}
 
 	private static String createPrintStatement(String content) {

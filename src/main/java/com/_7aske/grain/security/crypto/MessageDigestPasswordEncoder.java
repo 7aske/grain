@@ -5,6 +5,7 @@ import com._7aske.grain.component.Grain;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 @Grain
 public class MessageDigestPasswordEncoder implements PasswordEncoder {
@@ -17,7 +18,7 @@ public class MessageDigestPasswordEncoder implements PasswordEncoder {
 	@Override
 	public String encode(String password) {
 		byte[] encodedHash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-		return new String(encodedHash);
+		return new String(Base64.getEncoder().encode(encodedHash));
 	}
 
 	@Override
