@@ -10,6 +10,7 @@ import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.util.QueryBuilderUtil;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -103,6 +104,50 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	}
 
 	@Override
+	public QueryBuilder where(Map<String, Object> query) {
+		where = query;
+		return this;
+	}
+
+	@Override
+	public QueryBuilder where(String field1, Object value1) {
+		if (where == null)
+			where = new HashMap<>();
+		where.put(field1, value1);
+		return this;
+	}
+
+	@Override
+	public QueryBuilder where(String field1, Object value1, String field2, Object value2) {
+		if (where == null)
+			where = new HashMap<>();
+		where.put(field1, value1);
+		where.put(field2, value2);
+		return this;
+	}
+
+	@Override
+	public QueryBuilder where(String field1, Object value1, String field2, Object value2, String field3, Object value3) {
+		if (where == null)
+			where = new HashMap<>();
+		where.put(field1, value1);
+		where.put(field2, value2);
+		where.put(field3, value3);
+		return this;
+	}
+
+	@Override
+	public QueryBuilder where(String field1, Object value1, String field2, Object value2, String field3, Object value3, String field4, Object value4) {
+		if (where == null)
+			where = new HashMap<>();
+		where.put(field1, value1);
+		where.put(field2, value2);
+		where.put(field3, value3);
+		where.put(field4, value4);
+		return this;
+	}
+
+	@Override
 	public QueryBuilder groupBy(String... groupByParams) {
 		this.groupBy = groupByParams;
 		return this;
@@ -163,8 +208,8 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				if (where != null) {
 					builder.append("where ");
 					builder.append(where.entrySet().stream()
-							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
-							.collect(Collectors.joining(", ")));
+							.map(this::getFormattedFieldValue)
+							.collect(Collectors.joining(" and ")));
 					builder.append(" ");
 				}
 				if (pageable != null) {
@@ -181,7 +226,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				if (where != null) {
 					builder.append(" where ");
 					builder.append(where.entrySet().stream()
-							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
+							.map(this::getFormattedFieldValue)
 							.collect(Collectors.joining(", ")));
 					builder.append(" ");
 				} else {
@@ -195,7 +240,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				if (update != null) {
 					// @Incomplete should probably handle cascading at some point
 					builder.append(update.entrySet().stream()
-							.map(kv -> String.format("%s = %s", kv.getKey(), kv.getValue()))
+							.map(this::getFormattedFieldValue)
 							.collect(Collectors.joining(", ")));
 
 				}

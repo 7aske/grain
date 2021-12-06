@@ -2,6 +2,7 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.context.ApplicationContext;
+import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbNoSuchRowException;
@@ -12,9 +13,7 @@ import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
@@ -28,7 +27,7 @@ public class Model {
 	// @Temporary this should be injected through the dependency injection mechanism
 	// instead of relying on this hack.
 	private final ApplicationContext context = ApplicationContextHolder.getContext();
-	protected final QueryBuilder queryBuilder;
+	private final QueryBuilder queryBuilder;
 
 	final Table table;
 	final List<Field> fields;
@@ -80,10 +79,76 @@ public class Model {
 		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
 	}
 
-	protected  <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
+	public <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {
 		List<Map<String, String>> data = getDatabaseExecutor().executeQuery(query);
 		ModelDataAggregator<T> aggregator = new ModelDataAggregator<>(clazz, data);
 		return new ModelMapper<T>(clazz, aggregator.aggregate()).get();
+	}
+
+	public static <T extends Model> List<T> findAllBy(Class<T> clazz, Map<String, Object> params) {
+		Model instance = newInstance(clazz);
+		return instance.executeQuery(clazz, instance.queryBuilder.select().where(params).build());
+	}
+
+	public static <T extends Model> T findBy(Class<T> clazz, String field1, Object value1) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		return findBy(clazz, params);
+	}
+
+	public static <T extends Model> T findBy(Class<T> clazz, String field1, Object value1, String field2, Object value2) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		params.put(field2, value2);
+		return findBy(clazz, params);
+	}
+
+	public static <T extends Model> T findBy(Class<T> clazz, String field1, Object value1, String field2, Object value2, String field3, Object value3) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		params.put(field2, value2);
+		params.put(field3, value3);
+		return findBy(clazz, params);
+	}
+
+	public static <T extends Model> T findBy(Class<T> clazz, String field1, Object value1, String field2, Object value2, String field3, Object value3, String field4, Object value4) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		params.put(field2, value2);
+		params.put(field3, value3);
+		params.put(field4, value4);
+		return findBy(clazz, params);
+	}
+
+	public static <T extends Model> T findBy(Class<T> clazz, Map<String, Object> params) {
+		Model instance = newInstance(clazz);
+		List<T> result = instance.executeQuery(clazz, instance.queryBuilder.select().where(params).build());
+		if (result.size() > 1)
+			throw new GrainDbNonUniqueResultException();
+		if (result.isEmpty())
+			throw new NoSuchElementException();
+		return result.get(0);
+	}
+
+	public static <T extends Model> List<T> findAllBy(Class<T> clazz, String field1, Object value1) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		return findAllBy(clazz, params);
+	}
+
+	public static <T extends Model> List<T> findAllBy(Class<T> clazz, String field1, Object value1, String field2, Object value2) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		params.put(field2, value2);
+		return findAllBy(clazz, params);
+	}
+
+	public static <T extends Model> List<T> findAllBy(Class<T> clazz, String field1, Object value1, String field2, Object value2, String field3, Object value3) {
+		Map<String, Object> params = new HashMap<>();
+		params.put(field1, value1);
+		params.put(field2, value2);
+		params.put(field3, value3);
+		return findAllBy(clazz, params);
 	}
 
 	// @Incomplete

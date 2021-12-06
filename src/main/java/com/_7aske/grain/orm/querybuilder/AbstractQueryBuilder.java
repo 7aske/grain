@@ -7,6 +7,7 @@ import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.model.ModelInspector;
+import com._7aske.grain.util.formatter.StringFormat;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -41,7 +42,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 			field.setAccessible(true);
 			// Handle the case where the formatted value is a relationship object
 			if (field.isAnnotationPresent(OneToMany.class)) {
-
+				// @Incomplete
 			} else if (field.isAnnotationPresent(ManyToOne.class))  {
 				Model model = (Model) field.get(getModelInspector().getModel());
 				List<Field> ids = new ModelInspector(model).getModelIds();
@@ -67,6 +68,18 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	// @Incomplete check validity of date formats
 	protected String getFormattedFieldValue(Field field) {
 		return getFormattedFieldValue(field, getFieldValue(field));
+	}
+
+	protected String getFormattedFieldValue(Map.Entry<String,Object> kv) {
+		return getFormattedFieldValue(kv.getKey(), kv.getValue());
+	}
+	protected String getFormattedFieldValue(String key, Object value) {
+		try {
+			Field field = model.getModel().getClass().getDeclaredField(key);
+			return StringFormat.format("{} = {}", key, getFormattedFieldValue(field, value));
+		} catch (NoSuchFieldException e) {
+			return String.format("%s = %s", key, value);
+		}
 	}
 
 	// Gets hopefully valid SQL formatted value for the passed Field object.
