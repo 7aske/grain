@@ -20,6 +20,7 @@ public final class Configuration {
 		setProperty(SERVER_THREADS, 100);
 		setProperty(REQUEST_HANDLER_ACCESS_LOG, true);
 		setProperty(DATABASE_EXECUTOR_PRINT_SQL, true);
+		setProperty(DATABASE_POOL_SIZE, true);
 		setProperty(SESSION_ENABLED, true);
 		setProperty(SESSION_MAX_AGE, SessionConstants.SESSION_DEFAULT_MAX_AGE);
 		setProperty(SECURITY_ENABLED, false);
@@ -101,7 +102,8 @@ public final class Configuration {
 		DATABASE_DRIVER_CLASS       ("database.driver_class"),
 		DATABASE_EXECUTOR_PRINT_SQL ("database.executor.print-sql"),
 		REQUEST_HANDLER_ACCESS_LOG  ("request-handler.access-log"),
-		LOG_LEVEL                   ("logging.level");
+		LOG_LEVEL                   ("logging.level"),
+		DATABASE_POOL_SIZE          ("database.pool-size");
 		// @formatter:on
 
 		private final String key;

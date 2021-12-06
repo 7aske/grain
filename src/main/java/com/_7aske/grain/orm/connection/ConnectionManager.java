@@ -18,7 +18,6 @@ public final class ConnectionManager {
 	public Configuration configuration;
 	// @Temporary
 	private boolean driverInitialized = false;
-	private Connection connection;
 
 	// Generates url from injected database properties
 	public String getConnectionUrl() {
@@ -35,26 +34,18 @@ public final class ConnectionManager {
 		return String.format("jdbc:mysql://%s:%d/%s", host, port, name);
 	}
 
-	public Connection getConnection() {
-		try {
-			if (connection == null || connection.isClosed()) {
-				initializeConnection();
-			}
-			return connection;
-		} catch (SQLException e) {
-			throw new GrainDbConnectionException(e);
-		}
-	}
 
-	public void initializeConnection() {
+	public Connection initializeConnection() {
 		if (!driverInitialized) {
 			initializeDriver();
 			driverInitialized = false;
 		}
+
 		String user = (String) configuration.getProperty(DATABASE_USER);
 		String pass = (String) configuration.getProperty(DATABASE_PASS);
+
 		try {
-			connection = DriverManager.getConnection(getConnectionUrl(), user, pass);
+			return DriverManager.getConnection(getConnectionUrl(), user, pass);
 		} catch (SQLException e) {
 			throw new GrainDbConnectionException(e);
 		}

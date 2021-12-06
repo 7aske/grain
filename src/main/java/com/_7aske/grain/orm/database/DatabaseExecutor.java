@@ -5,7 +5,8 @@ import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.orm.connection.ConnectionManager;
+import com._7aske.grain.orm.connection.ConnectionPool;
+import com._7aske.grain.orm.connection.ConnectionWrapper;
 import com._7aske.grain.orm.exception.GrainDbStatementException;
 
 import java.sql.*;
@@ -16,7 +17,7 @@ import static com._7aske.grain.config.Configuration.Key.DATABASE_EXECUTOR_PRINT_
 @Grain
 public class DatabaseExecutor {
 	@Inject
-	protected ConnectionManager connectionManager;
+	protected ConnectionPool connectionPool;
 	@Inject
 	protected Configuration configuration;
 	private final Logger logger = LoggerFactory.getLogger(DatabaseExecutor.class);
@@ -26,7 +27,7 @@ public class DatabaseExecutor {
 		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
 			logger.trace(query);
 		}
-		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
+		try (ConnectionWrapper connection = connectionPool.getConnection(); Statement statement = connection.get().createStatement()) {
 			statement.executeUpdate(query);
 			ResultSet resultSet = statement.getGeneratedKeys();
 			// If there is a result we return the ID of the newly created row
@@ -47,7 +48,7 @@ public class DatabaseExecutor {
 			logger.trace(query);
 		}
 		List<Map<String, String>> out = new ArrayList<>();
-		try (Connection connection = connectionManager.getConnection(); Statement statement = connection.createStatement()) {
+		try (ConnectionWrapper connection = connectionPool.getConnection(); Statement statement = connection.get().createStatement()) {
 			ResultSet resultSet = statement.executeQuery(query);
 			ResultSetMetaData metaData = resultSet.getMetaData();
 			while (resultSet.next()) {
