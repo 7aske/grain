@@ -2,148 +2,126 @@
 
 ## Description
 
-Zero dependency web framework based on Spring.
+Zero dependency web framework inspired by Spring.
 
-This is a pet project to showcase programming paradigms, stereotypes and patterns.
+This is a pet project to showcase programming paradigms, stereotypes and
+patterns. Tries to provide all functionalities required to build an MVC or
+Service-Oriented web application.
+
+DO NOT USE IN PRODUCTION!
 
 ## Functionality
 
 * Java based configuration
-* HTTP Parsing
-  * Response codes
-  * JSON and text body
-  * HTTP Headers
-* Multi-threaded request handling
+* HTTP
+    * Request
+    * Response
+    * Session
+    * Cookies
+    * Headers
+    * JSON serialization/deserialization
+* Multithreaded request handling
 * Component system
-  * Dependency injection (constructor parameters and annotated fields)
-  * Middleware
-  * Controllers
-    * Method request mapping
-    * View templates
-      * Extremely basic interpreted template language
+    * Dependency injection
+        * Lifecycle hooks (AfterInit)
+        * Conditional loading
+        * Field and annotation based injection
+    * Middleware
+    * Controllers
+        * Request parameter binding
+        * Path variable binding
+        * Method request mapping
+        * Converters
+* Database
+    * Connection pooling
+    * Model based entity system
+    * Annotation based model configuration
+* View templating
+    * JSP-like scriptlets
+    * Compatible with Java
+    *
+    * Fragments (reusable HTML components)
+    * Form binding to controller method arguments
 * Static directory serving
-  * Classpath and non-classpath directories
+    * Classpath and non-classpath directories
+* Security
+    * Java configuration
+    * Default implementation uses HTTP Cookies for tracking
+    * Default login page and user
+    * Roles
+* Logging system
 * Custom generated error pages
+
+## Quickstart
+
+```java
+public class BlogApp extends GrainApp {
+
+  @Table(name = "post")
+  static final class Post extends Model {
+    @Id
+    @Column(name = "post_id")
+    private Integer id;
+    @Column(name = "title")
+    private String title;
+    @Column(name = "body")
+    private String body;
+  }
+
+  @Controller
+  @RequestMapping("/posts")
+  static final class PostController {
+    @GetMapping
+    public JsonResponse<List<Post>> getPosts() {
+      return JsonResponse.ok(Post.findAll(Post.class));
+    }
+  }
+
+  @Override
+  protected void configure(ConfigurationBuilder builder) {
+    builder.setProperty(DATABASE_USER, "root");
+    builder.setProperty(DATABASE_PASS, "toor");
+    builder.setProperty(DATABASE_NAME, "blog");
+    builder.setProperty(DATABASE_HOST, "127.0.0.1");
+    builder.setProperty(DATABASE_PORT, 3306);
+    builder.setProperty(DATABASE_DRIVER_CLASS, "com.mysql.jdbc.Driver");
+  }
+  
+  public static void main(String[] args) {
+    GrainAppRunner.run(BlogApp.class);
+  }
+  
+}
+```
+
+## Building
+
+Build the source
+
+```
+mvn package
+```
+
+This gives you a grainXXX.jar file that you can add to your project.
 
 ## Examples
 
-### Basic Main class with configuration
+See [documentation](./documentation) for more information.
 
-```java
-@GrainApplication
-public class Main extends GrainApp {
-  @Override
-  protected void configure(ConfigurationBuilder builder) {
-    builder.port(80);
-  }
+## Contact
 
-  public static void main(String[] args) {
-    GrainAppRunner.run(Main.class);
-  }
-}
-```
+Nikola Tasić – nik@7aske.com
 
-### Controller examples
+Distributed under the GPL v2 license. See ``LICENSE`` for more information.
 
-```java
-@Controller
-@RequestMapping("/")
-public class TestController {
-  // field dependency injection
-  @Inject
-  public TestService testService;
+[7aske.com](https://7aske.com)
 
-  // returning json response
-  @RequestMapping(value = "/json", method = HttpMethod.GET)
-  public JsonResponse<Data> getUser() {
-    return JsonResponse.ok(testService.getData());
-  }
+[github.com/7aske](https://github.com/7aske)
 
-  // injected HTTP request and response objects
-  @RequestMapping("/headers")
-  public String getHeaders(HttpResponse response, HttpRequest request) {
-    System.out.println(request.getHeader("Host"));
-    response.setHeader("Test-Header", request.getHeader("Test-Header"));
-    return "<body>Header example</body>";
-  }
+## Contributing
 
-  // returning templates
-  @RequestMapping("/index")
-  public View getIndex() {
-    return new View("index.html");
-  }
-
-  // parsing data inside of templates
-  @RequestMapping("/data-view")
-  public DataView getDataView(HttpRequest request) {
-    DataView view = new DataView("index.html");
-    view.setData("username", request.getStringParameter("username"));
-    return view;
-  }
-
-  // parsing json body
-  @RequestMapping(value = "/user", method = HttpMethod.POST)
-  public String postUser(@JsonBody User user) {
-    return user.username;
-  }
-}
-```
-
-### Template examples
-
-```html
-<!doctype html>
-<html lang="en">
-<body>
-<nav>
-  <% if username == null then %>
-  <a href="/login">Login</a>
-  <% else %>
-  <a href="/logout">Logout</a>
-  <% endif %>
-</nav>
-
-<% if username == "tom" then %>
-<h1>Hello <%=username%></h1>
-<% else %>
-<h1>Welcome</h1>
-<% endif %>
-
-</body>
-</html>
-```
-
-### Middleware examples
-
-```java
-@Grain
-@Priority(1)
-public class AuthMiddleware implements Middleware {
-
-  @Override
-  public boolean handle(HttpRequest httpRequest, HttpResponse httpResponse) throws HttpException {
-    if (!Objects.equals(httpRequest.getHeader("Authorization"), "true")) {
-    	throw new HttpException.Unauthorized(httpRequest.getPath());
-    }
-    return false;
-  }
-}
-```
-
-### Service examples
-
-```java
-@Grain
-public class TestServiceImpl implements TestService {
-  private OtherService otherService;	
-  
-  // constructor dependency injection
-  public TestServiceImpl(OtherService otherService) {
-	  this.otherService = otherService;
-  }
-	
-  public Data getData() {
-	  return new Data();
-  }
-}
-```
+1. Fork it (<https://github.com/7aske/grain/fork>)
+2. Create your feature branch (`git checkout -b feature/fooBar`)
+3. Commit your changes (`git commit -am 'Add some fooBar'`)
+4. Push to the branch (`git push origin feature/fooBar`)
+5. Create a new Pull Request
