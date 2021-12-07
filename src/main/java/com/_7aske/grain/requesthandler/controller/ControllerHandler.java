@@ -1,8 +1,8 @@
 package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.ApplicationContextHolder;
-import com._7aske.grain.controller.PathVariable;
-import com._7aske.grain.controller.RequestParam;
+import com._7aske.grain.controller.annotation.PathVariable;
+import com._7aske.grain.controller.annotation.RequestParam;
 import com._7aske.grain.controller.converter.Converter;
 import com._7aske.grain.controller.converter.ConverterRegistry;
 import com._7aske.grain.exception.http.HttpException;

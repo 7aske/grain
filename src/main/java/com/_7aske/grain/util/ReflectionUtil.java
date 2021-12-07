@@ -3,9 +3,12 @@ package com._7aske.grain.util;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.component.Default;
 import com._7aske.grain.component.Primary;
+import com._7aske.grain.controller.annotation.*;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
+import com._7aske.grain.exception.GrainRuntimeException;
+import com._7aske.grain.http.HttpMethod;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -108,7 +111,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @param object Field or Method on which to search annotation for
+	 * @param object     Field or Method on which to search annotation for
 	 * @param annotation annotation to search for
 	 * @return if annotation is present in the object or recursively in any of
 	 * the annotated types
@@ -120,7 +123,7 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @param object Field or Method on which to search annotation for
+	 * @param object      Field or Method on which to search annotation for
 	 * @param annotations annotations to search for
 	 * @return if annotation is present in the object or recursively in any of
 	 * the annotated types
@@ -260,5 +263,109 @@ public class ReflectionUtil {
 			// in any other case just return the first found dependency
 			return Optional.of(result.get(0));
 		}
+	}
+
+	/**
+	 * Extracts handler path from any of the valid @RequestMapping annotations.
+	 *
+	 * @param method to extract the path from
+	 * @return extracted request handler path. Throws if the annotation is not found
+	 */
+	public static String getAnnotatedHttpPath(Method method) {
+		if (method.isAnnotationPresent(RequestMapping.class))
+			return method.getAnnotation(RequestMapping.class).value();
+		if (method.isAnnotationPresent(GetMapping.class))
+			return method.getAnnotation(GetMapping.class).value();
+		if (method.isAnnotationPresent(PostMapping.class))
+			return method.getAnnotation(PostMapping.class).value();
+		if (method.isAnnotationPresent(PutMapping.class))
+			return method.getAnnotation(PutMapping.class).value();
+		if (method.isAnnotationPresent(DeleteMapping.class))
+			return method.getAnnotation(DeleteMapping.class).value();
+		if (method.isAnnotationPresent(PatchMapping.class))
+			return method.getAnnotation(PatchMapping.class).value();
+		if (method.isAnnotationPresent(HeadMapping.class))
+			return method.getAnnotation(HeadMapping.class).value();
+		if (method.isAnnotationPresent(TraceMapping.class))
+			return method.getAnnotation(TraceMapping.class).value();
+		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
+	}
+
+	/**
+	 * Extracts handler path from any of the valid @RequestMapping annotations.
+	 *
+	 * @param clazz to extract the path from
+	 * @return extracted request handler path. Throws if the annotation is not found
+	 */
+	public static String getAnnotatedHttpPath(Class<?> clazz) {
+		if (clazz.isAnnotationPresent(RequestMapping.class))
+			return clazz.getAnnotation(RequestMapping.class).value();
+		if (clazz.isAnnotationPresent(GetMapping.class))
+			return clazz.getAnnotation(GetMapping.class).value();
+		if (clazz.isAnnotationPresent(PostMapping.class))
+			return clazz.getAnnotation(PostMapping.class).value();
+		if (clazz.isAnnotationPresent(PutMapping.class))
+			return clazz.getAnnotation(PutMapping.class).value();
+		if (clazz.isAnnotationPresent(DeleteMapping.class))
+			return clazz.getAnnotation(DeleteMapping.class).value();
+		if (clazz.isAnnotationPresent(PatchMapping.class))
+			return clazz.getAnnotation(PatchMapping.class).value();
+		if (clazz.isAnnotationPresent(HeadMapping.class))
+			return clazz.getAnnotation(HeadMapping.class).value();
+		if (clazz.isAnnotationPresent(TraceMapping.class))
+			return clazz.getAnnotation(TraceMapping.class).value();
+		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
+	}
+
+	/**
+	 * Extracts http handler method from any of the valid @RequestMapping annotations.
+	 *
+	 * @param method to extract the http method from
+	 * @return extracted request handler path. Throws if the annotation is not found
+	 */
+	public static HttpMethod getAnnotatedHttpMethod(Method method) {
+		if (method.isAnnotationPresent(RequestMapping.class))
+			return method.getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(GetMapping.class))
+			return method.getAnnotation(GetMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(PostMapping.class))
+			return method.getAnnotation(PostMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(PutMapping.class))
+			return method.getAnnotation(PutMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(DeleteMapping.class))
+			return method.getAnnotation(DeleteMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(PatchMapping.class))
+			return method.getAnnotation(PatchMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(HeadMapping.class))
+			return method.getAnnotation(HeadMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (method.isAnnotationPresent(TraceMapping.class))
+			return method.getAnnotation(TraceMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
+	}
+
+	/**
+	 * Extracts http handler method from any of the valid @RequestMapping annotations.
+	 *
+	 * @param clazz to extract the http method from
+	 * @return extracted request handler path. Throws if the annotation is not found
+	 */
+	public static HttpMethod getAnnotatedHttpMethod(Class<?> clazz) {
+		if (clazz.isAnnotationPresent(RequestMapping.class))
+			return clazz.getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(GetMapping.class))
+			return clazz.getAnnotation(GetMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(PostMapping.class))
+			return clazz.getAnnotation(PostMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(PutMapping.class))
+			return clazz.getAnnotation(PutMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(DeleteMapping.class))
+			return clazz.getAnnotation(DeleteMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(PatchMapping.class))
+			return clazz.getAnnotation(PatchMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(HeadMapping.class))
+			return clazz.getAnnotation(HeadMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		if (clazz.isAnnotationPresent(TraceMapping.class))
+			return clazz.getAnnotation(TraceMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
+		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
 	}
 }

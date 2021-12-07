@@ -2,7 +2,7 @@ package com._7aske.grain.security.authentication;
 
 import com._7aske.grain.component.Controller;
 import com._7aske.grain.component.Inject;
-import com._7aske.grain.controller.RequestMapping;
+import com._7aske.grain.controller.annotation.RequestMapping;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;

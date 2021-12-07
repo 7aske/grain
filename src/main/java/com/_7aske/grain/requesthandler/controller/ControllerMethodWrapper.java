@@ -1,6 +1,5 @@
 package com._7aske.grain.requesthandler.controller;
 
-import com._7aske.grain.controller.RequestMapping;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpMethod;
 
@@ -12,6 +11,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 
 import static com._7aske.grain.util.HttpPathUtil.PATH_VARIABLE_PATTERN;
+import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpMethod;
+import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpPath;
 
 public class ControllerMethodWrapper {
 	private final Method method;
@@ -22,14 +23,15 @@ public class ControllerMethodWrapper {
 
 	public ControllerMethodWrapper(Method method) {
 		this.method = method;
-		RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-		this.httpMethod = requestMapping.method();
+		this.method.setAccessible(true);
 
-		Matcher matcher = PATH_VARIABLE_PATTERN.matcher(requestMapping.value());
+		this.httpMethod = getAnnotatedHttpMethod(method);
+		this.path = getAnnotatedHttpPath(method);
+
+		Matcher matcher = PATH_VARIABLE_PATTERN.matcher(this.path);
 		while (matcher.find()) {
 			this.pathVariables.add(matcher.group(2));
 		}
-		this.path = requestMapping.value();
 	}
 
 	public Object invoke(Object instance, Object... args) {
@@ -77,4 +79,5 @@ public class ControllerMethodWrapper {
 	public String getPath() {
 		return path;
 	}
+
 }

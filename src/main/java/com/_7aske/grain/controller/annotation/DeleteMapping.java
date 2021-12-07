@@ -1,4 +1,4 @@
-package com._7aske.grain.controller;
+package com._7aske.grain.controller.annotation;
 
 import com._7aske.grain.http.HttpMethod;
 
@@ -8,8 +8,7 @@ import java.lang.annotation.*;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-public @interface RequestMapping {
+@RequestMapping(method = HttpMethod.DELETE)
+public @interface DeleteMapping {
 	String value() default "/";
-
-	HttpMethod method() default HttpMethod.GET;
 }

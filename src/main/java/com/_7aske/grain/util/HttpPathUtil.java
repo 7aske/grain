@@ -1,7 +1,7 @@
 package com._7aske.grain.util;
 
 
-import com._7aske.grain.controller.PathVariable;
+import com._7aske.grain.controller.annotation.PathVariable;
 
 import java.util.Arrays;
 import java.util.Objects;

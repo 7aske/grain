@@ -4,7 +4,7 @@ import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.GrainRegistry;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.component.Priority;
-import com._7aske.grain.controller.RequestMapping;
+import com._7aske.grain.controller.annotation.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;

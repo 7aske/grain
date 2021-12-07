@@ -1,4 +1,4 @@
-package com._7aske.grain.controller;
+package com._7aske.grain.controller.annotation;
 
 import java.lang.annotation.*;
 
