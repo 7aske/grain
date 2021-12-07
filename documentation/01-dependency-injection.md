@@ -185,5 +185,7 @@ public class SecurityHandlerProxyFactory implements HandlerProxyFactory {
 
 ## Primary implementation
 
-`@Primary` annotation can be used to tell grain
+`@Primary` annotation can be used to tell grain to prioritize certain classes for
+dependency injection in situations where there are multiple classes implementing
+the same interface.
 
