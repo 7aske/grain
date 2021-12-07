@@ -88,6 +88,8 @@ public class GrainJarClassLoader implements GrainClassLoader {
 					.map(c -> {
 						try {
 							String className = c.endsWith(".class") ? c.substring(0, c.length() - ".class".length()) : c;
+							if (className.startsWith("."))
+								className = className.substring(1);
 							return Class.forName(className, true, urlClassLoader);
 						} catch (ClassNotFoundException e) {
 							e.printStackTrace();
