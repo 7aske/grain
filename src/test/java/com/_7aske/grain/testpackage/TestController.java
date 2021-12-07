@@ -5,20 +5,20 @@ import com._7aske.grain.controller.annotation.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.json.JsonBody;
-import com._7aske.grain.http.view.DataView;
+import com._7aske.grain.http.view.TemplateView;
 
 @Controller
 @RequestMapping
 public class TestController {
 
 	@RequestMapping("test")
-	public DataView get() {
+	public TemplateView get() {
 		String firstName = "John";
 		String lastName = "Smith";
-		DataView dataView = new DataView("index.html");
-		dataView.setData("firstName", firstName);
-		dataView.setData("lastName", lastName);
-		return dataView;
+		TemplateView templateView = new TemplateView("index.html");
+		templateView.setData("firstName", firstName);
+		templateView.setData("lastName", lastName);
+		return templateView;
 	}
 
 	@RequestMapping(value = "json", method = HttpMethod.POST)

@@ -11,7 +11,7 @@ import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
 import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.session.Session;
-import com._7aske.grain.http.view.DataView;
+import com._7aske.grain.http.view.TemplateView;
 import com._7aske.grain.http.view.View;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.security.context.SecurityContextHolder;
@@ -112,14 +112,14 @@ public class ControllerHandler implements RequestHandler {
 			String requestContentType = request.getHeader(CONTENT_TYPE);
 			response.setBody(null);
 			response.setHeader(CONTENT_TYPE, requestContentType == null ? HttpContentType.TEXT_PLAIN : requestContentType);
-		} else if (result instanceof DataView) {
+		} else if (result instanceof TemplateView) {
 			// Setting implicit objects
-			((DataView) result).setData("request", request);
-			((DataView) result).setData("response", response);
-			((DataView) result).setData("session", session);
-			((DataView) result).setData("authentication", SecurityContextHolder.getContext().getAuthentication());
+			((TemplateView) result).setData("request", request);
+			((TemplateView) result).setData("response", response);
+			((TemplateView) result).setData("session", session);
+			((TemplateView) result).setData("authentication", SecurityContextHolder.getContext().getAuthentication());
 			response.setBody(((View) result).getContent());
-			response.setHeader(CONTENT_TYPE, ((DataView) result).getContentType());
+			response.setHeader(CONTENT_TYPE, ((TemplateView) result).getContentType());
 		} else if (View.class.isAssignableFrom(result.getClass())) {
 			response.setBody(((View) result).getContent());
 			response.setHeader(CONTENT_TYPE, ((View) result).getContentType());
