@@ -12,11 +12,11 @@ injection system.
 @Grain
 @Priority(10)
 public class PoweredByMiddleware implements Middleware {
-	@Override
-	public boolean handle(HttpRequest httpRequest, HttpResponse httpResponse, Session session) {
-		httpResponse.setHeader("X-Powered-By", "Grain");
-		return false;
-	}
+  @Override
+  public boolean handle(HttpRequest httpRequest, HttpResponse httpResponse, Session session) {
+    httpResponse.setHeader("X-Powered-By", "Grain");
+    return false;
+  }
 }
 ```
 

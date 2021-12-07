@@ -32,13 +32,13 @@ which we will show in the following example.
 ```java
 @Grain
 public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoint {
-	@Inject
-	private UserService userService;
+  @Inject
+  private UserService userService;
 
-	@Override
-	public Authentication authenticate(HttpRequest request, HttpResponse response) throws GrainSecurityException {
-		// implementation details ...
-	}
+  @Override
+  public Authentication authenticate(HttpRequest request, HttpResponse response) throws GrainSecurityException {
+    // implementation details ...
+  }
 }
 ```
 
