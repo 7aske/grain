@@ -6,10 +6,7 @@ import com._7aske.grain.controller.annotation.RequestParam;
 import com._7aske.grain.controller.converter.Converter;
 import com._7aske.grain.controller.converter.ConverterRegistry;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpContentType;
-import com._7aske.grain.http.HttpMethod;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.http.*;
 import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
 import com._7aske.grain.http.json.*;
@@ -112,8 +109,9 @@ public class ControllerHandler implements RequestHandler {
 		Object result = method.invoke(controller.getInstance(), params);
 
 		if (result == null) {
+			String requestContentType = request.getHeader(CONTENT_TYPE);
 			response.setBody(null);
-			response.setHeader(CONTENT_TYPE, "text/plain");
+			response.setHeader(CONTENT_TYPE, requestContentType == null ? HttpContentType.TEXT_PLAIN : requestContentType);
 		} else if (result instanceof DataView) {
 			// Setting implicit objects
 			((DataView) result).setData("request", request);
