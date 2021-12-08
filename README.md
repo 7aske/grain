@@ -106,7 +106,7 @@ This gives you a grainXXX.jar file that you can add to your project.
 
 ## Examples
 
-See [documentation](./documentation/00-index.md) for more information.
+See [documentation](./documentation/README.md) for more information.
 
 ## Contact
 

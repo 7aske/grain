@@ -1,6 +1,6 @@
 # Documentation
 
-Grain documentation reference
+Grain documentation reference.
 
 ## Contents
 
