@@ -18,27 +18,27 @@ public interface Session {
 	String getId();
 
 	/**
-	 * Gets any object from the session store cooresponding to this sessionId
+	 * Gets any object from the session store corresponding to this sessionId
 	 * @param key
 	 * @return
 	 */
 	Object get(Object key);
 
 	/**
-	 * Sets any object to the session store cooresponding to this sessionId
+	 * Sets any object to the session store corresponding to this sessionId
 	 * @param key
 	 * @param value
 	 */
 	void put(Object key, Object value);
 
 	/**
-	 * Removes the object from store cooresponding to this sessionId
+	 * Removes the object from store corresponding to this sessionId
 	 * @param key
 	 */
 	void remove(Object key);
 
 	/**
-	 * Checks whether session store cooresponding to this sessionId contains
+	 * Checks whether session store corresponding to this sessionId contains
 	 * provided key
 	 * @param key
 	 */
