@@ -6,6 +6,7 @@ import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.querybuilder.Join;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
@@ -119,31 +120,27 @@ public class QueryBuilderUtil {
 		return getColumnNameForDialect(field);
 	}
 
-	public static List<Join<?, ?>> getJoins(Class<? extends Model> clazz, Stack<Join<?, ?>> stack) {
+	public static List<Join<?, ?>> getJoins(ModelClass<?> clazz, Stack<Join<?, ?>> stack) {
 		Join<?, ?> last = stack.isEmpty() ? null : stack.pop();
 		List<Join<?, ?>> result = new ArrayList<>();
-		Arrays.stream(clazz.getDeclaredFields())
-				.forEach(f -> {
-					// @Refactor this monstrosity
-					if (f.isAnnotationPresent(ManyToOne.class)) {
-						Class<? extends Model> type = (Class<? extends Model>) f.getType();
-						ManyToOne anno = f.getAnnotation(ManyToOne.class);
-						Join<?, ?> join = Join.from(last == null ? getTableNameForDialect(clazz) : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
-						result.add(join);
-						stack.add(join);
-						result.addAll(getJoins(type, stack));
-					} else if (f.isAnnotationPresent(OneToMany.class)) {
-						Class<? extends Model> type = getGenericListTypeArgument(f);
-						OneToMany anno = f.getAnnotation(OneToMany.class);
-						Join<?, ?> join = Join.from(last == null ? getTableNameForDialect(clazz) : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
-						result.add(join);
-						stack.add(join);
-						result.addAll(getJoins(type, stack));
-					} else if (f.isAnnotationPresent(ManyToMany.class)) {
-						// @Incomplete
-						logger.warn("ManyToMany relationship not implemented for getJoins");
-					}
-				});
+
+		clazz.getManyToOne().forEach(f -> {
+			Class<? extends Model> type = f.getType();
+			ManyToOne anno = f.getAnnotation(ManyToOne.class);
+			Join<?, ?> join = Join.from(last == null ? clazz.getTableName() : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
+			result.add(join);
+			stack.add(join);
+			result.addAll(getJoins(new ModelClass<>(type), stack));
+		});
+
+		clazz.getOneToMany().forEach(f -> {
+			Class<? extends Model> type = f.getGenericListTypeArgument();
+			OneToMany anno = f.getAnnotation(OneToMany.class);
+			Join<?, ?> join = Join.from(last == null ? clazz.getTableName() : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
+			result.add(join);
+			stack.add(join);
+			result.addAll(getJoins(new ModelClass<>(type), stack));
+		});
 		return result;
 	}
 

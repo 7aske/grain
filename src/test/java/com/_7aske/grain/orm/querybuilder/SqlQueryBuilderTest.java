@@ -6,11 +6,13 @@ import com._7aske.grain.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.page.DefaultPageable;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Stack;
@@ -175,6 +177,7 @@ class SqlQueryBuilderTest {
 		String regex = "select entity.test_id, entity.test_fk, test_\\d+.test_id, test_\\d+.string, test_\\d+.number, test_\\d+.date, test_\\d+.local_date, test_\\d+.boolean, test_\\d+.boolean2 from entity left join test test_\\d+ on entity.test_fk = test_\\d+.test_id";
 		Pattern pattern = Pattern.compile(regex);
 		System.err.println(selectSql);
+		System.err.println(pattern);
 		assertTrue(pattern.matcher(selectSql).find());
 	}
 
@@ -197,7 +200,7 @@ class SqlQueryBuilderTest {
 
 	@Test
 	void testNewJoins() {
-		List<Join<?,?>> joins = getJoins(User.class, new Stack<>());
+		List<Join<?,?>> joins = getJoins(new ModelClass<>(User.class), new Stack<>());
 		assertFalse(joins.isEmpty());
 	}
 
@@ -209,5 +212,45 @@ class SqlQueryBuilderTest {
 		Pattern pattern = Pattern.compile(regex);
 		System.err.println(selectSql);
 		assertTrue(pattern.matcher(selectSql).matches());
+	}
+
+
+	@Table
+	static class Screening {
+		@Id
+		@Column(name = "screening_id")
+		private Long id;
+		@Column(name = "time")
+		private LocalDateTime time;
+	}
+
+	@Table
+	static class Movie {
+		@Id
+		@Column(name = "movie_id")
+		private Long id;
+		@Column(name = "image_url")
+		private String url;
+		@Column(name = "title")
+		private String title;
+		@Column(name = "description")
+		private String description;
+		@Column(name = "genre")
+		private String genre;
+		@Column(name = "duration")
+		private Integer duration;
+		@Column(name = "director")
+		private String director;
+		@Column(name = "release_date")
+		private LocalDate releaseDate;
+		@OneToMany(column = "movie_id", referencedColumn = "movie_fk", table = "screening")
+		private List<Screening> screenings;
+		@ManyToOne(column = "movie_id", referencedColumn = "movie_fk", table = "screening")
+		private Movie movie;
+	}
+
+	@Test
+	void testRecursiveReference() {
+
 	}
 }

@@ -29,50 +29,11 @@ public class Model {
 	private final ApplicationContext context = ApplicationContextHolder.getContext();
 	private final QueryBuilder queryBuilder;
 
-	final Table table;
-	final List<Field> fields;
-	final List<Field> ids;
-	final List<Field> oneToMany;
-	final List<Field> manyToOne;
-
 	protected Model() {
 		// @Incomplete Error handling if models do have id's set
 		// @Incomplete Error handling if models do have table annotation set
 		// @Incomplete Handle composite keys
-		table = getClass().getAnnotation(Table.class);
-		ids = Arrays.stream(getClass().getDeclaredFields())
-				.filter(f -> isAnnotationPresent(f, Id.class))
-				.collect(Collectors.toList());
-		fields = Arrays.stream(getClass().getDeclaredFields())
-				.filter(f -> ReflectionUtil.isAnnotationPresent(f, Column.class))
-				.collect(Collectors.toList());
-		oneToMany = Arrays.stream(getClass().getDeclaredFields())
-				.filter(f -> isAnnotationPresent(f, OneToMany.class))
-				.collect(Collectors.toList());
-		manyToOne = Arrays.stream(getClass().getDeclaredFields())
-				.filter(f -> isAnnotationPresent(f, ManyToOne.class))
-				.collect(Collectors.toList());
 		queryBuilder = new SqlQueryBuilder(this);
-	}
-
-	Table getTable() {
-		return table;
-	}
-
-	List<Field> getFields() {
-		return fields;
-	}
-
-	List<Field> getIds() {
-		return ids;
-	}
-
-	List<Field> getOneToMany() {
-		return oneToMany;
-	}
-
-	List<Field> getManyToOne() {
-		return manyToOne;
 	}
 
 	protected DatabaseExecutor getDatabaseExecutor() {
@@ -195,13 +156,14 @@ public class Model {
 	public <T extends Model> T save() {
 		long id = getDatabaseExecutor().executeUpdate(queryBuilder.insert().build());
 		// @Temporary @Incomplete handle composite keys?
-		if (this.getIds().size() == 1) {
-			try {
-				this.getIds().get(0).set(this, id);
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
+		// @Incomplete
+		// if (this.getIds().size() == 1) {
+		// 	try {
+		// 		this.getIds().get(0).set(this, id);
+		// 	} catch (IllegalAccessException e) {
+		// 		e.printStackTrace();
+		// 	}
+		// }
 		return (T) this;
 	}
 
@@ -209,15 +171,9 @@ public class Model {
 	public <T extends Model> T update() {
 		getDatabaseExecutor().executeUpdate(queryBuilder.update().allValues().byId().build());
 		// @Incomplete handle composite keys
-		Field idField = getIds().get(0);
-		try {
-			return (T) doFindById(this.getClass(), idField.get(this));
-		} catch (IllegalAccessException e) {
-			// @Warning If the findById query fails we return same object we updated
-			// there might be loss of information in that case.
-			e.printStackTrace();
-			return (T) this;
-		}
+		// @Incomplete
+		// Field idField = getIds().get(0);
+		return (T) this;
 	}
 
 	public void delete() {

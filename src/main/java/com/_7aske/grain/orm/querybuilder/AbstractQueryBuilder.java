@@ -2,11 +2,11 @@ package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.model.Model;
-import com._7aske.grain.orm.model.ModelInspector;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.util.formatter.StringFormat;
 
 import java.lang.reflect.Field;
@@ -30,40 +30,40 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	public final static SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT_STRING);
 	public final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
 	private final Logger logger = LoggerFactory.getLogger(AbstractQueryBuilder.class);
-	private final ModelInspector model;
+	private final ModelClass<?> modelClass;
+	private final Model model;
 
 
 	protected AbstractQueryBuilder(Model model) {
-		this.model = new ModelInspector(model);
+		this.model = model;
+		this.modelClass = new ModelClass<>(model.getClass());
 	}
 
-	protected ModelInspector getModelInspector() {
-		return model;
+	protected <T extends Model> ModelClass<T> getModelClass() {
+		return (ModelClass<T>) modelClass;
 	}
 
-	protected Object getFieldValue(Field field) {
+	protected <T extends Model> T getModel() {
+		return (T) model;
+	}
+
+	protected Object getFieldValue(ModelField field) {
 		Object value = null;
-		try {
-			field.setAccessible(true);
-			// Handle the case where the formatted value is a relationship object
-			if (field.isAnnotationPresent(OneToMany.class)) {
-				// @Incomplete
-			} else if (field.isAnnotationPresent(ManyToOne.class))  {
-				Model model = (Model) field.get(getModelInspector().getModel());
-				List<Field> ids = new ModelInspector(model).getModelIds();
-				if (ids.size() > 1) {
-					// @Temporary probably should throw
-					logger.warn("Unsupported update of ManyToOne relationship with composite foreign key");
-				} else {
-					Field idField = ids.get(0);
-					idField.setAccessible(true);
-					value = idField.get(model);
-				}
+		// Handle the case where the formatted value is a relationship object
+		if (field.isAnnotationPresent(OneToMany.class)) {
+			// @Incomplete
+		} else if (field.isAnnotationPresent(ManyToOne.class)) {
+			Model m = (Model) field.get(model);
+			List<ModelField> ids = new ModelClass<>(m.getClass()).getIdColumnFields();
+			if (ids.size() > 1) {
+				// @Temporary probably should throw
+				logger.warn("Unsupported update of ManyToOne relationship with composite foreign key");
 			} else {
-				value = field.get(getModelInspector().getModel());
+				ModelField idField = ids.get(0);
+				value = idField.get(m);
 			}
-		} catch (IllegalAccessException e) {
-			// ignored
+		} else {
+			value = field.get(model);
 		}
 		return value;
 	}
@@ -71,24 +71,16 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	// @Incomplete probably doesn't cover all of the cases but for the time
 	// being it works for basic values
 	// @Incomplete check validity of date formats
-	protected String getFormattedFieldValue(Field field) {
+	protected String getFormattedFieldValue(ModelField field) {
 		return getFormattedFieldValue(field, getFieldValue(field));
 	}
 
-	protected String getFormattedFieldValue(Map.Entry<String,Object> kv) {
-		return getFormattedFieldValue(kv.getKey(), kv.getValue());
-	}
-	protected String getFormattedFieldValue(String key, Object value) {
-		try {
-			Field field = model.getModel().getClass().getDeclaredField(key);
-			return StringFormat.format("{} = {}", key, getFormattedFieldValue(field, value));
-		} catch (NoSuchFieldException e) {
-			return String.format("%s = %s", key, value);
-		}
+	protected String getFormattedFieldValue(Map.Entry<String, Object> kv) {
+		return StringFormat.format("{} = {}", kv.getKey(), kv.getValue());
 	}
 
 	// Gets hopefully valid SQL formatted value for the passed Field object.
-	protected String getFormattedFieldValue(Field field, Object value) {
+	protected String getFormattedFieldValue(ModelField field, Object value) {
 		if (value == null) {
 			return "NULL";
 		} else if (String.class.isAssignableFrom(field.getType())) {
@@ -124,18 +116,18 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	}
 
 	protected Map<String, Object> getIdValuePairs() {
-		return getModelInspector().getModelIds()
+		return modelClass.getIdColumnFields()
 				.stream()
-				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
+				.collect(Collectors.toMap(ModelField::getColumnName, this::getFormattedFieldValue));
 	}
 
 	protected Map<String, Object> getValuePairs() {
-		Map<String, Object> columns = getModelInspector().getModelFields()
+		Map<String, Object> columns = modelClass.getColumnFields()
 				.stream()
-				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
-		Map<String, Object> manyToOne = getModelInspector().getModelManyToOne()
+				.collect(Collectors.toMap(ModelField::getColumnName, this::getFormattedFieldValue));
+		Map<String, Object> manyToOne = getModelClass().getManyToOne()
 				.stream()
-				.collect(Collectors.toMap(f -> f.getAnnotation(ManyToOne.class).column(), this::getFormattedFieldValue));
+				.collect(Collectors.toMap(ModelField::getColumnName, this::getFormattedFieldValue));
 		columns.putAll(manyToOne);
 		return columns;
 	}
@@ -143,8 +135,8 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	protected Map<String, Object> getValuePairsFor(String... columns) {
 		return Arrays.stream(columns)
 				// @Refactor this can be better
-				.map(col -> getModelInspector().getModelFields().stream().filter(f -> f.getAnnotation(Column.class).name().equals(col)).findFirst())
+				.map(col -> modelClass.getColumnFields().stream().filter(f -> f.getColumnName().equals(col)).findFirst())
 				.flatMap(Optional::stream)
-				.collect(Collectors.toMap(f -> f.getAnnotation(Column.class).name(), this::getFormattedFieldValue));
+				.collect(Collectors.toMap(ModelField::getColumnName, this::getFormattedFieldValue));
 	}
 }

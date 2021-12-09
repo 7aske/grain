@@ -3,6 +3,10 @@ package com._7aske.grain.orm.model;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
+import com._7aske.grain.orm.querybuilder.helper.ModelField;
+import com._7aske.grain.orm.querybuilder.helper.ManyToOneField;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.orm.querybuilder.helper.OneToManyField;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
@@ -18,11 +22,11 @@ import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 public class ModelMapper<T extends Model> {
-	private final Class<?> modelClazz;
+	private final ModelClass<T> modelClazz;
 	private final List<Map<String, Object>> data;
 
 	public ModelMapper(Class<T> modelClazz, List<Map<String, Object>> data) {
-		this.modelClazz = modelClazz;
+		this.modelClazz = new ModelClass<>(modelClazz);
 		this.data = data;
 	}
 
@@ -32,21 +36,20 @@ public class ModelMapper<T extends Model> {
 		// @Refactor use stream
 		data.forEach(modelData -> {
 			try {
-				T model = (T) newInstance(modelClazz);
+				T model = modelClazz.newInstance();
 
-				for (Field field : model.getFields()) {
-					String val = (String) modelData.get(getColumnName(field));
-					assignValueToField(model, field, val, modelData);
+				for (ModelField field : modelClazz.getColumnFields()) {
+					String val = (String) modelData.get(field.getColumnName());
+					assignValueToField(model, field.getField(), val, modelData);
 				}
 
-				for (Field field : model.getManyToOne()) {
-					setFieldModelValue(model, field, (Map<String, Object>) modelData.get(getColumnName(field)));
+				for (ManyToOneField field : modelClazz.getManyToOne()) {
+					setFieldModelValue(model, field.getField(), (Map<String, Object>) modelData.get(field.getColumnName()));
 				}
 
-				for (Field field : model.getOneToMany()) {
-					List<Map<String, Object>> values = (List<Map<String, Object>>) modelData.get(field.getName());
-					field.setAccessible(true);
-					Class<? extends Model> clazz = getGenericListTypeArgument(field);
+				for (OneToManyField field : modelClazz.getOneToMany()) {
+					List<Map<String, Object>> values = (List<Map<String, Object>>) modelData.get(field.getField().getName());
+					Class<? extends Model> clazz = field.getGenericListTypeArgument();
 					List<?> toSet = new ModelMapper<>(clazz, values).get();
 					field.set(model, toSet);
 				}
@@ -113,12 +116,12 @@ public class ModelMapper<T extends Model> {
 	private void setFieldModelValue(Model model, Field field, Map<String, Object> modelData) throws IllegalAccessException {
 		field.setAccessible(true);
 		Model instance = (Model) newInstance(field.getType());
-		for (Field f : instance.getFields()) {
-			f.setAccessible(true);
+		ModelClass<?> newModelClass = new ModelClass(field.getType());
+		for (ModelField f : newModelClass.getColumnAndManyToOneFields()) {
 			if (f.isAnnotationPresent(Column.class)) {
-				assignValueToField(instance, f, (String) modelData.get(getColumnName(f)), modelData);
+				assignValueToField(instance, f.getField(), (String) modelData.get(f.getColumnName()), modelData);
 			} else if (f.isAnnotationPresent(ManyToOne.class)) {
-				setFieldModelValue(instance, f, (Map<String, Object>) modelData.get(f.getName()));
+				setFieldModelValue(instance, f.getField(), (Map<String, Object>) modelData.get(f.getField().getName()));
 			} else {
 				throw new GrainDbIntrospectionException("Unsupported operation");
 			}

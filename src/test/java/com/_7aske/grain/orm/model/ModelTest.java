@@ -10,6 +10,7 @@ import com._7aske.grain.orm.annotation.Id;
 import com._7aske.grain.orm.annotation.Table;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbConnectionException;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,10 +57,11 @@ class ModelTest {
 	@Test
 	void testModel_hasRequiredFields() {
 		TestModel testModel = new TestModel();
+		ModelClass<TestModel> modelClass = new ModelClass<>((Class<TestModel>) testModel.getClass());
 
-		assertEquals("test", testModel.getTable().name());
-		assertFalse(testModel.getFields().isEmpty());
-		assertFalse(testModel.getIds().isEmpty());
+		assertEquals("test", modelClass.getTableName());
+		assertFalse(modelClass.getColumnFields().isEmpty());
+		assertFalse(modelClass.getIdFields().isEmpty());
 	}
 
 	@Test

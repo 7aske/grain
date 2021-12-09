@@ -7,6 +7,7 @@ import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.exception.GrainDbUpdateIdMissingException;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.page.Pageable;
+import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.util.QueryBuilderUtil;
 
 import java.lang.reflect.Field;
@@ -63,7 +64,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 
 	@Override
 	public QueryBuilder join() {
-		joins = QueryBuilderUtil.getJoins(getModelInspector().getModel().getClass(), new Stack<>());
+		joins = QueryBuilderUtil.getJoins(getModelClass(), new Stack<>());
 		return this;
 	}
 
@@ -92,8 +93,8 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	// @Incomplete should allow composite keys
 	@Override
 	public QueryBuilder byId(Object id) {
-		Field idField = getModelInspector().getModelIds().get(0);
-		where = Map.of(idField.getAnnotation(Column.class).name(), getFormattedFieldValue(idField, id));
+		ModelField idField = getModelClass().getIdColumnField();
+		where = Map.of(idField.getColumnName(), getFormattedFieldValue(idField, id));
 		return this;
 	}
 
@@ -169,7 +170,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 	@Override
 	public String build() {
 		StringBuilder builder = new StringBuilder();
-		String thisTableName = getModelInspector().getModelTable().name();
+		String thisTableName = getModelClass().getTableName();
 
 		switch (operation) {
 			case SELECT:
@@ -178,24 +179,19 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 					builder.append(String.join(", ", columns)).append(" ");
 				} else {
 					// @Refactor change the way model inspector returns fields
-					builder.append(getModelInspector().getAllModelFields()
+					builder.append(getModelClass().getColumnAndManyToOneFields()
 							.stream()
 							.map(field -> {
-								String column;
-								if (field.isAnnotationPresent(Column.class)) {
-									column = field.getAnnotation(Column.class).name();
-								} else {
-									column = field.getAnnotation(ManyToOne.class).column();
-								}
+								String column = field.getColumnName();
 								return String.format("%s.%s", thisTableName, column);
 							})
 							.collect(Collectors.joining(", ")));
-					if (joins != null && !joins.isEmpty()) {
-						builder.append(", ");
-						builder.append(joins.stream()
-								.flatMap(j -> j.getFields().stream())
-								.collect(Collectors.joining(", ")));
-					}
+				}
+				if (joins != null && !joins.isEmpty()) {
+					builder.append(", ");
+					builder.append(joins.stream()
+							.flatMap(j -> j.getFields().stream())
+							.collect(Collectors.joining(", ")));
 				}
 				builder.append(" from ");
 				builder.append(thisTableName).append(" ");
@@ -259,7 +255,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				builder.append(thisTableName);
 				builder.append(" (");
 
-				String columns = getModelInspector().getModelFields()
+				String columns = getModelClass().getColumnFields()
 						.stream()
 						.filter(field -> {
 							Id id = field.getAnnotation(Id.class);
@@ -273,7 +269,7 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 
 				builder.append(" values (");
 
-				String values = getModelInspector().getModelFields()
+				String values = getModelClass().getColumnFields()
 						.stream()
 						.filter(field -> {
 							Id id = field.getAnnotation(Id.class);
