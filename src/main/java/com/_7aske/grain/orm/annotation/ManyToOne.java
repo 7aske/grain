@@ -6,7 +6,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ManyToOne {
-	String column();
-	String referencedColumn();
-	String table();
+	String column() default "";
+	String referencedColumn() default "";
+	String table() default "";
+	String mappedBy()  default "";
 }

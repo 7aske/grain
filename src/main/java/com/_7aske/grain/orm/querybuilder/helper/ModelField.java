@@ -35,7 +35,7 @@ public class ModelField implements HasDialect {
 	public String getColumnName() {
 		if (this.field.isAnnotationPresent(ManyToOne.class)) {
 			ManyToOne manyToOne = this.field.getAnnotation(ManyToOne.class);
-			return manyToOne.column() == null || manyToOne.column().isEmpty() ? field.getName() : manyToOne.column();
+			return manyToOne.column() == null || manyToOne.column().isEmpty() ? applyDialect(field.getName()) : manyToOne.column();
 		}
 
 		if (!this.field.isAnnotationPresent(Column.class))

@@ -15,35 +15,36 @@ import java.util.stream.Stream;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
-public class ModelClass<T extends Model> implements HasDialect {
+public class ModelClass implements HasDialect {
 	private final Logger logger = LoggerFactory.getLogger(ModelClass.class);
-	private final Class<T> clazz;
+	private final Class<? extends Model> clazz;
 	private final List<ModelField> columnFields;
 	private final List<OneToManyField> oneToManyFields;
 	private final List<ManyToOneField> manyToOneFields;
 	private final List<ModelField> idFields;
 
-	public ModelClass(Class<T> clazz) {
+	public ModelClass(Class<? extends Model> clazz) {
 		this.clazz = clazz;
-		idFields = Arrays.stream(clazz.getDeclaredFields())
+		Field[] fields = clazz.getDeclaredFields();
+		idFields = Arrays.stream(fields)
 				.filter(f -> isAnnotationPresent(f, Id.class))
 				.map(ModelField::new)
 				.collect(Collectors.toList());
-		columnFields = Arrays.stream(clazz.getDeclaredFields())
+		columnFields = Arrays.stream(fields)
 				.filter(f -> isAnnotationPresent(f, Column.class))
 				.map(ModelField::new)
 				.collect(Collectors.toList());
-		oneToManyFields = Arrays.stream(clazz.getDeclaredFields())
+		oneToManyFields = Arrays.stream(fields)
 				.filter(f -> isAnnotationPresent(f, OneToMany.class))
 				.map(OneToManyField::new)
 				.collect(Collectors.toList());
-		manyToOneFields = Arrays.stream(clazz.getDeclaredFields())
+		manyToOneFields = Arrays.stream(fields)
 				.filter(f -> isAnnotationPresent(f, ManyToOne.class))
 				.map(ManyToOneField::new)
 				.collect(Collectors.toList());
 	}
 
-	public T newInstance() {
+	public Model newInstance() {
 		return ReflectionUtil.newInstance(clazz);
 	}
 
@@ -63,7 +64,7 @@ public class ModelClass<T extends Model> implements HasDialect {
 		if (!this.clazz.isAnnotationPresent(Table.class))
 			throw new GrainDbIntrospectionException("Referenced class is not annotated with @Table annotation");
 		Table column = this.clazz.getAnnotation(Table.class);
-		return column.name() == null || column.name().isEmpty() ? applyDialect(column.name()) : column.name();
+		return column.name() == null || column.name().isEmpty() ? applyDialect(clazz.getSimpleName()) : column.name();
 	}
 
 	public List<ModelField> getColumnAndManyToOneFields() {
@@ -93,5 +94,21 @@ public class ModelClass<T extends Model> implements HasDialect {
 		} catch (NoSuchFieldException e) {
 			return null;
 		}
+	}
+
+	public ModelField getField(String name) {
+		for (ModelField f : idFields) {
+			if (f.getField().getName().equals(name)) return f;
+		}
+		for (ModelField f : columnFields) {
+			if (f.getField().getName().equals(name)) return f;
+		}
+		for (ModelField f : manyToOneFields) {
+			if (f.getField().getName().equals(name)) return f;
+		}
+		for (ModelField f : oneToManyFields) {
+			if (f.getField().getName().equals(name)) return f;
+		}
+		return null;
 	}
 }

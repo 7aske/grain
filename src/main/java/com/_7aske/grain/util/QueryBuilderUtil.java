@@ -21,6 +21,7 @@ import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class QueryBuilderUtil {
 	private static final Logger logger = LoggerFactory.getLogger(QueryBuilderUtil.class);
+
 	private QueryBuilderUtil() {
 	}
 
@@ -120,17 +121,20 @@ public class QueryBuilderUtil {
 		return getColumnNameForDialect(field);
 	}
 
-	public static List<Join<?, ?>> getJoins(ModelClass<?> clazz, Stack<Join<?, ?>> stack) {
+	public static List<Join<?, ?>> getJoins(ModelClass clazz, Stack<Join<?, ?>> stack) {
 		Join<?, ?> last = stack.isEmpty() ? null : stack.pop();
 		List<Join<?, ?>> result = new ArrayList<>();
 
 		clazz.getManyToOne().forEach(f -> {
 			Class<? extends Model> type = f.getType();
 			ManyToOne anno = f.getAnnotation(ManyToOne.class);
+			if (!anno.mappedBy().isEmpty()) {
+				return;
+			}
 			Join<?, ?> join = Join.from(last == null ? clazz.getTableName() : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
 			result.add(join);
 			stack.add(join);
-			result.addAll(getJoins(new ModelClass<>(type), stack));
+			result.addAll(getJoins(new ModelClass(type), stack));
 		});
 
 		clazz.getOneToMany().forEach(f -> {
@@ -139,12 +143,12 @@ public class QueryBuilderUtil {
 			Join<?, ?> join = Join.from(last == null ? clazz.getTableName() : last.alias(), anno.column(), anno.table(), anno.referencedColumn(), getTableFields(type));
 			result.add(join);
 			stack.add(join);
-			result.addAll(getJoins(new ModelClass<>(type), stack));
+			result.addAll(getJoins(new ModelClass(type), stack));
 		});
 		return result;
 	}
 
-	public static List<Field> getListFields(Class<? extends Model> clazz){
+	public static List<Field> getListFields(Class<? extends Model> clazz) {
 		return Arrays.stream(clazz.getDeclaredFields())
 				.filter(f -> f.isAnnotationPresent(OneToMany.class))
 				.collect(Collectors.toList());

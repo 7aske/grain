@@ -57,7 +57,7 @@ class ModelTest {
 	@Test
 	void testModel_hasRequiredFields() {
 		TestModel testModel = new TestModel();
-		ModelClass<TestModel> modelClass = new ModelClass<>((Class<TestModel>) testModel.getClass());
+		ModelClass modelClass = new ModelClass(testModel.getClass());
 
 		assertEquals("test", modelClass.getTableName());
 		assertFalse(modelClass.getColumnFields().isEmpty());

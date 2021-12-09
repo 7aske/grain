@@ -1,9 +1,6 @@
 package com._7aske.grain.orm.model;
 
-import com._7aske.grain.orm.annotation.Column;
-import com._7aske.grain.orm.annotation.Id;
-import com._7aske.grain.orm.annotation.OneToMany;
-import com._7aske.grain.orm.annotation.Table;
+import com._7aske.grain.orm.annotation.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +26,8 @@ class ModelDataAggregatorTest {
 		private Long id;
 		@Column(name = "body")
 		private String body;
+		@ManyToOne(column = "user_fk", mappedBy = "posts")
+		private User user;
 	}
 
 	@Table(name = "user")

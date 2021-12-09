@@ -2,21 +2,18 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbNoSuchRowException;
 import com._7aske.grain.orm.exception.GrainDbNonUniqueResultException;
 import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.orm.querybuilder.QueryBuilder;
 import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
+import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.util.ReflectionUtil;
 
-import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 /**
@@ -28,8 +25,11 @@ public class Model {
 	// instead of relying on this hack.
 	private final ApplicationContext context = ApplicationContextHolder.getContext();
 	private final QueryBuilder queryBuilder;
+	private final ModelClass modelClass;
+
 
 	protected Model() {
+		modelClass = new ModelClass(getClass());
 		// @Incomplete Error handling if models do have id's set
 		// @Incomplete Error handling if models do have table annotation set
 		// @Incomplete Handle composite keys
@@ -47,7 +47,7 @@ public class Model {
 	}
 
 	public static <T extends Model> List<T> findAllBy(Class<T> clazz, Map<String, Object> params) {
-		Model instance = newInstance(clazz);
+		Model instance = ReflectionUtil.newInstance(clazz);
 		return instance.executeQuery(clazz, instance.queryBuilder.select().where(params).build());
 	}
 
@@ -156,14 +156,9 @@ public class Model {
 	public <T extends Model> T save() {
 		long id = getDatabaseExecutor().executeUpdate(queryBuilder.insert().build());
 		// @Temporary @Incomplete handle composite keys?
-		// @Incomplete
-		// if (this.getIds().size() == 1) {
-		// 	try {
-		// 		this.getIds().get(0).set(this, id);
-		// 	} catch (IllegalAccessException e) {
-		// 		e.printStackTrace();
-		// 	}
-		// }
+		if (this.getModelClass().getIdColumnFields().size() == 1) {
+			this.getModelClass().getIdColumnField().set(this, id);
+		}
 		return (T) this;
 	}
 
@@ -171,12 +166,27 @@ public class Model {
 	public <T extends Model> T update() {
 		getDatabaseExecutor().executeUpdate(queryBuilder.update().allValues().byId().build());
 		// @Incomplete handle composite keys
-		// @Incomplete
-		// Field idField = getIds().get(0);
-		return (T) this;
+		// @Optimization after every update we shouldn't preform a database query
+		return (T) doFindById(getClass(), this.getModelClass().getIdColumnField().get(this));
 	}
 
 	public void delete() {
 		getDatabaseExecutor().executeUpdate(queryBuilder.delete().byId().build());
+	}
+
+	public ModelClass getModelClass() {
+		return modelClass;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Model that = (Model) o;
+		for (ModelField field : getModelClass().getIdColumnFields()) {
+			ModelField thatField = that.getModelClass().getField(field.getField().getName());
+			if (!Objects.equals(field.get(this), thatField.get(that))) return false;
+		}
+		return true;
 	}
 }

@@ -2,10 +2,11 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.ManyToOne;
+import com._7aske.grain.orm.annotation.OneToMany;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
-import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.orm.querybuilder.helper.ManyToOneField;
 import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.orm.querybuilder.helper.OneToManyField;
 
 import java.lang.reflect.Field;
@@ -17,16 +18,14 @@ import java.util.List;
 import java.util.Map;
 
 import static com._7aske.grain.orm.querybuilder.AbstractQueryBuilder.*;
-import static com._7aske.grain.util.QueryBuilderUtil.getColumnName;
-import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
 import static com._7aske.grain.util.ReflectionUtil.newInstance;
 
 public class ModelMapper<T extends Model> {
-	private final ModelClass<T> modelClazz;
+	private final ModelClass modelClazz;
 	private final List<Map<String, Object>> data;
 
 	public ModelMapper(Class<T> modelClazz, List<Map<String, Object>> data) {
-		this.modelClazz = new ModelClass<>(modelClazz);
+		this.modelClazz = new ModelClass(modelClazz);
 		this.data = data;
 	}
 
@@ -36,7 +35,7 @@ public class ModelMapper<T extends Model> {
 		// @Refactor use stream
 		data.forEach(modelData -> {
 			try {
-				T model = modelClazz.newInstance();
+				T model = (T) modelClazz.newInstance();
 
 				for (ModelField field : modelClazz.getColumnFields()) {
 					String val = (String) modelData.get(field.getColumnName());
@@ -44,10 +43,16 @@ public class ModelMapper<T extends Model> {
 				}
 
 				for (ManyToOneField field : modelClazz.getManyToOne()) {
+					// @Temporary
+					if (!field.getAnnotation(ManyToOne.class).mappedBy().isEmpty())
+						continue;
 					setFieldModelValue(model, field.getField(), (Map<String, Object>) modelData.get(field.getColumnName()));
 				}
 
 				for (OneToManyField field : modelClazz.getOneToMany()) {
+					// @Temporary
+					if (!field.getAnnotation(OneToMany.class).mappedBy().isEmpty())
+						continue;
 					List<Map<String, Object>> values = (List<Map<String, Object>>) modelData.get(field.getField().getName());
 					Class<? extends Model> clazz = field.getGenericListTypeArgument();
 					List<?> toSet = new ModelMapper<>(clazz, values).get();
@@ -116,7 +121,7 @@ public class ModelMapper<T extends Model> {
 	private void setFieldModelValue(Model model, Field field, Map<String, Object> modelData) throws IllegalAccessException {
 		field.setAccessible(true);
 		Model instance = (Model) newInstance(field.getType());
-		ModelClass<?> newModelClass = new ModelClass(field.getType());
+		ModelClass newModelClass = new ModelClass((Class<? extends Model>) field.getType());
 		for (ModelField f : newModelClass.getColumnAndManyToOneFields()) {
 			if (f.isAnnotationPresent(Column.class)) {
 				assignValueToField(instance, f.getField(), (String) modelData.get(f.getColumnName()), modelData);

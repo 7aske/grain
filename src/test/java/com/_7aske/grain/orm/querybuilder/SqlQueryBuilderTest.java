@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Stack;
@@ -101,6 +102,8 @@ class SqlQueryBuilderTest {
 	Category category;
 	ApplicationContextImpl context;
 	User user;
+	Movie movie;
+	Screening screening;
 
 	@BeforeEach
 	void setup() {
@@ -135,6 +138,15 @@ class SqlQueryBuilderTest {
 		user.id = 1L;
 		user.name = "user";
 		user.posts = List.of(post);
+
+		movie = new Movie();
+		movie.id = 1L;
+		movie.title = "Lord of the Rings - The Two Towers";
+		movie.screenings.add(screening);
+
+		screening = new Screening();
+		screening.id = 1L;
+		screening.movie = movie;
 	}
 
 
@@ -200,7 +212,7 @@ class SqlQueryBuilderTest {
 
 	@Test
 	void testNewJoins() {
-		List<Join<?,?>> joins = getJoins(new ModelClass<>(User.class), new Stack<>());
+		List<Join<?,?>> joins = getJoins(new ModelClass(User.class), new Stack<>());
 		assertFalse(joins.isEmpty());
 	}
 
@@ -216,16 +228,18 @@ class SqlQueryBuilderTest {
 
 
 	@Table
-	static class Screening {
+	static class Screening extends Model {
 		@Id
 		@Column(name = "screening_id")
 		private Long id;
 		@Column(name = "time")
 		private LocalDateTime time;
+		@ManyToOne(column = "movie_fk", mappedBy = "screenings")
+		private Movie movie;
 	}
 
 	@Table
-	static class Movie {
+	static class Movie extends Model {
 		@Id
 		@Column(name = "movie_id")
 		private Long id;
@@ -244,13 +258,13 @@ class SqlQueryBuilderTest {
 		@Column(name = "release_date")
 		private LocalDate releaseDate;
 		@OneToMany(column = "movie_id", referencedColumn = "movie_fk", table = "screening")
-		private List<Screening> screenings;
-		@ManyToOne(column = "movie_id", referencedColumn = "movie_fk", table = "screening")
-		private Movie movie;
+		private List<Screening> screenings = new ArrayList<>();
 	}
 
 	@Test
 	void testRecursiveReference() {
-
+		QueryBuilder queryBuilder = new SqlQueryBuilder(screening);
+		String selectSql = queryBuilder.select().join().build();
+		System.err.println(selectSql);
 	}
 }

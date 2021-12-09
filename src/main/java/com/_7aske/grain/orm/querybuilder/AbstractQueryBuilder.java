@@ -30,17 +30,17 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 	public final static SimpleDateFormat SIMPLE_DATE_TIME_FORMAT = new SimpleDateFormat(DATE_TIME_FORMAT_STRING);
 	public final static SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(DATE_FORMAT_STRING);
 	private final Logger logger = LoggerFactory.getLogger(AbstractQueryBuilder.class);
-	private final ModelClass<?> modelClass;
+	private final ModelClass modelClass;
 	private final Model model;
 
 
 	protected AbstractQueryBuilder(Model model) {
 		this.model = model;
-		this.modelClass = new ModelClass<>(model.getClass());
+		this.modelClass = new ModelClass(model.getClass());
 	}
 
-	protected <T extends Model> ModelClass<T> getModelClass() {
-		return (ModelClass<T>) modelClass;
+	protected <T extends Model> ModelClass getModelClass() {
+		return (ModelClass) modelClass;
 	}
 
 	protected <T extends Model> T getModel() {
@@ -54,7 +54,7 @@ public abstract class AbstractQueryBuilder implements QueryBuilder {
 			// @Incomplete
 		} else if (field.isAnnotationPresent(ManyToOne.class)) {
 			Model m = (Model) field.get(model);
-			List<ModelField> ids = new ModelClass<>(m.getClass()).getIdColumnFields();
+			List<ModelField> ids = new ModelClass(m.getClass()).getIdColumnFields();
 			if (ids.size() > 1) {
 				// @Temporary probably should throw
 				logger.warn("Unsupported update of ManyToOne relationship with composite foreign key");
