@@ -314,7 +314,7 @@ public class ReflectionUtil {
 			return clazz.getAnnotation(HeadMapping.class).value();
 		if (clazz.isAnnotationPresent(TraceMapping.class))
 			return clazz.getAnnotation(TraceMapping.class).value();
-		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
+		throw new GrainRuntimeException("Class not annotated with a valid @RequestMapping annotation");
 	}
 
 	/**
