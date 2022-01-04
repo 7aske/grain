@@ -97,8 +97,7 @@ and `Authentication` as `authentication`.
 
 * `Object[]` - any object array will be parsed as a JSON array response.
  
-* `String` - will just return the contents of the string as a `text/plain` response
-Special case: if the string response ends with `redirect:` will send a 302 redirect
+* `String` - will just return the contents of the string as a `text/plain` response. Special case: if the string response starts with `redirect:` will send a 302 redirect
 to the client with the remainder after the `redirect:` prefix as the value of 
 `Location` header.
 
