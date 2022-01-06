@@ -4,13 +4,15 @@ import com._7aske.grain.GrainApp;
 import com._7aske.grain.component.Default;
 import com._7aske.grain.component.Primary;
 import com._7aske.grain.controller.annotation.*;
-import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpMethod;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
@@ -293,9 +295,11 @@ public class ReflectionUtil {
 
 	/**
 	 * Extracts handler path from any of the valid @RequestMapping annotations.
+	 * Decided not to throw and rather return null since the controller Grain
+	 * can have it path defaulted to being just a "/".
 	 *
 	 * @param clazz to extract the path from
-	 * @return extracted request handler path. Throws if the annotation is not found
+	 * @return extracted request handler path.
 	 */
 	public static String getAnnotatedHttpPath(Class<?> clazz) {
 		if (clazz.isAnnotationPresent(RequestMapping.class))
@@ -314,7 +318,7 @@ public class ReflectionUtil {
 			return clazz.getAnnotation(HeadMapping.class).value();
 		if (clazz.isAnnotationPresent(TraceMapping.class))
 			return clazz.getAnnotation(TraceMapping.class).value();
-		throw new GrainRuntimeException("Class not annotated with a valid @RequestMapping annotation");
+		return null;
 	}
 
 	/**
