@@ -42,7 +42,7 @@ public class GrainRegistry {
 		grains.putAll(grainInitializer.initialize(classes));
 	}
 
-	public boolean shouldBeLoaded(Class<?> cl) {
+	private boolean shouldBeLoaded(Class<?> cl) {
 		boolean isMarked = !cl.isAnnotation() && isAnnotationPresent(cl, Grain.class);
 		if (cl.isAnnotationPresent(Condition.class)) {
 			Condition condition = cl.getAnnotation(Condition.class);

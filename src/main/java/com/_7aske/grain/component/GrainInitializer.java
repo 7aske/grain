@@ -5,9 +5,11 @@ import com._7aske.grain.config.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
-import com._7aske.grain.util.ReflectionUtil;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,8 @@ public class GrainInitializer {
 				.map(Dependency::new).collect(Collectors.toList()));
 		this.dependencies.forEach(this::initializeConstructors);
 		this.dependencies.forEach(this::loadOwnDependencies);
-		this.dependencies.forEach(this::partiallyInitialize);
+		// We need a copy of the set to prevent ConcurrentModificationExceptions
+		new HashSet<>(this.dependencies).forEach(this::partiallyInitialize);
 		this.dependencies.forEach(this::initializeMissingFields);
 
 		// @Temporary
@@ -227,6 +230,29 @@ public class GrainInitializer {
 			dep.instance = newInstance(dep.constructor, realParams)
 					.orElseThrow(() -> new GrainInitializationException(String.format("Could not instantiate grain %s.", dep.clazz)));
 			dep.initialized = true;
+
+			// Then, we call Grain methods
+			List<Method> methods = Arrays.stream(dep.getClazz().getDeclaredMethods())
+					.filter(m -> m.isAnnotationPresent(Grain.class))
+					.collect(Collectors.toList());
+
+			// @Refactor
+			for (Method method : methods) {
+				method.setAccessible(true);
+				try {
+					Object result = method.invoke(dep.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
+					// @Note This can be either method#getReturnType() or result#getClass();
+					Dependency dependency = new Dependency(method.getReturnType());
+					dependency.initialized = true;
+					dependency.visited = true;
+					dependency.instance = result;
+					// @Todo Handle multiple declarations of the same bean.
+					// Consider using @Primary annotation.
+					dependencies.add(dependency);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new GrainInitializationException(String.format("Could not invoke grain method %s.", method.getName()), e);
+				}
+			}
 		}
 	}
 
@@ -244,7 +270,8 @@ public class GrainInitializer {
 						method.setAccessible(true);
 						// We call the lifecycle methods with any other Grain instances as parameters
 						method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
-					} catch (IllegalAccessException | InvocationTargetException e) {
+					} catch (IllegalAccessException |
+					         InvocationTargetException e) {
 						// @Incomplete should we throw
 						e.printStackTrace();
 					}
