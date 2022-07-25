@@ -2,6 +2,8 @@ package com._7aske.grain.config;
 
 import com._7aske.grain.http.session.SessionConstants;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import static com._7aske.grain.config.Configuration.Key.*;
@@ -25,6 +27,15 @@ public final class Configuration {
 		setProperty(SESSION_MAX_AGE, SessionConstants.SESSION_DEFAULT_MAX_AGE);
 		setProperty(SECURITY_ENABLED, false);
 		setProperty(LOG_LEVEL, "info");
+
+		// @Temporary
+		ClassLoader classLoader = Configuration.class.getClassLoader();
+		try (InputStream inputStream = classLoader.getResourceAsStream("application.properties")) {
+			properties.load(inputStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+			// ignored
+		}
 	}
 
 	public static Configuration createDefault() {
@@ -68,7 +79,7 @@ public final class Configuration {
 	}
 
 	public int getPort() {
-		return (int) getProperty(SERVER_PORT);
+		return Integer.parseInt(getProperty(SERVER_PORT).toString());
 	}
 
 	public void setPort(int port) {

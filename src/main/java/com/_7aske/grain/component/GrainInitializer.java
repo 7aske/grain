@@ -11,7 +11,6 @@ import com._7aske.grain.util.ReflectionUtil;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -259,14 +258,8 @@ public class GrainInitializer {
 		if (!dependency.lifecycleMethodCalled) {
 			for (Method method : dependency.instance.getClass().getDeclaredMethods()) {
 				if (method.isAnnotationPresent(AfterInit.class)) {
-					try {
-						// We call the lifecycle methods with any other Grain instances as parameters
-						method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
-					} catch (IllegalAccessException |
-					         InvocationTargetException e) {
-						// @Incomplete should we throw
-						e.printStackTrace();
-					}
+					// We call the lifecycle methods with any other Grain instances as parameters
+					ReflectionUtil.invokeMethod(method, dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
 				}
 			}
 			dependency.lifecycleMethodCalled = true;

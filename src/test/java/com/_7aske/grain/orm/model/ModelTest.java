@@ -11,6 +11,7 @@ import com._7aske.grain.orm.annotation.Table;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbConnectionException;
 import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,15 +39,18 @@ class ModelTest {
 	// context in the ApplicationContextHolder class.
 	@BeforeEach
 	void setup() throws NoSuchFieldException, IllegalAccessException {
-		ApplicationContext context = new ApplicationContextImpl(TestApp.class.getPackageName());
-		Field field = ApplicationContextHolder.class.getDeclaredField("applicationContext");
-		field.setAccessible(true);
-		field.set(null, context);
-
-		Configuration configuration = context.getGrainRegistry().getGrain(Configuration.class);
+		ApplicationContextHolder.setContext(null);
+		Configuration configuration = Configuration.createDefault();
 		configuration.setProperty(DATABASE_HOST, "127.0.0.1");
 		configuration.setProperty(DATABASE_PORT, 3306);
 		configuration.setProperty(DATABASE_NAME, "test");
+		configuration.setPropertyUnsafe("grain.persistence.provider", "native");
+		ApplicationContext context = new ApplicationContextImpl(ModelTest.TestApp.class.getPackageName(),
+				configuration,
+				StaticLocationsRegistry.createDefault());
+		Field field = ApplicationContextHolder.class.getDeclaredField("applicationContext");
+		field.setAccessible(true);
+		field.set(null, context);
 	}
 
 	@Test

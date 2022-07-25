@@ -5,6 +5,7 @@ import com._7aske.grain.GrainApp;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.context.ApplicationContext;
 import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -19,11 +20,14 @@ class ConnectionManagerTest {
 	@Test
 	void testGetConnectionUrl() {
 		ApplicationContextHolder.setContext(null);
-		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName());
-		Configuration configuration = applicationContext.getGrainRegistry().getGrain(Configuration.class);
+		Configuration configuration = Configuration.createDefault();
 		configuration.setProperty(DATABASE_HOST, "127.0.0.1");
 		configuration.setProperty(DATABASE_PORT, 3306);
 		configuration.setProperty(DATABASE_NAME, "test");
+		configuration.setPropertyUnsafe("grain.persistence.provider", "native");
+		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName(),
+				configuration,
+				StaticLocationsRegistry.createDefault());
 		ConnectionManager connectionManager = applicationContext.getGrainRegistry().getGrain(ConnectionManager.class);
 		Assertions.assertEquals("jdbc:mysql://127.0.0.1:3306/test", connectionManager.getConnectionUrl());
 	}

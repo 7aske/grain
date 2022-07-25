@@ -1,5 +1,6 @@
 package com._7aske.grain.orm.connection;
 
+import com._7aske.grain.component.Condition;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
@@ -15,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static com._7aske.grain.config.Configuration.Key;
 
 @Grain
+@Condition("grain.persistence.provider == 'native'")
 public class ConnectionPool {
 	final List<ConnectionWrapper> connections;
 	@Inject
