@@ -372,4 +372,40 @@ public class ReflectionUtil {
 			return clazz.getAnnotation(TraceMapping.class).annotationType().getAnnotation(RequestMapping.class).method();
 		throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
 	}
+
+	/**
+	 * Sets a value to a field regardless of its visibility and accessibility.
+	 */
+	public static void setFieldValue(Field field, Object target, Object value) {
+		try {
+			field.setAccessible(true);
+			field.set(target, value);
+		} catch (IllegalAccessException e) {
+			throw new GrainReflectionException(e);
+		}
+	}
+
+	/**
+	 * Gets a value to a field regardless of its visibility and accessibility.
+	 */
+	public static Object getFieldValue(Field field, Object target) {
+		try {
+			field.setAccessible(true);
+			return field.get(target);
+		} catch (IllegalAccessException e) {
+			throw new GrainReflectionException(e);
+		}
+	}
+
+	/**
+	 * Invokes a method regardless of its visibility and accessibility.
+	 */
+	public static Object invokeMethod(Method method, Object target, Object... args) {
+		try {
+			method.setAccessible(true);
+			return method.invoke(target, args);
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			throw new GrainReflectionException(String.format("Unable to invoke method '%s'", method.getName()), e);
+		}
+	}
 }

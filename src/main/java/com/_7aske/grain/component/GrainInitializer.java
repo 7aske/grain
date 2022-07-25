@@ -5,7 +5,10 @@ import com._7aske.grain.config.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
+import com._7aske.grain.exception.GrainReflectionException;
+import com._7aske.grain.util.ReflectionUtil;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -76,21 +79,19 @@ public class GrainInitializer {
 
 	// @Hack @Temporary there should be better way to determine which fields
 	// to initialize instead of a pass counter.
-	private static int pass = 1;
+	private int pass = 1;
 
 	// We do this pass after initializing all the fields since fields can
 	// hopefully reference other Grains
 	private void initializeValues(Dependency dep) {
 		for (DependencyField field : dep.fields) {
-			field.field.setAccessible(true);
-
 			try {
 
-				if (field.initialized) continue;
+				if (field.isInitialized()) continue;
 
-				if (field.field.isAnnotationPresent(Inject.class))
+				if (field.isAnnotationPresent(Inject.class))
 					throw new GrainInvalidInjectException("Cannot mark field as @Inject and @Value");
-				Value value = field.field.getAnnotation(Value.class);
+				Value value = field.getAnnotation(Value.class);
 				String code = value.value();
 				// We're analyzing the code to find Values that are referencing
 				// only values from properties to initialize them first.
@@ -99,17 +100,16 @@ public class GrainInitializer {
 				// First pass initializes Values that are referencing only
 				// props. Second pass initializes everything else.
 				if (onlyProperties || pass == 2) {
-					field.initialized = true;
+					field.setInitialized(true);
 
 					// We cast the result to confirm that we have a valid value
-					Object result = field.field.getType().cast(interpreter.evaluate(code));
-					field.field.set(dep.instance, result);
+					Object result = field.getType().cast(interpreter.evaluate(code));
+					ReflectionUtil.setFieldValue(field.get(), dep.instance, result);
 				}
 
-			} catch (IllegalAccessException e) {
+			} catch (GrainReflectionException e) {
 				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);
 			}
-			field.field.setAccessible(false);
 		}
 	}
 
@@ -183,25 +183,23 @@ public class GrainInitializer {
 		Class<?> clazz = dep.clazz;
 		Field[] fields = clazz.getDeclaredFields();
 		for (Field field : fields) {
-			field.setAccessible(true);
 
 			try {
 
 				// If the field is already initialized(some will be) we don't do
 				// anything.
-				if (field.get(dep.instance) != null) continue;
+				if (getFieldValue(field, dep.instance) != null) continue;
 				// We do the initialization only for @Inject marked attributes or
 				// for the attributes that appear as constructor parameters.
 				if (isAnnotationPresent(field, Inject.class) || (isConstructorParam(dep.constructor, field.getType()))) {
 					Dependency dependency = findDependencyByClass(field.getType())
 							.orElseThrow(() -> new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s: %s", dep.clazz, field.getType())));
 					partiallyInitialize(dependency);
-					field.set(dep.instance, dependency.instance);
+					ReflectionUtil.setFieldValue(field, dep.instance, dependency.instance);
 				}
-			} catch (IllegalAccessException e) {
+			} catch (GrainReflectionException e) {
 				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);
 			}
-			field.setAccessible(false);
 		}
 	}
 
@@ -238,20 +236,15 @@ public class GrainInitializer {
 
 			// @Refactor
 			for (Method method : methods) {
-				method.setAccessible(true);
-				try {
-					Object result = method.invoke(dep.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
-					// @Note This can be either method#getReturnType() or result#getClass();
-					Dependency dependency = new Dependency(method.getReturnType());
-					dependency.initialized = true;
-					dependency.visited = true;
-					dependency.instance = result;
-					// @Todo Handle multiple declarations of the same bean.
-					// Consider using @Primary annotation.
-					dependencies.add(dependency);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-					throw new GrainInitializationException(String.format("Could not invoke grain method %s.", method.getName()), e);
-				}
+				Object result = ReflectionUtil.invokeMethod(method, dep.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
+				// @Note This can be either method#getReturnType() or result#getClass();
+				Dependency dependency = new Dependency(method.getReturnType());
+				dependency.initialized = true;
+				dependency.visited = true;
+				dependency.instance = result;
+				// @Todo Handle multiple declarations of the same bean.
+				// Consider using @Primary annotation.
+				dependencies.add(dependency);
 			}
 		}
 	}
@@ -267,7 +260,6 @@ public class GrainInitializer {
 			for (Method method : dependency.instance.getClass().getDeclaredMethods()) {
 				if (method.isAnnotationPresent(AfterInit.class)) {
 					try {
-						method.setAccessible(true);
 						// We call the lifecycle methods with any other Grain instances as parameters
 						method.invoke(dependency.instance, mapParamsToInstances(method.getParameterTypes(), dependencies));
 					} catch (IllegalAccessException |
@@ -337,12 +329,36 @@ public class GrainInitializer {
 
 
 	public static class DependencyField {
-		private Field field;
+		private final Field field;
 		private boolean initialized;
 
 		public DependencyField(Field field) {
 			this.field = field;
 			this.initialized = false;
+		}
+
+		public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+			return field.getAnnotation(annotationClass);
+		}
+
+		public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass) {
+			return field.isAnnotationPresent(annotationClass);
+		}
+
+		public Class<?> getType() {
+			return field.getType();
+		}
+
+		public Field get() {
+			return field;
+		}
+
+		public boolean isInitialized() {
+			return initialized;
+		}
+
+		public void setInitialized(boolean initialized) {
+			this.initialized = initialized;
 		}
 	}
 }
