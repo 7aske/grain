@@ -1,6 +1,7 @@
 package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.ApplicationContextHolder;
+import com._7aske.grain.constants.ValueConstants;
 import com._7aske.grain.controller.annotation.PathVariable;
 import com._7aske.grain.controller.annotation.RequestParam;
 import com._7aske.grain.controller.converter.Converter;
@@ -22,6 +23,7 @@ import java.lang.reflect.Parameter;
 import java.util.Map;
 
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
+import static com._7aske.grain.util.ReflectionUtil.*;
 
 public class ControllerHandler implements RequestHandler {
 	public static final String REDIRECT_PREFIX = "redirect:";
@@ -69,27 +71,28 @@ public class ControllerHandler implements RequestHandler {
 			} else if (param.isAnnotationPresent(RequestParam.class)) {
 				RequestParam requestParam = param.getAnnotation(RequestParam.class);
 				RequestParams requestParams = new RequestParams(request.getParameters());
-				String paramName = requestParam.value();
+
+				String[] paramValues = requestParams.getArrayParameter(requestParam.value());
+				if ((paramValues.length == 0 || paramValues[0].isBlank())
+						&& !requestParam.defaultValue().equals(ValueConstants.DEFAULT_NONE)) {
+					paramValues = new String[]{requestParam.defaultValue()};
+				}
+
 				if (param.getType().equals(String.class)) {
-					String stringParam = String.join(",", requestParams.getArrayParameter(paramName));
+					String stringParam = String.join(",", paramValues);
 					params[i] = stringParam;
 				} else if (param.getType().isArray()) {
-					params[i] = requestParams.getArrayParameter(paramName);
+					params[i] = paramValues;
 				} else if (converterRegistry.hasConverter(param.getType())) {
 					// RequestParams stores values as an array and returns only the
 					// first element when getStringParameter is called, so we need to
 					// join them back to a string in order to properly pass it to
 					// converter for conversion.
 					Converter<?> converter = converterRegistry.getConverter(param.getType());
-					String[] requestParamArray = requestParams.getArrayParameter(paramName);
-					if (requestParamArray != null) {
-						String stringParam = String.join(",", requestParamArray);
-						params[i] = converter.convert(stringParam);
-					} else {
-						params[i] = converter.convert("");
-					}
+					String stringParam = String.join(",", paramValues);
+					params[i] = converter.convert(stringParam);
 				} else {
-					params[i] = requestParams.getStringParameter(paramName);
+					params[i] = paramValues[0];
 				}
 			} else if (param.isAnnotationPresent(PathVariable.class)) {
 				PathVariable pathVariable = param.getAnnotation(PathVariable.class);

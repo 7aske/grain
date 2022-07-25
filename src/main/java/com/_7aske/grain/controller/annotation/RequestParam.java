@@ -1,5 +1,7 @@
 package com._7aske.grain.controller.annotation;
 
+import com._7aske.grain.constants.ValueConstants;
+
 import java.lang.annotation.*;
 
 @Documented
@@ -7,4 +9,6 @@ import java.lang.annotation.*;
 @Target(ElementType.PARAMETER)
 public @interface RequestParam {
 	String value();
+
+	String defaultValue() default ValueConstants.DEFAULT_NONE;
 }
