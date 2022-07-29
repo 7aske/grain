@@ -1,4 +1,4 @@
-name: Java CI
+name: Test
 
 on: [push]
 
@@ -11,6 +11,9 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '11'
+          cache: maven
           distribution: 'adopt'
+      - name: Verify Maven version
+        run: mvn --version
       - name: Test with Maven
-        run: mvn test
+        run: mvn --batch-mode test --file pom.xml
