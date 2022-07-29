@@ -26,8 +26,8 @@ public class ConnectionPool {
 	private Integer poolConnectionWait;
 
 	public ConnectionPool(Configuration configuration) {
-		Integer numConnections = configuration.getProperty(ConfigurationKey.DATABASE_POOL_SIZE, 10);
-		poolConnectionWait = configuration.getProperty(ConfigurationKey.DATABASE_POOL_CONNECTION_WAIT, 10);
+		Integer numConnections = configuration.getInt(ConfigurationKey.DATABASE_POOL_SIZE, 10);
+		poolConnectionWait = configuration.getInt(ConfigurationKey.DATABASE_POOL_CONNECTION_WAIT, 10);
 		connections = new ArrayList<>(numConnections);
 		for (int i = 0; i < numConnections; i++) {
 			connections.add(new ConnectionWrapper());

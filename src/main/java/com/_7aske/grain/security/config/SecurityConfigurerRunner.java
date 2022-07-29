@@ -23,7 +23,7 @@ final class SecurityConfigurerRunner {
 
 	@AfterInit
 	private void setup() {
-		if (Objects.equals(configuration.getProperty(ConfigurationKey.SECURITY_ENABLED), true)) {
+		if (Objects.equals(configuration.get(ConfigurationKey.SECURITY_ENABLED), true)) {
 			securityConfigurer.configure(builder);
 		} else {
 

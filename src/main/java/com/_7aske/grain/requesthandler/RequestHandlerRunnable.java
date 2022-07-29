@@ -91,7 +91,7 @@ public class RequestHandlerRunnable implements Runnable {
 			} finally {
 				long end = System.currentTimeMillis();
 				writer.write(response.getHttpString());
-				if (Objects.equals(configuration.getProperty(REQUEST_HANDLER_ACCESS_LOG), true)) {
+				if (Objects.equals(configuration.get(REQUEST_HANDLER_ACCESS_LOG), true)) {
 					logger.info("{} {} {} - {} - {}ms", request.getMethod(), request.getPath(), request.getVersion(), response.getStatus().getValue(), end - start);
 				}
 			}

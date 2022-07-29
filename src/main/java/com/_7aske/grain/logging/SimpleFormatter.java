@@ -34,7 +34,7 @@ public class SimpleFormatter extends Formatter {
 	}
 	private String getThrowable(LogRecord logRecord) {
 		if (logRecord.getThrown() == null) {
-			return null;
+			return "";
 		}
 		StringWriter stringWriter = new StringWriter();
 		try (PrintWriter printWriter = new PrintWriter(stringWriter)) {

@@ -117,8 +117,8 @@ class GrainRegistryTest {
 	@Test
 	void testConditionalLoad() {
 		Configuration configuration = Configuration.createDefault();
-		configuration.setPropertyUnsafe("test.prop", true);
-		configuration.setPropertyUnsafe("profile.active", "test");
+		configuration.set("test.prop", true);
+		configuration.set("profile.active", "test");
 		GrainRegistry registry = new GrainRegistry(configuration);
 		registry.registerGrain(configuration);
 		registry.registerGrains(GrainApp.class.getPackageName());
@@ -129,8 +129,8 @@ class GrainRegistryTest {
 	@Test
 	void testValue() {
 		Configuration configuration = Configuration.createDefault();
-		configuration.setPropertyUnsafe("options.number", 42);
-		configuration.setPropertyUnsafe("options.string", "test");
+		configuration.set("options.number", 42);
+		configuration.set("options.string", "test");
 		GrainRegistry registry = new GrainRegistry(configuration);
 		registry.registerGrain(configuration);
 		registry.registerGrains(GrainApp.class.getPackageName());
@@ -142,7 +142,7 @@ class GrainRegistryTest {
 	@Test
 	void testValueReferenceGrain() {
 		Configuration configuration = Configuration.createDefault();
-		configuration.setPropertyUnsafe("options.number", 42);
+		configuration.set("options.number", 42);
 		GrainRegistry registry = new GrainRegistry(configuration);
 		registry.registerGrain(configuration);
 		registry.registerGrains(GrainApp.class.getPackageName());

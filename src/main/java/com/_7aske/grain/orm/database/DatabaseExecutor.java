@@ -26,7 +26,7 @@ public class DatabaseExecutor {
 
 	// Used for update and insert operations
 	public long executeUpdate(String query) {
-		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
+		if (Objects.equals(configuration.get(DATABASE_EXECUTOR_PRINT_SQL), true)) {
 			logger.trace(query);
 		}
 		try (ConnectionWrapper connection = connectionPool.getConnection(); Statement statement = connection.get().createStatement()) {
@@ -46,7 +46,7 @@ public class DatabaseExecutor {
 	}
 
 	public List<Map<String, String>> executeQuery(String query) {
-		if (Objects.equals(configuration.getProperty(DATABASE_EXECUTOR_PRINT_SQL), true)) {
+		if (Objects.equals(configuration.get(DATABASE_EXECUTOR_PRINT_SQL), true)) {
 			logger.trace(query);
 		}
 		List<Map<String, String>> out = new ArrayList<>();

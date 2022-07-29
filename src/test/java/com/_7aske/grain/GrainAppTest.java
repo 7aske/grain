@@ -1,7 +1,7 @@
 package com._7aske.grain;
 
 import com._7aske.grain.component.Controller;
-import com._7aske.grain.config.ConfigurationBuilder;
+import com._7aske.grain.config.Configuration;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -27,8 +27,8 @@ class GrainAppTest {
 
 	static class TestApp extends GrainApp {
 		@Override
-		protected void configure(ConfigurationBuilder builder) {
-			builder.port(7070);
+		protected void configure(Configuration builder) {
+			builder.set("server.port", 7070);
 		}
 	}
 
@@ -59,10 +59,10 @@ class GrainAppTest {
 
 	static class TestConfigurationApp extends GrainApp {
 		@Override
-		protected void configure(ConfigurationBuilder builder) {
+		protected void configure(Configuration builder) {
 			builder
-					.port(testPort)
-					.host("127.0.0.1");
+			.set("server.port", 7070)
+			.set("server.host", "127.0.0.1");
 		}
 	}
 
@@ -90,8 +90,8 @@ class GrainAppTest {
 		}
 
 		@Override
-		protected void configure(ConfigurationBuilder builder) {
-			builder.port(33631);
+		protected void configure(Configuration builder) {
+			builder.set("server.port", 33631);
 		}
 
 	}

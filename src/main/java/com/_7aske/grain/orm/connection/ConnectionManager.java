@@ -24,10 +24,10 @@ public final class ConnectionManager {
 	// Generates url from injected database properties
 	public String getConnectionUrl() {
 		// @formatter:off
-		String host = (String) configuration.getProperty(DATABASE_HOST);
-		int port    = (int)    configuration.getProperty(DATABASE_PORT);
-		String name = (String) configuration.getProperty(DATABASE_NAME);
-		String url  = (String) configuration.getProperty(DATABASE_URL);
+		String host = configuration.get(DATABASE_HOST);
+		int port    = configuration.getInt(DATABASE_PORT);
+		String name = configuration.get(DATABASE_NAME);
+		String url  = configuration.get(DATABASE_URL);
 		// @formatter:on
 		if (url != null)
 			return url;
@@ -43,8 +43,8 @@ public final class ConnectionManager {
 			driverInitialized = false;
 		}
 
-		String user = (String) configuration.getProperty(DATABASE_USER);
-		String pass = (String) configuration.getProperty(DATABASE_PASS);
+		String user = configuration.get(DATABASE_USER);
+		String pass = configuration.get(DATABASE_PASS);
 
 		try {
 			return DriverManager.getConnection(getConnectionUrl(), user, pass);
@@ -55,7 +55,7 @@ public final class ConnectionManager {
 
 	private void initializeDriver() {
 		try {
-			String className = (String) configuration.getProperty(DATABASE_DRIVER_CLASS);
+			String className = configuration.get(DATABASE_DRIVER_CLASS);
 			if (className != null) {
 				Class.forName(className);
 			}

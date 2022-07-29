@@ -21,10 +21,10 @@ class ConnectionManagerTest {
 	void testGetConnectionUrl() {
 		ApplicationContextHolder.setContext(null);
 		Configuration configuration = Configuration.createDefault();
-		configuration.setProperty(DATABASE_HOST, "127.0.0.1");
-		configuration.setProperty(DATABASE_PORT, 3306);
-		configuration.setProperty(DATABASE_NAME, "test");
-		configuration.setPropertyUnsafe("grain.persistence.provider", "native");
+		configuration.set(DATABASE_HOST, "127.0.0.1");
+		configuration.set(DATABASE_PORT, 3306);
+		configuration.set(DATABASE_NAME, "test");
+		configuration.set("grain.persistence.provider", "native");
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName(),
 				configuration,
 				StaticLocationsRegistry.createDefault());

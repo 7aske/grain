@@ -1,7 +1,7 @@
 package com._7aske.grain;
 
 import com._7aske.grain.config.Configuration;
-import com._7aske.grain.config.ConfigurationBuilder;
+import com._7aske.grain.config.ConfigurationKey;
 import com._7aske.grain.config.GrainApplication;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
@@ -33,8 +33,6 @@ public class GrainApp {
 	private ApplicationContext context;
 	private final Logger logger = LoggerFactory.getLogger(GrainApp.class);
 
-	private final ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-
 	protected GrainApp() {
 	}
 
@@ -57,11 +55,11 @@ public class GrainApp {
 
 	// Main run loop
 	private void doRun() {
-		logger.info("Started Grain application on {}:{}", configuration.getHost(), configuration.getPort());
+		logger.info("Started Grain application on {}:{}", configuration.get(ConfigurationKey.SERVER_HOST), configuration.get(ConfigurationKey.SERVER_PORT));
 
-		ExecutorService executor = Executors.newFixedThreadPool(configuration.getThreads());
+		ExecutorService executor = Executors.newFixedThreadPool(configuration.getInt(ConfigurationKey.SERVER_THREADS));
 
-		try (ServerSocket serverSocket = new ServerSocket(configuration.getPort(), -1, InetAddress.getByName(configuration.getHost()))) {
+		try (ServerSocket serverSocket = new ServerSocket(configuration.getInt(ConfigurationKey.SERVER_PORT), -1, InetAddress.getByName(configuration.get(ConfigurationKey.SERVER_HOST)))) {
 
 			while (running) {
 				Socket socket = serverSocket.accept();
@@ -69,7 +67,7 @@ public class GrainApp {
 			}
 
 		} catch (UnknownHostException e) {
-			throw new AppInitializationException("Unable to resolve host " + configuration.getHost(), e);
+			throw new AppInitializationException("Unable to resolve host " + configuration.get(ConfigurationKey.SERVER_HOST), e);
 		} catch (IOException e) {
 			throw new AppInitializationException("Unable to create server socket", e);
 		}
@@ -78,15 +76,15 @@ public class GrainApp {
 	// Calling of all configuration methods should happen here as this method is being called
 	// before initializing application context
 	private void doConfigure() {
-		this.configure(configurationBuilder);
-		this.configuration = configurationBuilder.build();
+		configuration = Configuration.createDefault();
+		this.configure(configuration);
 		this.staticLocationsRegistry = StaticLocationsRegistry.createDefault();
 		this.staticLocationRegistry(staticLocationsRegistry);
 	}
 
 	// Method used to allow derived class to modify configuration object
 	// before it gets passed to application context
-	protected void configure(ConfigurationBuilder builder) {
+	protected void configure(Configuration configuration) {
 	}
 
 	// Method used to allow derived class to modify static locations

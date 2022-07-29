@@ -21,11 +21,11 @@ public class CookieSessionInitializer implements SessionInitializer {
 	private SessionStore sessionStore;
 
 	public Session initialize(HttpRequest request, HttpResponse response) {
-		if (!Objects.equals(configuration.getProperty(ConfigurationKey.SESSION_ENABLED), true)) {
+		if (!Objects.equals(configuration.get(ConfigurationKey.SESSION_ENABLED), true)) {
 			return null;
 		}
 
-		long maxAge = System.currentTimeMillis() + configuration.getProperty(ConfigurationKey.SESSION_MAX_AGE, SESSION_DEFAULT_MAX_AGE);
+		long maxAge = System.currentTimeMillis() + configuration.getLong(ConfigurationKey.SESSION_MAX_AGE, SESSION_DEFAULT_MAX_AGE);
 
 		Cookie gsid = request.getCookie(SESSION_COOKIE_NAME);
 		if (gsid == null) {
