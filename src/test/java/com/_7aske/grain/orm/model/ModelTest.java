@@ -3,8 +3,8 @@ package com._7aske.grain.orm.model;
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.config.Configuration;
-import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.core.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.Column;
 import com._7aske.grain.orm.annotation.Id;
 import com._7aske.grain.orm.annotation.Table;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 
-import static com._7aske.grain.config.Configuration.Key.*;
+import static com._7aske.grain.config.ConfigurationKey.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ModelTest {

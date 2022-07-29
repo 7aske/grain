@@ -13,7 +13,7 @@ import com._7aske.grain.orm.exception.GrainDbStatementException;
 import java.sql.*;
 import java.util.*;
 
-import static com._7aske.grain.config.Configuration.Key.DATABASE_EXECUTOR_PRINT_SQL;
+import static com._7aske.grain.config.ConfigurationKey.DATABASE_EXECUTOR_PRINT_SQL;
 
 @Grain
 @Condition("grain.persistence.provider == 'native'")

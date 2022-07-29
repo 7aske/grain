@@ -1,7 +1,7 @@
 package com._7aske.grain.orm.model;
 
 import com._7aske.grain.ApplicationContextHolder;
-import com._7aske.grain.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbNoSuchRowException;
 import com._7aske.grain.orm.exception.GrainDbNonUniqueResultException;

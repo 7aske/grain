@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 
 import static com._7aske.grain.logging.Color.*;
 import static com._7aske.grain.logging.Util.shortenClassName;
+import static com._7aske.grain.logging.SimpleFormatter.DATE_TIME_FORMATTER;
+import static com._7aske.grain.logging.SimpleFormatter.LOG_FORMAT;
 
 class ConsoleLogger extends Logger {
 	//2021-11-26 00:36:32.144  INFO 4063739 --- [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
@@ -15,7 +17,6 @@ class ConsoleLogger extends Logger {
 
 	private void doLog(Level level, String s, Object... params) {
 		// @Incomplete allow to change format
-		String FORMAT = "{0} {1:5} - [{2:15}] {3:-41}: {4}";
 		String date = DATE_TIME_FORMATTER.format(LocalDateTime.now());
 		String message = StringFormat.format(s, params);
 		String threadName = Thread.currentThread().getName();
@@ -40,7 +41,7 @@ class ConsoleLogger extends Logger {
 			default:
 				levelStr = level.getName();
 		}
-		System.out.println(StringFormat.format(FORMAT, date, levelStr, threadName, cyan(name), message));
+		System.out.print(StringFormat.format(LOG_FORMAT, date, levelStr, threadName, cyan(name), message));
 	}
 
 	@Override

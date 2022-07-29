@@ -4,6 +4,7 @@ import com._7aske.grain.component.AfterInit;
 import com._7aske.grain.component.Grain;
 import com._7aske.grain.component.Inject;
 import com._7aske.grain.config.Configuration;
+import com._7aske.grain.config.ConfigurationKey;
 import com._7aske.grain.security.config.builder.SecurityConfigurationBuilder;
 
 import java.util.Objects;
@@ -22,7 +23,7 @@ final class SecurityConfigurerRunner {
 
 	@AfterInit
 	private void setup() {
-		if (Objects.equals(configuration.getProperty(Configuration.Key.SECURITY_ENABLED), true)) {
+		if (Objects.equals(configuration.getProperty(ConfigurationKey.SECURITY_ENABLED), true)) {
 			securityConfigurer.configure(builder);
 		} else {
 

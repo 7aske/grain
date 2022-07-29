@@ -3,13 +3,13 @@ package com._7aske.grain.orm.connection;
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.config.Configuration;
-import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.core.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static com._7aske.grain.config.Configuration.Key.*;
+import static com._7aske.grain.config.ConfigurationKey.*;
 
 class ConnectionManagerTest {
 	public static final class TestApp extends GrainApp {

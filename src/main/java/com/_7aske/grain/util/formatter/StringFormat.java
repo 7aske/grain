@@ -20,7 +20,11 @@ public class StringFormat {
 					Object toPrint;
 					if (Character.isDigit(iter.peek())) {
 						int index = Integer.parseInt(iter.eatWhile(Character::isDigit));
-						toPrint = params[index];
+						if (index >= params.length) {
+							toPrint = "";
+						} else {
+							toPrint = params[index];
+						}
 					} else {
 						toPrint = params[currParam++];
 					}

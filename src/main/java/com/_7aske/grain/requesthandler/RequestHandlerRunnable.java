@@ -1,7 +1,7 @@
 package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.config.Configuration;
-import com._7aske.grain.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.http.json.JsonObject;
 import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.http.HttpException;
@@ -26,7 +26,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
-import static com._7aske.grain.config.Configuration.Key.REQUEST_HANDLER_ACCESS_LOG;
+import static com._7aske.grain.config.ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG;
 import static com._7aske.grain.http.HttpHeaders.*;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 

@@ -4,9 +4,12 @@ import com._7aske.grain.http.session.SessionConstants;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
+import java.util.logging.LogManager;
 
-import static com._7aske.grain.config.Configuration.Key.*;
+import static com._7aske.grain.config.ConfigurationKey.*;
 import static com._7aske.grain.constants.ServerConstants.PORT_MAX_VALUE;
 import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 
@@ -15,7 +18,7 @@ import static com._7aske.grain.constants.ServerConstants.PORT_MIN_VALUE;
 public final class Configuration {
 	private final Properties properties;
 
-	private Configuration(){
+	private Configuration() {
 		properties = new Properties();
 		setProperty(SERVER_HOST, "0.0.0.0");
 		setProperty(SERVER_PORT, 8080);
@@ -30,19 +33,34 @@ public final class Configuration {
 
 		// @Temporary
 		ClassLoader classLoader = Configuration.class.getClassLoader();
-		try (InputStream inputStream = classLoader.getResourceAsStream("application.properties")) {
-			properties.load(inputStream);
-		} catch (IOException e) {
-			e.printStackTrace();
-			// ignored
-		}
+		try {
+			Enumeration<URL> urls = classLoader.getResources("application.properties");
+			urls.asIterator().forEachRemaining(url -> {
+				try (InputStream inputStream = url.openStream()) {
+					properties.load(inputStream);
+				} catch (IOException ignored) {/*ignored*/}
+			});
+		} catch (IOException ignored) {/*ignored*/}
+
+		try {
+			Enumeration<URL> urls = classLoader.getResources("logging.properties");
+			urls.asIterator().forEachRemaining(url -> {
+				try (InputStream inputStream = url.openStream()) {
+					LogManager.getLogManager().readConfiguration(inputStream);
+				} catch (IOException ignored) {/*ignored*/}
+			});
+		} catch (IOException ignored) {/*ignored*/}
+
+		properties.forEach((key, value) -> {
+			System.setProperty(key.toString(), value.toString());
+		});
 	}
 
 	public static Configuration createDefault() {
 		return new Configuration();
 	}
 
-	public void setProperty(Configuration.Key prop, Object value) {
+	public void setProperty(ConfigurationKey prop, Object value) {
 		properties.put(prop.getKey(), value);
 	}
 
@@ -51,11 +69,11 @@ public final class Configuration {
 		properties.put(prop, value);
 	}
 
-	public Object getProperty(Configuration.Key prop) {
+	public Object getProperty(ConfigurationKey prop) {
 		return properties.get(prop.getKey());
 	}
 
-	public <T> T getProperty(Configuration.Key prop, T _default) {
+	public <T> T getProperty(ConfigurationKey prop, T _default) {
 		return (T) properties.getOrDefault(prop, _default);
 	}
 
@@ -96,36 +114,4 @@ public final class Configuration {
 		this.setProperty(SERVER_HOST, host);
 	}
 
-	public enum Key {
-		// @formatter:off
-		SECURITY_ENABLED             ("security.enabled"),
-		SESSION_ENABLED              ("session.enabled"),
-		SESSION_MAX_AGE              ("session.max-age"),
-		SERVER_PORT                  ("server.port"),
-		SERVER_HOST                  ("server.host"),
-		SERVER_THREADS               ("server.threads"),
-		DATABASE_HOST                ("database.host"),
-		DATABASE_NAME                ("database.name"),
-		DATABASE_PORT                ("database.port"),
-		DATABASE_USER                ("database.user"),
-		DATABASE_PASS                ("database.pass"),
-		DATABASE_URL                 ("database.url"),
-		DATABASE_DRIVER_CLASS        ("database.driver_class"),
-		DATABASE_EXECUTOR_PRINT_SQL  ("database.executor.print-sql"),
-		REQUEST_HANDLER_ACCESS_LOG   ("request-handler.access-log"),
-		LOG_LEVEL                    ("logging.level"),
-		DATABASE_POOL_SIZE           ("database.pool.size"),
-		DATABASE_POOL_CONNECTION_WAIT("database.pool.connection-wait");
-		// @formatter:on
-
-		private final String key;
-
-		Key(String key) {
-			this.key = key;
-		}
-
-		public String getKey() {
-			return key;
-		}
-	}
 }

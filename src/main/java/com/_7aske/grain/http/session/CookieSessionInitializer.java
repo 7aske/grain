@@ -9,7 +9,7 @@ import com._7aske.grain.http.HttpResponse;
 import java.util.Objects;
 import java.util.UUID;
 
-import static com._7aske.grain.config.Configuration.Key;
+import com._7aske.grain.config.ConfigurationKey;
 import static com._7aske.grain.http.session.SessionConstants.SESSION_COOKIE_NAME;
 import static com._7aske.grain.http.session.SessionConstants.SESSION_DEFAULT_MAX_AGE;
 
@@ -21,11 +21,11 @@ public class CookieSessionInitializer implements SessionInitializer {
 	private SessionStore sessionStore;
 
 	public Session initialize(HttpRequest request, HttpResponse response) {
-		if (!Objects.equals(configuration.getProperty(Key.SESSION_ENABLED), true)) {
+		if (!Objects.equals(configuration.getProperty(ConfigurationKey.SESSION_ENABLED), true)) {
 			return null;
 		}
 
-		long maxAge = System.currentTimeMillis() + configuration.getProperty(Key.SESSION_MAX_AGE, SESSION_DEFAULT_MAX_AGE);
+		long maxAge = System.currentTimeMillis() + configuration.getProperty(ConfigurationKey.SESSION_MAX_AGE, SESSION_DEFAULT_MAX_AGE);
 
 		Cookie gsid = request.getCookie(SESSION_COOKIE_NAME);
 		if (gsid == null) {

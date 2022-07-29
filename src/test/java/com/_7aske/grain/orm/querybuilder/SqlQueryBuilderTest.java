@@ -2,7 +2,7 @@ package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
-import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.page.DefaultPageable;

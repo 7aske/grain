@@ -1,8 +1,8 @@
 package com._7aske.grain.security.config.builder;
 
 import com._7aske.grain.ApplicationContextHolder;
-import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.core.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.crypto.PasswordEncoder;

@@ -3,8 +3,8 @@ package com._7aske.grain;
 import com._7aske.grain.config.Configuration;
 import com._7aske.grain.config.ConfigurationBuilder;
 import com._7aske.grain.config.GrainApplication;
-import com._7aske.grain.context.ApplicationContext;
-import com._7aske.grain.context.ApplicationContextImpl;
+import com._7aske.grain.core.context.ApplicationContext;
+import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
  * passed to GrainApplicationRunner
  */
 @GrainApplication
-public abstract class GrainApp {
+public class GrainApp {
 	private Configuration configuration;
 	private StaticLocationsRegistry staticLocationsRegistry;
 	private boolean running = true;

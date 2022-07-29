@@ -8,7 +8,7 @@ public class ConfigurationBuilder {
 	}
 
 	// Sets the property directly to Configuration.properties
-	public void setProperty(Configuration.Key prop, Object value) {
+	public void setProperty(ConfigurationKey prop, Object value) {
 		this.instance.setProperty(prop, value);
 	}
 

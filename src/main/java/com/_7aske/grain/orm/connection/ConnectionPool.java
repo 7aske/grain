@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static com._7aske.grain.config.Configuration.Key;
+import com._7aske.grain.config.ConfigurationKey;
 
 @Grain
 @Condition("grain.persistence.provider == 'native'")
@@ -26,8 +26,8 @@ public class ConnectionPool {
 	private Integer poolConnectionWait;
 
 	public ConnectionPool(Configuration configuration) {
-		Integer numConnections = configuration.getProperty(Key.DATABASE_POOL_SIZE, 10);
-		poolConnectionWait = configuration.getProperty(Key.DATABASE_POOL_CONNECTION_WAIT, 10);
+		Integer numConnections = configuration.getProperty(ConfigurationKey.DATABASE_POOL_SIZE, 10);
+		poolConnectionWait = configuration.getProperty(ConfigurationKey.DATABASE_POOL_CONNECTION_WAIT, 10);
 		connections = new ArrayList<>(numConnections);
 		for (int i = 0; i < numConnections; i++) {
 			connections.add(new ConnectionWrapper());

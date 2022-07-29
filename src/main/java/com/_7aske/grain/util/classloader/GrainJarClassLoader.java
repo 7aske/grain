@@ -43,10 +43,11 @@ public class GrainJarClassLoader implements GrainClassLoader {
 			if (url.getProtocol().equals("jar")) {
 				String jarFilePath = url.toExternalForm().split("!")[0];
 				jars.add(new URL(jarFilePath + "!/"));
-				paths.addAll(getClassNamesFromJarFile(new File(jarFilePath.replace("jar:file:", ""))));
+				paths.addAll(getClassNamesFromJarFile(new File(jarFilePath.replace("jar:file:", "")), path));
 			} else {
-				BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-				paths.addAll(reader.lines().map(line -> path + "." + line).collect(Collectors.toList()));
+				try(BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+					paths.addAll(reader.lines().map(line -> path + "." + line).collect(Collectors.toList()));
+				}
 			}
 
 		}
@@ -85,14 +86,14 @@ public class GrainJarClassLoader implements GrainClassLoader {
 		try {
 			return doLoadClasses(basePackage)
 					.stream()
+					.filter(url -> !url.startsWith("META-INF"))
 					.map(c -> {
 						try {
 							String className = c.endsWith(".class") ? c.substring(0, c.length() - ".class".length()) : c;
 							if (className.startsWith("."))
 								className = className.substring(1);
-							return Class.forName(className, true, urlClassLoader);
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
+							return Class.forName(className, false, urlClassLoader);
+						} catch (ClassNotFoundException | NoClassDefFoundError e) {
 							return null;
 						}
 					})
@@ -113,7 +114,7 @@ public class GrainJarClassLoader implements GrainClassLoader {
 		return loadClasses(c -> true);
 	}
 
-	public static Set<String> getClassNamesFromJarFile(File givenFile) throws IOException {
+	public static Set<String> getClassNamesFromJarFile(File givenFile, String basePackage) throws IOException {
 		Set<String> classNames = new HashSet<>();
 		try (JarFile jarFile = new JarFile(givenFile)) {
 			Enumeration<JarEntry> e = jarFile.entries();
@@ -122,7 +123,15 @@ public class GrainJarClassLoader implements GrainClassLoader {
 				if (jarEntry.getName().endsWith(".class")) {
 					String className = jarEntry.getName()
 							.replace("/", ".");
-					classNames.add(className);
+					// @CopyPasta ReflectionUtil
+					// @Note this check allows only classes that are starting with
+					// the base package of the framework and base package of the
+					// user's application to be loaded from jars. This will prevent
+					// scanning the whole classpath and speed application startup.
+					if (className.startsWith(basePackage) &&
+							className.charAt(basePackage.length()) == '.') {
+						classNames.add(className);
+					}
 				}
 			}
 			return classNames;
