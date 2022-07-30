@@ -10,6 +10,8 @@ import com._7aske.grain.compiler.lexer.LexerException;
 import com._7aske.grain.compiler.parser.Parser;
 import com._7aske.grain.compiler.util.AstUtil;
 import com._7aske.grain.http.view.FileView;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.*;
@@ -29,6 +31,7 @@ public class Interpreter {
 	private final List<AstNode> nodes;
 	private final InterpreterOutput output;
 	private final Deque<Map<String, Object>> scopeStack;
+	private static final Logger log = LoggerFactory.getLogger(Interpreter.class);
 
 	public Interpreter() {
 		this.nodes = new ArrayList<>();
@@ -96,7 +99,7 @@ public class Interpreter {
 			String[] parts = key.split("\\.");
 			Map<String, Object> lastMap = null;
 			Map<String, Object> firstMap = null;
-			if (parts.length > 1)
+			if (parts.length > 1) {
 				for (int i = 0; i < parts.length - 1; i++) {
 					String part = parts[i];
 
@@ -106,23 +109,28 @@ public class Interpreter {
 					// whether the last reference contains the current key.
 					// If it does then we update but if not we crate a new
 					// HashMap with empty values.
-					Map<String, Object> ref;
+					Map<String, Object> ref = null;
 					if (lastMap == null) {
 						// first iteration
 						Object existing = getSymbolValue(part);
 
-						if (existing != null && !Map.class.isAssignableFrom(existing.getClass()))
-							throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
-
-						firstMap = existing == null ? new HashMap<>() : (Map<String, Object>) existing;
-						ref = firstMap;
+						if (existing != null && !Map.class.isAssignableFrom(existing.getClass())) {
+							log.error("Symbol '{}' already defined", parts[parts.length - 1]);
+							// throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
+						} else {
+							firstMap = existing == null ? new HashMap<>() : (Map<String, Object>) existing;
+							ref = firstMap;
+						}
 					} else {
 						if (lastMap.containsKey(part)) {
-							Object existing = getSymbolValue(part);
+							Object existing = lastMap.get(part);
 
-							if (existing != null && !Map.class.isAssignableFrom(existing.getClass()))
-								throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
-							ref = (Map<String, Object>) lastMap.get(part);
+							if (existing != null && !Map.class.isAssignableFrom(existing.getClass())) {
+								log.error("Symbol '{}' already defined", parts[parts.length - 1]);
+							} else {
+								// throw new InterpreterException(StringFormat.format("Symbol '{}' already defined and is of type '{}'", part, existing.getClass()));
+								ref = existing == null ? new HashMap<>() : (Map<String, Object>) existing;
+							}
 						} else {
 							ref = new HashMap<>();
 							lastMap.put(part, ref);
@@ -130,8 +138,21 @@ public class Interpreter {
 					}
 					lastMap = ref;
 				}
+			}
 			if (lastMap == null) {
 				lastMap = new HashMap<>();
+			}
+
+			// @Refactor Feels like there are many checks like these.
+			// @Warning We're for now ignoring errors like these because we want
+			// to be able to load environment variables. This should throw in cases
+			// where we have a key like: "java.home:/var/lib/jvm" and "java.home.path:/var/lib/jvm".
+			// We shouldn't be able to create a property "path" on a object that
+			// already has a string value. Since this situations are common when
+			// it comes to env variables we just simply ignore them.
+			if (lastMap.containsKey(parts[parts.length - 1])) {
+				log.error("Symbol '{}' already defined", parts[parts.length - 1]);
+				// throw new InterpreterException(StringFormat.format("Symbol '{}' already defined", parts[parts.length - 1]));
 			}
 			// In the end we re-wire the maps to their corresponding symbols
 			lastMap.put(parts[parts.length - 1], v);

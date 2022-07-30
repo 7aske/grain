@@ -519,4 +519,40 @@ class InterpreterTest {
 		interpreter.run();
 		assertEquals("test2test1", interpreter.getContent());
 	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	void putProperties() {
+		Interpreter interpreter = new Interpreter("", Map.of());
+		Map<String, Object> props = Map.of(
+				"java.x86.11.home.path", "/lib/jvm/java-11-openjdk-amd64/bin",
+				"java.x86.11.home.version", "11.0.2",
+				"java.x86.8.home.path", "/lib/jvm/java-8-openjdk-amd64/bin",
+				"java.x86.8.home.version", "1.8.0_212"
+		);
+		Properties properties = new Properties();
+		properties.putAll(props);
+		interpreter.putProperties(properties);
+
+		assertEquals("/lib/jvm/java-11-openjdk-amd64/bin", ((Map<String, String>) ((Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) interpreter.getSymbols().get("java"))
+				.get("x86"))
+				.get("11"))
+				.get("home"))
+				.get("path"));
+		assertEquals("11.0.2", ((Map<String, String>) ((Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) interpreter.getSymbols().get("java"))
+				.get("x86"))
+				.get("11"))
+				.get("home"))
+				.get("version"));
+		assertEquals("/lib/jvm/java-8-openjdk-amd64/bin", ((Map<String, String>) ((Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) interpreter.getSymbols().get("java"))
+				.get("x86"))
+				.get("8"))
+				.get("home"))
+				.get("path"));
+		assertEquals("1.8.0_212", ((Map<String, String>) ((Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) interpreter.getSymbols().get("java"))
+				.get("x86"))
+				.get("8"))
+				.get("home"))
+				.get("version"));
+	}
 }
