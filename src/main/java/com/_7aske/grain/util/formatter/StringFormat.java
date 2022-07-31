@@ -7,6 +7,7 @@ public class StringFormat {
 	private StringFormat(){}
 
 	public static String format(String format, Object... params) {
+		if (params == null || params.length == 0) return format;
 		StringBuilder builder = new StringBuilder();
 		FormatIterator iter = new FormatIterator(format);
 		int currParam = 0;

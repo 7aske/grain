@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
  * application itself by passing the required package argument.
  */
 public final class GrainAppRunner {
-	private static final Logger logger = LoggerFactory.getLogger(GrainApp.class);
+	private static final Logger logger = LoggerFactory.getLogger(GrainAppRunner.class);
 
 	private GrainAppRunner(){}
 

@@ -1,9 +1,22 @@
 package com._7aske.grain.logging;
 
+/**
+ * Utility class used in logging classes.
+ */
 public class Util {
 	private Util() {
 	}
 
+	/**
+	 * Shortens the FQCN to fit the given length.
+	 *
+	 * E.g. 'c._.g.compiler.interpreter.Interpreter' will be shortened to
+	 * 'c._.g.compiler.interpreter.Interpreter'.
+	 *
+	 * @param className the FQCN to shorten
+	 * @param length the length to fit the FQCN to
+	 * @return the shortened FQCN
+	 */
 	public static String shortenClassName(String className, int length) {
 		if (className.length() <= length) {
 			return className;

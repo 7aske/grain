@@ -1,6 +1,12 @@
 package com._7aske.grain.logging;
 
+/**
+ * Utility class for coloring text to be output on the terminal.
+ */
 public final class Color {
+	private Color() {
+	}
+
 	public static final String BLACK = "\u001B[30m";
 	public static final String BLACK_BACKGROUND = "\u001B[40m";
 	public static final String RED = "\u001B[31m";
