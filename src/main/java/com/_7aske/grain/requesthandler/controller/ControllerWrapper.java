@@ -1,6 +1,6 @@
 package com._7aske.grain.requesthandler.controller;
 
-import com._7aske.grain.controller.annotation.RequestMapping;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 
 import java.util.Arrays;

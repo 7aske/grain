@@ -1,9 +1,9 @@
 package com._7aske.grain.orm.connection;
 
-import com._7aske.grain.component.Condition;
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.util.formatter.StringFormat;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com._7aske.grain.config.ConfigurationKey;
+import com._7aske.grain.core.configuration.ConfigurationKey;
 
 @Grain
 @Condition("grain.persistence.provider == 'native'")

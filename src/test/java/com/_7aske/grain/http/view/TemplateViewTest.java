@@ -1,5 +1,6 @@
 package com._7aske.grain.http.view;
 
+import com._7aske.grain.web.view.TemplateView;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

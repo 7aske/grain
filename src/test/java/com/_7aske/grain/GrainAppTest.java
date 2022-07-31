@@ -1,8 +1,7 @@
 package com._7aske.grain;
 
-import com._7aske.grain.component.Controller;
-import com._7aske.grain.config.Configuration;
-import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
+import com._7aske.grain.core.component.Controller;
+import com._7aske.grain.core.configuration.Configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -84,11 +83,6 @@ class GrainAppTest {
 	}
 
 	static class DebugApp extends GrainApp {
-		@Override
-		protected void staticLocationRegistry(StaticLocationsRegistry registry) {
-			registry.addStaticLocation("/home/nik/.local/src/js/website/build");
-		}
-
 		@Override
 		protected void configure(Configuration builder) {
 			builder.set("server.port", 33631);

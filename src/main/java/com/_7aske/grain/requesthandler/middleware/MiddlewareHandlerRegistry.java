@@ -1,10 +1,10 @@
 package com._7aske.grain.requesthandler.middleware;
 
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.GrainRegistry;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.component.Priority;
-import com._7aske.grain.controller.annotation.RequestMapping;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.GrainRegistry;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.component.Priority;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;

@@ -1,6 +1,6 @@
 package com._7aske.grain.security.crypto;
 
-import com._7aske.grain.component.Grain;
+import com._7aske.grain.core.component.Grain;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

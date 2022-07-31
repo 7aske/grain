@@ -1,6 +1,6 @@
 package com._7aske.grain.security.config;
 
-import com._7aske.grain.component.Grain;
+import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.security.BasicUser;
 import com._7aske.grain.security.config.rule.Rule;
 

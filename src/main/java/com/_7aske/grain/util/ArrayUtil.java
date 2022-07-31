@@ -16,7 +16,7 @@ public class ArrayUtil {
 			length += array.length;
 		}
 
-		//T[] result = new T[length];
+		// T[] result = new T[length];
 		final T[] result = (T[]) Array.newInstance(arrays[0].getClass().getComponentType(), length);
 
 		int offset = 0;

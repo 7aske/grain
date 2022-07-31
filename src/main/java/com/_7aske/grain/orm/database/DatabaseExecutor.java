@@ -1,9 +1,9 @@
 package com._7aske.grain.orm.database;
 
-import com._7aske.grain.component.Condition;
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.connection.ConnectionPool;
@@ -13,7 +13,7 @@ import com._7aske.grain.orm.exception.GrainDbStatementException;
 import java.sql.*;
 import java.util.*;
 
-import static com._7aske.grain.config.ConfigurationKey.DATABASE_EXECUTOR_PRINT_SQL;
+import static com._7aske.grain.core.configuration.ConfigurationKey.DATABASE_EXECUTOR_PRINT_SQL;
 
 @Grain
 @Condition("grain.persistence.provider == 'native'")

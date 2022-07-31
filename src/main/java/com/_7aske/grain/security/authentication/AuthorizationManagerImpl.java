@@ -1,6 +1,6 @@
 package com._7aske.grain.security.authentication;
 
-import com._7aske.grain.component.Grain;
+import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.context.SecurityContextHolder;
 import com._7aske.grain.security.exception.AuthenticationFailedException;

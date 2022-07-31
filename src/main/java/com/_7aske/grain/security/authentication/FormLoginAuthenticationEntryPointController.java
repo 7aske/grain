@@ -1,8 +1,8 @@
 package com._7aske.grain.security.authentication;
 
-import com._7aske.grain.component.Controller;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.controller.annotation.RequestMapping;
+import com._7aske.grain.core.component.Controller;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
@@ -10,7 +10,7 @@ import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.session.SessionStore;
 import com._7aske.grain.http.session.SessionToken;
 import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
-import com._7aske.grain.http.view.View;
+import com._7aske.grain.web.view.View;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.context.SecurityContextHolder;

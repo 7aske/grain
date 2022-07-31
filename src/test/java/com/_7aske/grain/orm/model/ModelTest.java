@@ -2,7 +2,7 @@ package com._7aske.grain.orm.model;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.orm.annotation.Column;
@@ -11,13 +11,12 @@ import com._7aske.grain.orm.annotation.Table;
 import com._7aske.grain.orm.database.DatabaseExecutor;
 import com._7aske.grain.orm.exception.GrainDbConnectionException;
 import com._7aske.grain.orm.querybuilder.helper.ModelClass;
-import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 
-import static com._7aske.grain.config.ConfigurationKey.*;
+import static com._7aske.grain.core.configuration.ConfigurationKey.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ModelTest {
@@ -46,8 +45,7 @@ class ModelTest {
 		configuration.set(DATABASE_NAME, "test");
 		configuration.set("grain.persistence.provider", "native");
 		ApplicationContext context = new ApplicationContextImpl(ModelTest.TestApp.class.getPackageName(),
-				configuration,
-				StaticLocationsRegistry.createDefault());
+				configuration);
 		Field field = ApplicationContextHolder.class.getDeclaredField("applicationContext");
 		field.setAccessible(true);
 		field.set(null, context);

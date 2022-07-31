@@ -1,6 +1,6 @@
 package com._7aske.grain.requesthandler;
 
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.http.json.JsonObject;
 import com._7aske.grain.ui.impl.ErrorPage;
@@ -26,7 +26,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
-import static com._7aske.grain.config.ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG;
+import static com._7aske.grain.core.configuration.ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG;
 import static com._7aske.grain.http.HttpHeaders.*;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
@@ -44,7 +44,7 @@ public class RequestHandlerRunnable implements Runnable {
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
 		// @Todo Make static handler registry a Grain
-		StaticHandlerRegistry staticHandlerRegistry = new StaticHandlerRegistry(context.getStaticLocationsRegistry());
+		StaticHandlerRegistry staticHandlerRegistry = context.getGrain(StaticHandlerRegistry.class);
 		ControllerHandlerRegistry controllerRegistry = context.getGrain(ControllerHandlerRegistry.class);
 		MiddlewareHandlerRegistry middlewareRegistry = context.getGrain(MiddlewareHandlerRegistry.class);
 		this.sessionInitializer = context.getGrain(SessionInitializer.class);
@@ -80,9 +80,7 @@ public class RequestHandlerRunnable implements Runnable {
 			this.session = session;
 
 			try {
-
 				handlerRunner.handle(request, response, session);
-
 			} catch (HttpException ex) {
 				writeHttpExceptionResponse(request, response, ex);
 			} catch (RuntimeException ex) {
@@ -91,8 +89,13 @@ public class RequestHandlerRunnable implements Runnable {
 			} finally {
 				long end = System.currentTimeMillis();
 				writer.write(response.getHttpString());
-				if (Objects.equals(configuration.get(REQUEST_HANDLER_ACCESS_LOG), true)) {
-					logger.info("{} {} {} - {} - {}ms", request.getMethod(), request.getPath(), request.getVersion(), response.getStatus().getValue(), end - start);
+				if (configuration.getBoolean(REQUEST_HANDLER_ACCESS_LOG, true)) {
+					logger.info("{} {} {} - {} - {}ms",
+							request.getMethod(),
+							request.getPath(),
+							request.getVersion(),
+							response.getStatus().getValue(),
+							end - start);
 				}
 			}
 

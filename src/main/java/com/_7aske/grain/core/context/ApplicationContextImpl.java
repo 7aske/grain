@@ -1,21 +1,18 @@
 package com._7aske.grain.core.context;
 
-import com._7aske.grain.component.GrainRegistry;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.component.GrainRegistry;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 public class ApplicationContextImpl implements ApplicationContext {
+	private static final Logger logger = LoggerFactory.getLogger(ApplicationContextImpl.class);
 	private final GrainRegistry grainRegistry;
-	private final StaticLocationsRegistry staticLocationsRegistry;
 	private final String basePackage;
 	private final Configuration configuration;
-	private final Logger logger = LoggerFactory.getLogger(ApplicationContextImpl.class);
 
-	public ApplicationContextImpl(String basePackage, Configuration configuration, StaticLocationsRegistry staticLocationsRegistry) {
+	public ApplicationContextImpl(String basePackage, Configuration configuration) {
 		this.basePackage = basePackage;
-		this.staticLocationsRegistry = staticLocationsRegistry;
 		this.configuration = configuration;
 		this.grainRegistry = new GrainRegistry(configuration);
 		this.grainRegistry.registerGrain(configuration);
@@ -24,17 +21,12 @@ public class ApplicationContextImpl implements ApplicationContext {
 	}
 
 	public ApplicationContextImpl(String basePackage) {
-		this(basePackage, Configuration.createDefault(), StaticLocationsRegistry.createDefault());
+		this(basePackage, Configuration.createDefault());
 	}
 
 	@Override
 	public GrainRegistry getGrainRegistry() {
 		return grainRegistry;
-	}
-
-	@Override
-	public StaticLocationsRegistry getStaticLocationsRegistry() {
-		return staticLocationsRegistry;
 	}
 
 	@Override

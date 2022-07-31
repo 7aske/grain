@@ -1,16 +1,16 @@
 package com._7aske.grain.orm.connection;
 
-import com._7aske.grain.component.Condition;
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.orm.exception.GrainDbConnectionException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-import static com._7aske.grain.config.ConfigurationKey.*;
+import static com._7aske.grain.core.configuration.ConfigurationKey.*;
 
 
 @Grain

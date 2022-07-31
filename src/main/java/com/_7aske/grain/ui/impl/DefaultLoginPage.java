@@ -1,6 +1,6 @@
 package com._7aske.grain.ui.impl;
 
-import com._7aske.grain.component.Grain;
+import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.ui.LoginPage;
 import com._7aske.grain.ui.util.Styles;

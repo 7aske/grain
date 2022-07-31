@@ -1,10 +1,10 @@
 package com._7aske.grain.security.config;
 
-import com._7aske.grain.component.AfterInit;
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.config.Configuration;
-import com._7aske.grain.config.ConfigurationKey;
+import com._7aske.grain.core.component.AfterInit;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.security.config.builder.SecurityConfigurationBuilder;
 
 import java.util.Objects;

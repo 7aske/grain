@@ -1,6 +1,6 @@
 package com._7aske.grain.http.session;
 
-import com._7aske.grain.component.Grain;
+import com._7aske.grain.core.component.Grain;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,6 +1,6 @@
 package com._7aske.grain.util.iterator;
 
-import com._7aske.grain.component.Priority;
+import com._7aske.grain.core.component.Priority;
 
 public class SortUtil {
 	private SortUtil() {

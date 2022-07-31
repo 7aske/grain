@@ -1,8 +1,9 @@
 package com._7aske.grain.config;
 
 import com._7aske.grain.GrainApp;
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
 import org.junit.jupiter.api.Assertions;

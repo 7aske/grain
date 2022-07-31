@@ -103,10 +103,10 @@ Configuration example:
 ```java
 @Grain
 public class Configuration {
-  @AfterInit
-  public void setup(com._7aske.grain.config.Configuration configuration) {
-    configuration.setPropertyUnsafe("application.name", "grain");
-  }
+	@AfterInit
+	public void setup(com._7aske.grain.core.configuration.Configuration configuration) {
+		configuration.setPropertyUnsafe("application.name", "grain");
+	}
 }
 ```
 

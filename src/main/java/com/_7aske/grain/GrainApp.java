@@ -1,15 +1,14 @@
 package com._7aske.grain;
 
-import com._7aske.grain.config.Configuration;
-import com._7aske.grain.config.ConfigurationKey;
-import com._7aske.grain.config.GrainApplication;
+import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.configuration.ConfigurationKey;
+import com._7aske.grain.core.configuration.GrainApplication;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.RequestHandlerRunnable;
-import com._7aske.grain.requesthandler.staticlocation.StaticLocationsRegistry;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -28,7 +27,6 @@ import java.util.concurrent.Executors;
 @GrainApplication
 public class GrainApp {
 	private Configuration configuration;
-	private StaticLocationsRegistry staticLocationsRegistry;
 	private boolean running = true;
 	private ApplicationContext context;
 	private final Logger logger = LoggerFactory.getLogger(GrainApp.class);
@@ -46,7 +44,7 @@ public class GrainApp {
 	final void initialize(String basePackage) {
 		this.doConfigure();
 		// initialize/reload context
-		this.context = new ApplicationContextImpl(basePackage, configuration, staticLocationsRegistry);
+		this.context = new ApplicationContextImpl(basePackage, configuration);
 		// After initializing the application context we set it to the holder to make it
 		// available for use in other classes that are not available for dependency injection.
 		ApplicationContextHolder.setContext(this.context);
@@ -78,17 +76,10 @@ public class GrainApp {
 	private void doConfigure() {
 		configuration = Configuration.createDefault();
 		this.configure(configuration);
-		this.staticLocationsRegistry = StaticLocationsRegistry.createDefault();
-		this.staticLocationRegistry(staticLocationsRegistry);
 	}
 
 	// Method used to allow derived class to modify configuration object
 	// before it gets passed to application context
 	protected void configure(Configuration configuration) {
-	}
-
-	// Method used to allow derived class to modify static locations
-	// before they get passed to application context
-	protected void staticLocationRegistry(StaticLocationsRegistry registry) {
 	}
 }

@@ -1,11 +1,11 @@
 package com._7aske.grain.testpackage;
 
-import com._7aske.grain.component.Controller;
-import com._7aske.grain.controller.annotation.RequestMapping;
+import com._7aske.grain.core.component.Controller;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.json.JsonBody;
-import com._7aske.grain.http.view.TemplateView;
+import com._7aske.grain.web.view.TemplateView;
 
 @Controller
 @RequestMapping

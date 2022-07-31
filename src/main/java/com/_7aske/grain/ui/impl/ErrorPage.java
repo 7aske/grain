@@ -2,7 +2,7 @@ package com._7aske.grain.ui.impl;
 
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpContentType;
-import com._7aske.grain.http.view.View;
+import com._7aske.grain.web.view.View;
 import com._7aske.grain.ui.util.Styles;
 
 import java.io.ByteArrayOutputStream;

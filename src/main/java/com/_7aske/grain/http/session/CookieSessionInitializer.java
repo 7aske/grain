@@ -1,15 +1,15 @@
 package com._7aske.grain.http.session;
 
-import com._7aske.grain.component.Grain;
-import com._7aske.grain.component.Inject;
-import com._7aske.grain.config.Configuration;
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 
 import java.util.Objects;
 import java.util.UUID;
 
-import com._7aske.grain.config.ConfigurationKey;
+import com._7aske.grain.core.configuration.ConfigurationKey;
 import static com._7aske.grain.http.session.SessionConstants.SESSION_COOKIE_NAME;
 import static com._7aske.grain.http.session.SessionConstants.SESSION_DEFAULT_MAX_AGE;
 

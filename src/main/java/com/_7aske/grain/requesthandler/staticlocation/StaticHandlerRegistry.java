@@ -1,5 +1,7 @@
 package com._7aske.grain.requesthandler.staticlocation;
 
+import com._7aske.grain.core.component.Default;
+import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
@@ -8,6 +10,8 @@ import com._7aske.grain.requesthandler.handler.RequestHandler;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Grain
+@Default
 public class StaticHandlerRegistry implements HandlerRegistry {
 	private final List<RequestHandler> handlers;
 
