@@ -18,6 +18,7 @@ import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.security.context.SecurityContextHolder;
 import com._7aske.grain.util.HttpPathUtil;
 import com._7aske.grain.util.RequestParams;
+import com._7aske.grain.web.view.ViewResolver;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class ControllerHandler implements RequestHandler {
 		String fullControllerMapping = HttpPathUtil.join(controller.getPath(), method.getPath());
 
 		ConverterRegistry converterRegistry = ApplicationContextHolder.getContext().getGrain(ConverterRegistry.class);
+		ViewResolver viewResolver = ApplicationContextHolder.getContext().getGrain(ViewResolver.class);
 
 		// Here we handle Controller method parameter parsing
 		Parameter[] declaredParams = method.getParameters();
@@ -114,17 +116,8 @@ public class ControllerHandler implements RequestHandler {
 			String requestContentType = request.getHeader(CONTENT_TYPE);
 			response.setBody(null);
 			response.setHeader(CONTENT_TYPE, requestContentType == null ? HttpContentType.TEXT_PLAIN : requestContentType);
-		} else if (result instanceof TemplateView) {
-			// Setting implicit objects
-			((TemplateView) result).setData("request", request);
-			((TemplateView) result).setData("response", response);
-			((TemplateView) result).setData("session", session);
-			((TemplateView) result).setData("authentication", SecurityContextHolder.getContext().getAuthentication());
-			response.setBody(((View) result).getContent());
-			response.setHeader(CONTENT_TYPE, ((TemplateView) result).getContentType());
-		} else if (View.class.isAssignableFrom(result.getClass())) {
-			response.setBody(((View) result).getContent());
-			response.setHeader(CONTENT_TYPE, ((View) result).getContentType());
+		} else if (result instanceof View) {
+			viewResolver.resolve((View) result, request, response, session, SecurityContextHolder.getContext().getAuthentication());
 		} else if (result instanceof JsonResponse) {
 			response.setStatus(((JsonResponse<?>) result).getStatus());
 			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());

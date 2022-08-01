@@ -1,5 +1,6 @@
 package com._7aske.grain.ui.impl;
 
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.ui.LoginPage;
@@ -7,7 +8,7 @@ import com._7aske.grain.ui.util.Styles;
 
 @Grain
 public class DefaultLoginPage implements LoginPage {
-	public String getContent() {
+	public @NotNull String getContent() {
 		return "<!DOCTYPE html>\n" +
 				"<html>\n" +
 				"<head>\n" +
@@ -34,8 +35,14 @@ public class DefaultLoginPage implements LoginPage {
 				"</html>";
 	}
 
+	@NotNull
 	@Override
-	public String getContentType() {
+	public String getName() {
+		return "login.html";
+	}
+
+	@Override
+	public @NotNull String getContentType() {
 		return HttpContentType.TEXT_HTML;
 	}
 }

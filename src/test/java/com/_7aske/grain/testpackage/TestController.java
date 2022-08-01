@@ -16,8 +16,8 @@ public class TestController {
 		String firstName = "John";
 		String lastName = "Smith";
 		TemplateView templateView = new TemplateView("index.html");
-		templateView.setData("firstName", firstName);
-		templateView.setData("lastName", lastName);
+		templateView.addAttribute("firstName", firstName);
+		templateView.addAttribute("lastName", lastName);
 		return templateView;
 	}
 

@@ -1,5 +1,7 @@
 package com._7aske.grain.ui.impl;
 
+import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.annotation.Nullable;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.web.view.View;
@@ -7,6 +9,7 @@ import com._7aske.grain.ui.util.Styles;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Map;
 
 public class ErrorPage implements View {
 	private final HttpException exception;
@@ -19,7 +22,7 @@ public class ErrorPage implements View {
 		return new ErrorPage(new HttpException.InternalServerError(exception, path)).getContent();
 	}
 
-	public String getContent() {
+	public @NotNull String getContent() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("<html>");
 		builder.append("<head>");
@@ -48,9 +51,21 @@ public class ErrorPage implements View {
 		return builder.toString();
 	}
 
+
 	@Override
-	public String getContentType() {
+	public @NotNull String getName() {
+		return "error.html";
+	}
+
+	@Override
+	public @NotNull String getContentType() {
 		return HttpContentType.TEXT_HTML;
+	}
+
+	@NotNull
+	@Override
+	public Map<String, Object> getAttributes() {
+		return Map.of();
 	}
 
 	private String getStatusBar() {

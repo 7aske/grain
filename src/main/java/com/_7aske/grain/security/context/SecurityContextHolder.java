@@ -1,9 +1,14 @@
 package com._7aske.grain.security.context;
 
+import com._7aske.grain.annotation.NotNull;
+
 public class SecurityContextHolder {
 	private static final SecurityContextHolderStrategy holderStrategy = new ThreadLocalSecurityContextHolderStrategy();
 
-	public static SecurityContext getContext() {
+	private SecurityContextHolder() {
+	}
+
+	public static @NotNull SecurityContext getContext() {
 		if (holderStrategy.getContext() == null)
 			holderStrategy.setContext(holderStrategy.crateDefaultContext());
 		return holderStrategy.getContext();

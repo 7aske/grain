@@ -1,5 +1,7 @@
 package com._7aske.grain.web.view;
 
+import com._7aske.grain.annotation.NotNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -17,7 +19,7 @@ public class FileView implements View {
 		this.contentType = probeContentTypeNoThrow(path, "text/html");
 	}
 
-	public String getContent() {
+	public @NotNull String getContent() {
 		if (cachedContent == null) {
 			try {
 				InputStream inputStream = classLoader.getResourceAsStream(path);
@@ -32,7 +34,13 @@ public class FileView implements View {
 		return cachedContent;
 	}
 
-	public String getContentType() {
+
+	@Override
+	public @NotNull String getName() {
+		return path;
+	}
+
+	public @NotNull String getContentType() {
 		return this.contentType;
 	}
 }
