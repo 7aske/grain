@@ -12,6 +12,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -191,10 +192,19 @@ public class GrainInitializer {
 				// We do the initialization only for @Inject marked attributes or
 				// for the attributes that appear as constructor parameters.
 				if (isAnnotationPresent(field, Inject.class) || (isConstructorParam(dep.constructor, field.getType()))) {
-					Dependency dependency = findDependencyByClass(field.getType())
-							.orElseThrow(() -> new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s: %s", dep.clazz, field.getType())));
-					partiallyInitialize(dependency);
-					ReflectionUtil.setFieldValue(field, dep.instance, dependency.instance);
+					if (Iterable.class.isAssignableFrom(field.getType())) {
+						Class<?> genericType = (Class<?>) ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0];
+						List<Object> instances = dependencies.stream()
+								.filter(d -> genericType.isAssignableFrom(d.clazz))
+								.map(d -> d.instance)
+								.collect(Collectors.toList());
+						ReflectionUtil.setFieldValue(field, dep.instance, instances);
+					} else {
+						Dependency dependency = findDependencyByClass(field.getType())
+								.orElseThrow(() -> new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s: %s", dep.clazz, field.getType())));
+						partiallyInitialize(dependency);
+						ReflectionUtil.setFieldValue(field, dep.instance, dependency.instance);
+					}
 				}
 			} catch (GrainReflectionException e) {
 				throw new GrainDependencyUnsatisfiedException(String.format("Grain dependencies unsatisfied for class %s", dep.clazz), e);

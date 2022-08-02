@@ -207,6 +207,13 @@ public class ReflectionUtil {
 		return 0;
 	}
 
+	public static <T> List<Class<?>> findClasses(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
+		return classes.stream()
+				.map(extractor::apply)
+				.filter(d -> d.equals(clazz) || clazz.isAssignableFrom(d))
+				.collect(Collectors.toList());
+	}
+
 	/**
 	 * Method used to search a collection of items for the appropriate class.
 	 * Used when given a collection of Grains or Dependencies we want to find
