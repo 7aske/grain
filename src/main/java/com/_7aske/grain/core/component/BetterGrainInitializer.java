@@ -2,86 +2,139 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
+import com._7aske.grain.util.ReflectionUtil;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 public class BetterGrainInitializer {
-	private final Map<String, BetterDependency> dependencies;
+	private final DependencyContainer dependencies;
 	private final Interpreter interpreter;
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 
 	public BetterGrainInitializer(Configuration configuration) {
-		this.dependencies = new ConcurrentHashMap<>();
+		this.dependencies = new DependencyContainer();
 		this.interpreter = new Interpreter();
 		interpreter.putProperties(configuration.getProperties());
 	}
 
 
-	public Map<String, Object> initialize(Set<Class<?>> classes) {
+	// @Todo rename
+	public DependencyContainer initialize(Set<Class<?>> classes) {
 		for (Class<?> clazz : classes) {
-			String name = grainNameResolver.resolveDeclarationName(clazz);
-			BetterDependency dependency = dependencies.getOrDefault(name, new BetterDependency(name, clazz));
-			resolveDependencies(dependency);
-			dependencies.putIfAbsent(name, dependency);
+			BetterDependency dependency = new BetterDependency(
+					clazz,
+					grainNameResolver.resolveReferenceName(clazz)
+			);
+			dependency.getGrainMethods().forEach(method -> {
+				BetterDependency methodDependency = new BetterDependency(
+						method.getReturnType(),
+						grainNameResolver.resolveReferenceName(method));
+				methodDependency.setGrainMethodDependency(true);
+				methodDependency.setProvider(dependency);
+				this.dependencies.add(methodDependency);
+			});
+			this.dependencies.add(dependency);
 		}
+
 		checkCircularDependencies();
-		return null;
+
+		for (BetterDependency dependency : this.dependencies) {
+			if (!dependency.isGrainMethodDependency()) {
+				initialize(dependency);
+			}
+		}
+
+		return dependencies;
 	}
 
-	private void resolveDependencies(BetterDependency betterDependency) {
-		// Firstly, we resolve constructor parameters
-		List<String> constructionDependencies = Arrays.stream(betterDependency.getParams())
-				.map(grainNameResolver::resolveReferenceName)
-				.collect(Collectors.toList());
-		betterDependency.setDependencies(constructionDependencies);
+	private void initialize(BetterDependency dependency) {
+		if (dependency.isInitialized()) {
+			return;
+		}
+		Constructor<?> constructor = dependency.getConstructor();
+		Object[] constructorParameters = mapConstructorParametersToDependencies(dependency);
+		try {
+			Object instance = ReflectionUtil.newInstance(constructor, constructorParameters)
+					.orElseThrow(() -> new GrainInitializationException("Could not instantiate " + dependency.getType()));
+			dependency.setInstance(instance);
+			dependency.setInitialized(true);
+		} catch (Exception e) {
+			throw new GrainInitializationException( "Failed to initialize grain " + dependency, e);
+		}
 
-		// Secondly, we resolve any possible @Grain methods
-		List<String> grainDependencies = Arrays.stream(betterDependency.getClazz().getDeclaredMethods())
-				.filter(m -> isAnnotationPresent(m, Grain.class))
-				.flatMap(m -> {
-					String name = grainNameResolver.resolveDeclarationName(m);
-					// This is in turn a dependency declaration
-					if (dependencies.containsKey(name)) {
-						throw new GrainInitializationException("Grain method " + m.getName() + " returns a dependency " + name + " which is already defined");
-					}
-					BetterDependency dependency = new BetterDependency(name, m.getReturnType());
-					dependency.setProvider(betterDependency.getName());
-					resolveDependencies(dependency);
+		dependency.getGrainMethods().forEach(method -> {
+			try {
+				Object instance = dependency.getInstance();
+				Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
+				BetterDependency methodDependency = DependencyReference.of(method)
+						.resolve(dependencies);
+				if (methodDependency.isInitialized()) {
+					throw new GrainInitializationException("Dependency '" + methodDependency + "' is already initialized");
+				} else {
+					methodDependency.setInstance(result);
+					methodDependency.setInitialized(true);
+				}
+			} catch (Exception e) {
+				throw new GrainInitializationException( "Failed to initialize grain " + dependency, e);
+			}
+		});
 
-					// And their dependencies
-					return Stream.concat(Stream.of(name), Arrays.stream(m.getParameters())
-							.map(grainNameResolver::resolveReferenceName));
-				})
-				.collect(Collectors.toList());
-		betterDependency.getDependencies().addAll(grainDependencies);
+	}
+
+	private Object[] mapMethodParametersToDependencies(Method method) {
+		Parameter[] parameters = method.getParameters();
+		Object[] methodParameters = new Object[method.getParameterCount()];
+		for (int i = 0; i < method.getParameterCount(); i++) {
+			BetterDependency dependency = DependencyReference.of(parameters[i])
+					.resolve(dependencies);
+			if (!dependency.isInitialized()) {
+				if (dependency.isGrainMethodDependency()
+						&& !dependency.getProvider().isInitialized()) {
+					initialize(dependency.getProvider());
+				}
+				initialize(dependency);
+			}
+			methodParameters[i] = dependency.getInstance();
+		}
+		return methodParameters;
+	}
+
+	private Object[] mapConstructorParametersToDependencies(BetterDependency betterDependency) {
+		DependencyReference[] constructorParameters = betterDependency.getConstructorParameters();
+		Object[] parameterInstances = new Object[constructorParameters.length];
+		for (int i = 0; i < constructorParameters.length; i++) {
+			DependencyReference dependencyReference = constructorParameters[i];
+			BetterDependency dependency = dependencyReference.resolve(this.dependencies);
+			if (!dependency.isInitialized())
+				initialize(dependency);
+			parameterInstances[i] = dependency.getInstance();
+		}
+		return parameterInstances;
 	}
 
 	public void checkCircularDependencies() {
-		for (BetterDependency dependency : dependencies.values()) {
+		for (BetterDependency dependency : dependencies.getAll()) {
 			check(dependency, dependency.getDependencies(), new ArrayList<>());
 		}
 	}
 
-	private void check(BetterDependency start, List<String> dependencies, List<String> steps) {
-		for (String dependency : dependencies) {
+	private void check(BetterDependency start, List<DependencyReference> dependencies, List<DependencyReference> steps) {
+		for (DependencyReference dependency : dependencies) {
 			steps.add(dependency);
-			BetterDependency betterDependency = this.dependencies.get(dependency);
-			if (betterDependency == start) {
-				throw new GrainInitializationException("Circular dependency detected:\n\n" + start.getName() + "\n\t|\n\tv\n" + String.join("\n\t|\n\tv\n", steps));
+			BetterDependency dependencyDependencies = dependency.resolve(this.dependencies);
+
+			if (dependencyDependencies == start) {
+				throw new GrainInitializationException("Circular dependency detected:\n\n" + start.asReference().getName() + "\n\t|\n\tv\n" + steps.stream().map(DependencyReference::getName).collect(Collectors.joining("\n\t|\n\tv\n")));
 			}
 
-			if (betterDependency == null) {
-				throw new GrainDependencyUnsatisfiedException("Dependency '" + dependency + "' is not satisfied for '" + start.getName() + "' dependency chain.");
-			}
-
-			check(start, betterDependency.getDependencies(), steps);
+			check(start, dependencyDependencies.getDependencies(), steps);
 		}
 	}
 }
