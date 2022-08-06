@@ -5,6 +5,7 @@ import com._7aske.grain.exception.GrainInitializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,37 +23,42 @@ class GrainInitializerTest {
 
 	}
 
-	@Grain
 	static class TestGrainImpl implements TestGrain {
 		public TestGrainImpl(TestDependency testDependency) {
 		}
 	}
 
-	@Grain
 	static class TestDependency {
 		public TestDependency(TestGrain testGrain) {
 		}
 	}
 
 	static class BeanImpl {
-		public BeanImpl() {
+		public int id;
+		public BeanImpl(int id) {
+			this.id = id;
 		}
 	}
 
-	@Grain
 	static class GrainImpl {
 		public GrainImpl() {
 		}
 
 		@Grain
-		public BeanImpl bean() {
-			return new BeanImpl();
+		public BeanImpl bean1() {
+			return new BeanImpl(1);
+		}
+
+		@Grain
+		public BeanImpl bean2() {
+			return new BeanImpl(2);
 		}
 	}
 
-	@Grain
 	static class Component {
-		public Component(BeanImpl grain) {
+		public List<BeanImpl> grains;
+		public Component(List<BeanImpl> grains) {
+			this.grains = grains;
 		}
 	}
 
@@ -60,20 +66,25 @@ class GrainInitializerTest {
 	@Test
 	void initialize_circular() {
 		assertThrows(GrainInitializationException.class,
-				() -> grainInitializer.initialize(Set.of(TestGrainImpl.class, TestDependency.class)));
+				() -> grainInitializer.inject(Set.of(TestGrainImpl.class, TestDependency.class)));
 	}
 
 	@Test
 	void initialize_missing() {
 		assertThrows(GrainInitializationException.class,
-				() -> grainInitializer.initialize(Set.of(TestDependency.class)));
+				() -> grainInitializer.inject(Set.of(TestDependency.class)));
 	}
 
 	@Test
 	void initialize() {
-		DependencyContainer dependencies = grainInitializer.initialize(Set.of(GrainImpl.class, Component.class));
-		Optional<BetterDependency> dependency = dependencies.getByClass(GrainImpl.class);
+		DependencyContainer dependencies = grainInitializer.inject(Set.of(GrainImpl.class, Component.class));
+		Optional<BetterDependency> dependency = dependencies.getByClass(Component.class);
 		assertTrue(dependency.isPresent());
-		assertNotNull(dependency.get().getInstance());
+		Component component = dependency.get().getInstance();
+		assertNotNull(component);
+		assertEquals(2, component.grains.size());
+
+		assertTrue(component.grains.stream().anyMatch(g -> g.id == 1));
+		assertTrue(component.grains.stream().anyMatch(g -> g.id == 2));
 	}
 }

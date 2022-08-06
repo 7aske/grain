@@ -1,20 +1,27 @@
 package com._7aske.grain.core.component;
 
+import com._7aske.grain.GrainApp;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class DependencyContainer implements Iterable<BetterDependency> {
-	private final List<BetterDependency> dependencies;
+	private final Collection<BetterDependency> dependencies;
 
 	public DependencyContainer() {
-		this.dependencies = new ArrayList<>();
+		// Using TreeSet to allow for dependency ordering by their own dependency
+		// numbers. This will allow resolving more efficiently.
+		this.dependencies = new PriorityQueue<>(Comparator.comparing(
+				BetterDependency::getDependencies,
+				Comparator.comparing(Collection::size))
+		);
 	}
 
 	public void add(BetterDependency dependency) {
 		dependencies.add(dependency);
 	}
 
-	public List<BetterDependency> getAll() {
+	public Collection<BetterDependency> getAll() {
 		return dependencies;
 	}
 
@@ -32,7 +39,16 @@ public class DependencyContainer implements Iterable<BetterDependency> {
 		}
 
 		if (list.size() > 1) {
-			throw new IllegalStateException("More than one dependency with name '" + name + "'");
+			List<BetterDependency> userDefined = list.stream()
+					.filter(d -> {
+						String basePackage = GrainApp.class.getPackage().getName() + ".";
+						return !d.getType().getName().startsWith(basePackage);
+					})
+					.collect(Collectors.toList());
+			if (userDefined.size() == 1) {
+				return Optional.of(userDefined.get(0));
+			}
+			throw new IllegalStateException("More than one dependency with name '" + name + "' found. ");
 		}
 
 		return Optional.of(list.get(0));
@@ -52,7 +68,16 @@ public class DependencyContainer implements Iterable<BetterDependency> {
 		}
 
 		if (list.size() > 1) {
-			throw new IllegalStateException("More than one dependency of type '" + clazz + "'");
+			List<BetterDependency> userDefined = list.stream()
+					.filter(d -> {
+						String basePackage = GrainApp.class.getPackage().getName() + ".";
+						return !d.getType().getName().startsWith(basePackage);
+					})
+					.collect(Collectors.toList());
+			if (userDefined.size() == 1) {
+				return Optional.of(userDefined.get(0));
+			}
+			throw new IllegalStateException("More than one dependency of type '" + clazz + "' found.");
 		}
 
 		return Optional.of(list.get(0));

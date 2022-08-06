@@ -125,6 +125,18 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * @param parameter  Parameter on which to search annotation for
+	 * @param annotation annotation to search for
+	 * @return if annotation is present in the parameter or recursively in any of
+	 * the annotated types
+	 */
+	public static boolean isAnnotationPresent(Parameter parameter, Class<? extends Annotation> annotation) {
+		if (parameter.isAnnotationPresent(annotation)) return true;
+
+		return Arrays.stream(parameter.getAnnotations()).anyMatch(a -> isAnnotationPresent(a.annotationType(), annotation));
+	}
+
+	/**
 	 * @param object      Field or Method on which to search annotation for
 	 * @param annotations annotations to search for
 	 * @return if annotation is present in the object or recursively in any of
@@ -147,7 +159,8 @@ public class ReflectionUtil {
 	public static <T> T newInstance(Class<T> clazz) throws GrainReflectionException {
 		try {
 			return getAnyConstructor(clazz).newInstance();
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+		} catch (InstantiationException | IllegalAccessException |
+		         InvocationTargetException | NoSuchMethodException e) {
 			throw new GrainReflectionException(e);
 		}
 	}
@@ -155,7 +168,8 @@ public class ReflectionUtil {
 	public static <T> Optional<T> newInstance(Constructor<T> constructor, Object... params) {
 		try {
 			return Optional.of(constructor.newInstance(params));
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+		} catch (InstantiationException | IllegalAccessException |
+		         InvocationTargetException e) {
 			return Optional.empty();
 		}
 	}
@@ -170,6 +184,30 @@ public class ReflectionUtil {
 	 */
 	public static <T> Class<T> getGenericListTypeArgument(Field f) {
 		return (Class<T>) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+	}
+
+	/**
+	 * Returns the class representing the generic type in a container class
+	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
+	 *
+	 * @param m   Method return a generic type.
+	 * @param <T> Generic type
+	 * @return generic type class
+	 */
+	public static <T> Class<T> getGenericListTypeArgument(Method m) {
+		return (Class<T>) ((ParameterizedType) m.getGenericReturnType()).getActualTypeArguments()[0];
+	}
+
+	/**
+	 * Returns the class representing the generic type in a container class
+	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
+	 *
+	 * @param p   Generic method parameter.
+	 * @param <T> Generic type
+	 * @return generic type class
+	 */
+	public static <T> Class<T> getGenericListTypeArgument(Parameter p) {
+		return (Class<T>) ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0];
 	}
 
 	/**

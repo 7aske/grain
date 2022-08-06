@@ -6,6 +6,7 @@ import com._7aske.grain.core.component.*;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
+import com._7aske.grain.exception.GrainRuntimeException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -123,7 +124,7 @@ class GrainRegistryTest {
 		GrainRegistry registry = new GrainRegistry(configuration);
 		registry.registerGrain(configuration);
 		registry.registerGrains(GrainApp.class.getPackageName());
-		assertNull(registry.getGrain(TestCondition.class));
+		assertThrows(GrainRuntimeException.class, () -> registry.getGrain(TestCondition.class));
 		assertNotNull(registry.getGrain(TestConditionTrue.class));
 	}
 

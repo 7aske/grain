@@ -13,7 +13,11 @@ public interface GrainNameResolver {
 		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
 			return grain.name();
 		}
-		return null;
+		String className = clazz.getSimpleName();
+		if (className.endsWith("[]")) {
+			className = className.substring(className.length() - 2);
+		}
+		return className.substring(0, 1).toLowerCase() + className.substring(1);
 	}
 
 	default @Nullable String resolveReferenceName(Field field) {
@@ -22,7 +26,7 @@ public interface GrainNameResolver {
 			return inject.name();
 		}
 
-		return resolveReferenceName(field.getType());
+		return null;
 	}
 
 	default @Nullable String resolveReferenceName(Parameter parameter) {
@@ -31,7 +35,7 @@ public interface GrainNameResolver {
 			return inject.name();
 		}
 
-		return resolveReferenceName(parameter.getType());
+		return null;
 	}
 
 
@@ -41,7 +45,7 @@ public interface GrainNameResolver {
 			return grain.name();
 		}
 
-		return resolveReferenceName(m.getReturnType());
+		return m.getName();
 	}
 
 	static GrainNameResolver getDefault() {

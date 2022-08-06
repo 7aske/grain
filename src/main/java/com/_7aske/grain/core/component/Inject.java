@@ -7,4 +7,5 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 public @interface Inject {
 	String name() default "";
+	boolean required() default true;
 }
