@@ -14,28 +14,28 @@ import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
-class Injectable {
+class Injectable<T> {
 	private final String name;
-	private final Class<?> type;
-	private final Constructor<?> constructor;
-	private final DependencyReference[] constructorParameters;
-	private Object instance;
+	private final Class<T> type;
+	private final Constructor<T> constructor;
+	private final InjectableReference<?>[] constructorParameters;
+	private T instance;
 	private final List<Method> grainMethods;
 	private final List<Field> injectableFields;
-	private List<DependencyReference> dependencies;
+	private List<InjectableReference<?>> dependencies;
 	private final List<InjectableField> valueFields;
 	private final List<Method> afterInitMethods;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
 	 */
-	private Injectable provider;
+	private Injectable<?> provider;
 
-	private Injectable(Class<?> type, String name, Constructor<?> constructor) {
+	private Injectable(Class<T> type, String name, Constructor<T> constructor) {
 		this.name = name;
 		this.type = type;
 		this.constructor = constructor;
-		this.constructorParameters = new DependencyReference[0];
+		this.constructorParameters = new InjectableReference[0];
 		this.dependencies = new ArrayList<>();
 		this.grainMethods = new ArrayList<>();
 		this.injectableFields = new ArrayList<>();
@@ -43,13 +43,13 @@ class Injectable {
 		this.afterInitMethods = new ArrayList<>();
 	}
 
-	public static Injectable ofMethod(@NotNull Class<?> clazz, @Nullable String name, Injectable provider) {
-		Injectable injectable = new Injectable(clazz, name, null);
+	public static <T> Injectable<T> ofMethod(@NotNull Class<T> clazz, @Nullable String name, Injectable<?> provider) {
+		Injectable<T> injectable = new Injectable<T>(clazz, name, null);
 		injectable.setProvider(provider);
 		return injectable;
 	}
 
-	public Injectable(@NotNull Class<?> clazz, @Nullable String name) {
+	public Injectable(@NotNull Class<T> clazz, @Nullable String name) {
 		this.name = name;
 		try {
 			this.constructor = ReflectionUtil.getBestConstructor(clazz);
@@ -57,10 +57,10 @@ class Injectable {
 			throw new GrainInitializationException("No constructor found for class " + clazz.getName());
 		}
 
-		this.constructorParameters = new DependencyReference[this.constructor.getParameterCount()];
+		this.constructorParameters = new InjectableReference[this.constructor.getParameterCount()];
 		Parameter[] parameters = this.constructor.getParameters();
 		for (int i = 0; i < parameters.length; i++) {
-			this.constructorParameters[i] = DependencyReference.of(parameters[i]);
+			this.constructorParameters[i] = InjectableReference.of(parameters[i]);
 		}
 
 		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
@@ -71,7 +71,7 @@ class Injectable {
 				.filter(f -> isAnnotationPresent(f, Inject.class))
 				.collect(Collectors.toList());
 
-		List<DependencyReference> constructorDependencies = Arrays.asList(this.constructorParameters);
+		List<InjectableReference<?>> constructorDependencies = Arrays.asList(this.constructorParameters);
 		// List<DependencyReference> grainMethodDependencies = this.grainMethods.stream()
 		// 		.flatMap(m -> Arrays.stream(m.getParameters()).map(DependencyReference::of))
 		// 		.collect(Collectors.toList());
@@ -96,27 +96,31 @@ class Injectable {
 				.collect(Collectors.toList());
 	}
 
-	public <T> T getInstance() {
-		return (T) instance;
+	public T getInstance() {
+		return instance;
 	}
 
-	public void setInstance(Object instance) {
+	public void setInstance(T instance) {
 		this.instance = instance;
 	}
 
-	public Constructor<?> getConstructor() {
+	public void setObjectInstance(Object instance) {
+		this.instance = type.cast(instance);
+	}
+
+	public Constructor<T> getConstructor() {
 		return constructor;
 	}
 
-	public DependencyReference[] getConstructorParameters() {
+	public InjectableReference<?>[] getConstructorParameters() {
 		return constructorParameters;
 	}
 
-	public List<DependencyReference> getDependencies() {
+	public List<InjectableReference<?>> getDependencies() {
 		return dependencies;
 	}
 
-	public void setDependencies(List<DependencyReference> dependencies) {
+	public void setDependencies(List<InjectableReference<?>> dependencies) {
 		this.dependencies = dependencies;
 	}
 
@@ -144,11 +148,11 @@ class Injectable {
 		return provider != null;
 	}
 
-	public Injectable getProvider() {
+	public Injectable<?> getProvider() {
 		return provider;
 	}
 
-	public void setProvider(Injectable provider) {
+	public void setProvider(Injectable<?> provider) {
 		this.provider = provider;
 	}
 

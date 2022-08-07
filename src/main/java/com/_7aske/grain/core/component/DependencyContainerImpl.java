@@ -7,8 +7,8 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
 
-class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
-	private final Collection<Injectable> dependencies;
+class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable<?>> {
+	private final Collection<Injectable<?>> dependencies;
 
 	public DependencyContainerImpl() {
 		// Using TreeSet to allow for dependency ordering by their own dependency
@@ -19,18 +19,18 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		);
 	}
 
-	void add(Injectable dependency) {
+	void add(Injectable<?> dependency) {
 		dependencies.add(dependency);
 	}
 
-	List<Injectable> getListByName(String name) {
+	List<Injectable<?>> getListByName(String name) {
 		return dependencies.stream()
 				.filter(d -> Objects.equals(d.getName().orElse(null), name))
 				.collect(Collectors.toList());
 	}
 
-	Optional<Injectable> getByName(String name) {
-		List<Injectable> list = getListByName(name);
+	Optional<Injectable<?>> getByName(String name) {
+		List<Injectable<?>> list = getListByName(name);
 
 		if (list.isEmpty()) {
 			return Optional.empty();
@@ -43,20 +43,20 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return Optional.of(list.get(0));
 	}
 
-	List<Injectable> getListByClass(Class<?> clazz) {
+	<T> List<Injectable<?>> getListByClass(Class<T> clazz) {
 		return dependencies.stream()
 				.filter(d -> clazz.isAssignableFrom(d.getType()))
 				.collect(Collectors.toList());
 	}
 
-	List<Injectable> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
+	List<Injectable<?>> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
 		return dependencies.stream()
 				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
 				.collect(Collectors.toList());
 	}
 
-	Optional<Injectable> getByClass(Class<?> clazz) {
-		List<Injectable> list = getListByClass(clazz);
+	<T> Optional<Injectable<?>> getByClass(Class<T> clazz) {
+		List<Injectable<?>> list = getListByClass(clazz);
 
 		if (list.isEmpty()) {
 			return Optional.empty();
@@ -70,12 +70,12 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	}
 
 	@Override
-	public Iterator<Injectable> iterator() {
+	public Iterator<Injectable<?>> iterator() {
 		return dependencies.iterator();
 	}
 
-	private Optional<Injectable> resolveSingleDependency(String name, List<Injectable> list)  {
-		List<Injectable> userDefined = list.stream()
+	private Optional<Injectable<?>> resolveSingleDependency(String name, List<Injectable<?>> list)  {
+		List<Injectable<?>> userDefined = list.stream()
 				.filter(d -> {
 					String basePackage = GrainApp.getBasePackage() + ".";
 					String depPackage = d.getProvider() == null
@@ -128,10 +128,11 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	@Override
 	public <T> Optional<T> getOptionalGrain(Class<T> clazz) {
 		return getByClass(clazz)
-				.map(Injectable::getInstance);
+				.map(Injectable::getInstance)
+				.map(clazz::cast);
 	}
 
-	public Collection<Injectable> getAll() {
+	public Collection<Injectable<?>> getAll() {
 		return dependencies;
 	}
 }
