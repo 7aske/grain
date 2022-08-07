@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
-class BetterDependency {
+class Injectable {
 	private final String name;
 	private final Class<?> type;
 	private final Constructor<?> constructor;
@@ -23,15 +23,15 @@ class BetterDependency {
 	private final List<Method> grainMethods;
 	private final List<Field> injectableFields;
 	private List<DependencyReference> dependencies;
-	private final List<BetterDependencyField> valueFields;
+	private final List<InjectableField> valueFields;
 	private final List<Method> afterInitMethods;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
 	 */
-	private BetterDependency provider;
+	private Injectable provider;
 
-	private BetterDependency(Class<?> type, String name, Constructor<?> constructor) {
+	private Injectable(Class<?> type, String name, Constructor<?> constructor) {
 		this.name = name;
 		this.type = type;
 		this.constructor = constructor;
@@ -43,13 +43,13 @@ class BetterDependency {
 		this.afterInitMethods = new ArrayList<>();
 	}
 
-	public static BetterDependency ofMethod(@NotNull Class<?> clazz, @Nullable String name, BetterDependency provider) {
-		BetterDependency betterDependency = new BetterDependency(clazz, name, null);
-		betterDependency.setProvider(provider);
-		return betterDependency;
+	public static Injectable ofMethod(@NotNull Class<?> clazz, @Nullable String name, Injectable provider) {
+		Injectable injectable = new Injectable(clazz, name, null);
+		injectable.setProvider(provider);
+		return injectable;
 	}
 
-	public BetterDependency(@NotNull Class<?> clazz, @Nullable String name) {
+	public Injectable(@NotNull Class<?> clazz, @Nullable String name) {
 		this.name = name;
 		try {
 			this.constructor = ReflectionUtil.getBestConstructor(clazz);
@@ -72,12 +72,12 @@ class BetterDependency {
 				.collect(Collectors.toList());
 
 		List<DependencyReference> constructorDependencies = Arrays.asList(this.constructorParameters);
-		List<DependencyReference> grainMethodDependencies = this.grainMethods.stream()
-				.flatMap(m -> Arrays.stream(m.getParameters()).map(DependencyReference::of))
-				.collect(Collectors.toList());
-		List<DependencyReference> grainFieldDependencies = this.injectableFields.stream()
-				.map(DependencyReference::of)
-				.collect(Collectors.toList());
+		// List<DependencyReference> grainMethodDependencies = this.grainMethods.stream()
+		// 		.flatMap(m -> Arrays.stream(m.getParameters()).map(DependencyReference::of))
+		// 		.collect(Collectors.toList());
+		// List<DependencyReference> grainFieldDependencies = this.injectableFields.stream()
+		// 		.map(DependencyReference::of)
+		// 		.collect(Collectors.toList());
 
 		this.dependencies = new ArrayList<>();
 		this.dependencies.addAll(constructorDependencies);
@@ -89,7 +89,7 @@ class BetterDependency {
 		this.provider = null;
 		this.valueFields = Arrays.stream(clazz.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Value.class))
-				.map(BetterDependencyField::new)
+				.map(InjectableField::new)
 				.collect(Collectors.toList());
 		this.afterInitMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, AfterInit.class))
@@ -144,11 +144,11 @@ class BetterDependency {
 		return provider != null;
 	}
 
-	public BetterDependency getProvider() {
+	public Injectable getProvider() {
 		return provider;
 	}
 
-	public void setProvider(BetterDependency provider) {
+	public void setProvider(Injectable provider) {
 		this.provider = provider;
 	}
 
@@ -157,7 +157,7 @@ class BetterDependency {
 		return String.format("%s[%s]", type.getName(), name);
 	}
 
-	public List<BetterDependencyField> getValueFields() {
+	public List<InjectableField> getValueFields() {
 		return valueFields;
 	}
 

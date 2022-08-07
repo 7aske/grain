@@ -12,11 +12,11 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GrainInitializerTest {
-	BetterGrainInitializer grainInitializer;
+	GrainInjector grainInitializer;
 
 	@BeforeEach
 	void setUp() {
-		grainInitializer = new BetterGrainInitializer(Configuration.createDefault());
+		grainInitializer = new GrainInjector(Configuration.createDefault());
 	}
 
 	interface TestGrain {
@@ -77,10 +77,11 @@ class GrainInitializerTest {
 
 	@Test
 	void initialize() {
-		DependencyContainer dependencies = grainInitializer.inject(Set.of(GrainImpl.class, Component.class));
-		Optional<BetterDependency> dependency = dependencies.getByClass(Component.class);
+		grainInitializer.inject(Set.of(GrainImpl.class, Component.class));
+		DependencyContainer dependencies = grainInitializer.getContainer();
+		Optional<Component> dependency = dependencies.getOptionalGrain(Component.class);
 		assertTrue(dependency.isPresent());
-		Component component = dependency.get().getInstance();
+		Component component = dependency.get();
 		assertNotNull(component);
 		assertEquals(2, component.grains.size());
 

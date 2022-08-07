@@ -37,7 +37,7 @@ public class Model {
 	}
 
 	protected DatabaseExecutor getDatabaseExecutor() {
-		return context.getGrainRegistry().getGrain(DatabaseExecutor.class);
+		return context.getGrain(DatabaseExecutor.class);
 	}
 
 	public <T extends Model> List<T> executeQuery(Class<T> clazz, String query) {

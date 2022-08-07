@@ -82,4 +82,8 @@ public class GrainApp {
 	// before it gets passed to application context
 	protected void configure(Configuration configuration) {
 	}
+
+	public static String getBasePackage() {
+		return GrainApp.class.getPackage().getName();
+	}
 }

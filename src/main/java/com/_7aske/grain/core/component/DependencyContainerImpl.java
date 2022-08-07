@@ -1,0 +1,137 @@
+package com._7aske.grain.core.component;
+
+import com._7aske.grain.GrainApp;
+import com._7aske.grain.util.ReflectionUtil;
+
+import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.stream.Collectors;
+
+class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
+	private final Collection<Injectable> dependencies;
+
+	public DependencyContainerImpl() {
+		// Using TreeSet to allow for dependency ordering by their own dependency
+		// numbers. This will allow resolving more efficiently.
+		this.dependencies = new PriorityQueue<>(Comparator.comparing(
+				Injectable::getDependencies,
+				Comparator.comparing(Collection::size))
+		);
+	}
+
+	void add(Injectable dependency) {
+		dependencies.add(dependency);
+	}
+
+	List<Injectable> getListByName(String name) {
+		return dependencies.stream()
+				.filter(d -> Objects.equals(d.getName().orElse(null), name))
+				.collect(Collectors.toList());
+	}
+
+	Optional<Injectable> getByName(String name) {
+		List<Injectable> list = getListByName(name);
+
+		if (list.isEmpty()) {
+			return Optional.empty();
+		}
+
+		if (list.size() > 1) {
+			return resolveSingleDependency(name, list);
+		}
+
+		return Optional.of(list.get(0));
+	}
+
+	List<Injectable> getListByClass(Class<?> clazz) {
+		return dependencies.stream()
+				.filter(d -> clazz.isAssignableFrom(d.getType()))
+				.collect(Collectors.toList());
+	}
+
+	List<Injectable> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
+		return dependencies.stream()
+				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
+				.collect(Collectors.toList());
+	}
+
+	Optional<Injectable> getByClass(Class<?> clazz) {
+		List<Injectable> list = getListByClass(clazz);
+
+		if (list.isEmpty()) {
+			return Optional.empty();
+		}
+
+		if (list.size() > 1) {
+			return resolveSingleDependency(clazz.getName(), list);
+		}
+
+		return Optional.of(list.get(0));
+	}
+
+	@Override
+	public Iterator<Injectable> iterator() {
+		return dependencies.iterator();
+	}
+
+	private Optional<Injectable> resolveSingleDependency(String name, List<Injectable> list)  {
+		List<Injectable> userDefined = list.stream()
+				.filter(d -> {
+					String basePackage = GrainApp.getBasePackage() + ".";
+					String depPackage = d.getProvider() == null
+							? d.getType().getPackageName()
+							: d.getProvider().getType().getPackageName();
+					return !depPackage.startsWith(basePackage);
+				})
+				.collect(Collectors.toList());
+
+		if (userDefined.size() > 1) {
+			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
+		}
+
+		return userDefined.stream().findFirst();
+	}
+
+	@Override
+	public Collection<Object> getAllGrains() {
+		return dependencies.stream()
+				.map(Injectable::getInstance)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public <T> T getGrain(Class<T> clazz) {
+		return clazz.cast(getByClass(clazz)
+				.map(Injectable::getInstance)
+				.orElseThrow(() -> new IllegalStateException("No dependency of type '" + clazz.getName() + "' found.")));
+	}
+
+	@Override
+	public <T> Collection<T> getGrains(Class<T> clazz) {
+		return getListByClass(clazz)
+				.stream()
+				.map(Injectable::getInstance)
+				.sorted(ReflectionUtil::compareLibraryAndUserPackage)
+				.map(clazz::cast)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
+		return getListAnnotatedByClass(clazz)
+				.stream()
+				.map(Injectable::getInstance)
+				.sorted(ReflectionUtil::compareLibraryAndUserPackage)
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public <T> Optional<T> getOptionalGrain(Class<T> clazz) {
+		return getByClass(clazz)
+				.map(Injectable::getInstance);
+	}
+
+	public Collection<Injectable> getAll() {
+		return dependencies;
+	}
+}

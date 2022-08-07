@@ -25,15 +25,6 @@ public class DependencyReference {
 		this.isCollection = isCollection;
 	}
 
-	public DependencyReference(Class<?> type, String name, ReferenceType referenceType) {
-		this(type, name, referenceType, false);
-	}
-
-	static DependencyReference of(Class<?> type) {
-		String name = grainNameResolver.resolveReferenceName(type);
-		return new DependencyReference(type, name, name == null ? TYPE : NAME);
-	}
-
 	public static DependencyReference of(Parameter parameter) {
 		String name = grainNameResolver.resolveReferenceName(parameter);
 		boolean isCollection = false;
@@ -67,7 +58,7 @@ public class DependencyReference {
 		return new DependencyReference(actualType, name, name == null ? TYPE : NAME, isCollection);
 	}
 
-	public Collection<BetterDependency> resolveList(DependencyContainer container) {
+	public Collection<Injectable> resolveList(DependencyContainerImpl container) {
 		if (referenceType == TYPE) {
 			return container.getListByClass(type);
 		}
@@ -79,7 +70,7 @@ public class DependencyReference {
 		throw new GrainInitializationException("Unknown reference type");
 	}
 
-	public BetterDependency resolve(DependencyContainer container) {
+	public Injectable resolve(DependencyContainerImpl container) {
 		if (referenceType == TYPE) {
 			return container.getByClass(type)
 					.orElseThrow(() -> new GrainInitializationException("No dependency of type '" + type + "'"));

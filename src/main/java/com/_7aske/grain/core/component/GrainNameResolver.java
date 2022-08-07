@@ -1,5 +1,6 @@
 package com._7aske.grain.core.component;
 
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
 
 import java.lang.reflect.Field;
@@ -8,7 +9,15 @@ import java.lang.reflect.Parameter;
 
 public interface GrainNameResolver {
 
-	default @Nullable String resolveReferenceName(Class<?> clazz) {
+	default @Nullable String resolveDeclarationName(Class<?> clazz) {
+		Grain grain = clazz.getAnnotation(Grain.class);
+		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
+			return grain.name();
+		}
+		return null;
+	}
+
+	default @NotNull String resolveReferenceName(Class<?> clazz) {
 		Grain grain = clazz.getAnnotation(Grain.class);
 		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
 			return grain.name();

@@ -33,16 +33,16 @@ class ConfigurationTest {
 	@Test
 	void testConfiguration_isInjected() {
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApplication.class.getPackageName());
-		TestClass testObject = applicationContext.getGrainRegistry().getGrain(TestClass.class);
+		TestClass testObject = applicationContext.getGrain(TestClass.class);
 		Assertions.assertEquals("0.0.0.0", testObject.configuration.get("server.host"));
 	}
 
 	@Test
 	void testConfiguration_changeOfConfigurationPropagates() {
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApplication.class.getPackageName());
-		TestClass testObject = applicationContext.getGrainRegistry().getGrain(TestClass.class);
+		TestClass testObject = applicationContext.getGrain(TestClass.class);
 		testObject.changeConfiguration();
-		TestClass2 testObject2 = applicationContext.getGrainRegistry().getGrain(TestClass2.class);
+		TestClass2 testObject2 = applicationContext.getGrain(TestClass2.class);
 		Assertions.assertEquals("127.0.0.1", testObject2.configuration.get("server.host"));
 	}
 }

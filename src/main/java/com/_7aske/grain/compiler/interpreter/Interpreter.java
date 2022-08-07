@@ -231,7 +231,7 @@ public class Interpreter {
 			try {
 				value = node.run(this);
 			} catch (InterpreterException e) {
-				e.printStackTrace();
+				log.error("Error while evaluating \"{}\": {}", code, e.getMessage());
 				value = null;
 			}
 		}

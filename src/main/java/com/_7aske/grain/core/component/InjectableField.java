@@ -3,11 +3,11 @@ package com._7aske.grain.core.component;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-class BetterDependencyField {
+class InjectableField {
 	private final Field field;
 	private boolean initialized;
 
-	public BetterDependencyField(Field field) {
+	public InjectableField(Field field) {
 		this.field = field;
 		this.initialized = false;
 	}
