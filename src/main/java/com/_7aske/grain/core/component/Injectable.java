@@ -9,7 +9,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
@@ -44,24 +47,30 @@ class Injectable<T> {
 	}
 
 	public static <T> Injectable<T> ofMethod(@NotNull Class<T> clazz, @Nullable String name, Injectable<?> provider) {
-		Injectable<T> injectable = new Injectable<T>(clazz, name, null);
+		Injectable<T> injectable = new Injectable<>(clazz, name, null);
 		injectable.setProvider(provider);
 		return injectable;
 	}
 
 	public Injectable(@NotNull Class<T> clazz, @Nullable String name) {
 		this.name = name;
-		try {
-			this.constructor = ReflectionUtil.getBestConstructor(clazz);
-		} catch (NoSuchMethodException e) {
-			throw new GrainInitializationException("No constructor found for class " + clazz.getName());
+		if (clazz.isInterface()) {
+			this.constructor = null;
+			this.constructorParameters = new InjectableReference[0];
+			this.instance = ReflectionUtil.createProxy(clazz);
+		} else {
+			try {
+				this.constructor = ReflectionUtil.getBestConstructor(clazz);
+				this.constructorParameters = new InjectableReference[this.constructor.getParameterCount()];
+				Parameter[] parameters = this.constructor.getParameters();
+				for (int i = 0; i < parameters.length; i++) {
+					this.constructorParameters[i] = InjectableReference.of(parameters[i]);
+				}
+			} catch (NoSuchMethodException e) {
+				throw new GrainInitializationException("No constructor found for class " + clazz.getName());
+			}
 		}
 
-		this.constructorParameters = new InjectableReference[this.constructor.getParameterCount()];
-		Parameter[] parameters = this.constructor.getParameters();
-		for (int i = 0; i < parameters.length; i++) {
-			this.constructorParameters[i] = InjectableReference.of(parameters[i]);
-		}
 
 		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
@@ -85,7 +94,6 @@ class Injectable<T> {
 		// this.dependencies.addAll(grainFieldDependencies);
 
 		this.type = clazz;
-		this.instance = null;
 		this.provider = null;
 		this.valueFields = Arrays.stream(clazz.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Value.class))

@@ -7,12 +7,15 @@ import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.web.controller.annotation.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
  * Collection of utilities related for reflective operations and type inspections.
  */
 public class ReflectionUtil {
+	private static final Logger logger = LoggerFactory.getLogger(ReflectionUtil.class);
+	private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
 	private ReflectionUtil() {
 	}
 
@@ -452,5 +457,33 @@ public class ReflectionUtil {
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new GrainReflectionException(String.format("Unable to invoke method '%s'", method.getName()), e);
 		}
+	}
+
+	/**
+	 * Creates a proxy object for provided interfaces that allows calling their
+	 * default methods. Calling non-default methods will result in returning a
+	 * null value and a warning will be logged.
+	 *
+	 * @param interfaces to create a proxy for
+	 * @return proxy object
+	 */
+	public static <T> T createProxy(Class<?>... interfaces) {
+		// Invocation handler that finds the default method implementation and invokes it
+		// when a method is called on the proxy object
+		InvocationHandler ih = (proxy, method, args) -> {
+			if (method.isDefault()) {
+				Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class
+						.getDeclaredConstructor(Class.class);
+				constructor.setAccessible(true);
+				return constructor.newInstance(method.getDeclaringClass())
+						.in(method.getDeclaringClass())
+						.unreflectSpecial(method, method.getDeclaringClass())
+						.bindTo(proxy)
+						.invokeWithArguments(args);
+			}
+			logger.warn("Proxy call on a non-default method '{}'", method);
+			return null;
+		};
+		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, ih);
 	}
 }

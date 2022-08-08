@@ -5,11 +5,9 @@ import java.lang.reflect.Field;
 
 class InjectableField {
 	private final Field field;
-	private boolean initialized;
 
 	public InjectableField(Field field) {
 		this.field = field;
-		this.initialized = false;
 	}
 
 	public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
@@ -26,13 +24,5 @@ class InjectableField {
 
 	public Field get() {
 		return field;
-	}
-
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	public void setInitialized(boolean initialized) {
-		this.initialized = initialized;
 	}
 }
