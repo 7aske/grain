@@ -467,11 +467,6 @@ public class ReflectionUtil {
 	 * @return proxy object
 	 */
 	public static <T> T createProxy(Class<?>... interfaces) {
-		try {
-			InvocationHandler ih  = new ProxyInvocationHandler();
-			return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, ih);
-		} catch (NoSuchMethodException e) {
-			throw new GrainReflectionException("Unable to create ProxyInvocationHandler", e);
-		}
+		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, new ProxyInvocationHandler());
 	}
 }

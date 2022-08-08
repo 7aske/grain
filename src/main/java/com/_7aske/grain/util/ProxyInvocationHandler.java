@@ -5,7 +5,6 @@ import com._7aske.grain.logging.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -17,22 +16,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProxyInvocationHandler implements InvocationHandler {
 	private final Map<Method, MethodHandle> cache = new ConcurrentHashMap<>();
-	private final Constructor<MethodHandles.Lookup> constructor;
 	private static final Logger logger = LoggerFactory.getLogger(ProxyInvocationHandler.class);
-
-
-	public ProxyInvocationHandler() throws NoSuchMethodException {
-		this.constructor = MethodHandles.Lookup.class
-				.getDeclaredConstructor(Class.class);
-		this.constructor.setAccessible(true);
-	}
 
 	public synchronized MethodHandle getInstance(Method method) throws Exception {
 		if (cache.containsKey(method)) {
 			return cache.get(method);
 		}
-		MethodHandle instance = this.constructor.newInstance(method.getDeclaringClass())
-				.in(method.getDeclaringClass())
+		MethodHandles.Lookup lookup = MethodHandles.lookup();
+		MethodHandle instance = MethodHandles.privateLookupIn(method.getDeclaringClass(), lookup)
 				.unreflectSpecial(method, method.getDeclaringClass());
 		cache.put(method, instance);
 		return instance;
