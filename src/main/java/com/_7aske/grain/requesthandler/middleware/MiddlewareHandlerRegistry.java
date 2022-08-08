@@ -1,7 +1,7 @@
 package com._7aske.grain.requesthandler.middleware;
 
+import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.core.component.GrainRegistry;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.core.component.Priority;
 import com._7aske.grain.web.controller.annotation.RequestMapping;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Grain
 public class MiddlewareHandlerRegistry implements HandlerRegistry {
 	@Inject
-	private GrainRegistry registry;
+	private DependencyContainer container;
 
 	// @Incomplete allow setting path for middleware classes
 	@Override
@@ -25,7 +25,7 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 	}
 
 	public List<Handler> getHandlers(String path, HttpMethod method) {
-		return registry.getMiddlewares()
+		return container.getGrains(Middleware.class)
 				.stream()
 				.sorted(((o1, o2) -> {
 					if (o1.getClass().isAnnotationPresent(Priority.class) && o2.getClass().isAnnotationPresent(Priority.class)) {

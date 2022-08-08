@@ -230,7 +230,8 @@ public class Interpreter {
 		for (AstNode node : this.nodes) {
 			try {
 				value = node.run(this);
-			} catch (InterpreterException ignored) {
+			} catch (InterpreterException e) {
+				log.error("Error while evaluating \"{}\": {}", code, e.getMessage());
 				value = null;
 			}
 		}

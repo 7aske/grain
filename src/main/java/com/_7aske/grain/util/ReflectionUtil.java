@@ -7,6 +7,8 @@ import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.web.controller.annotation.*;
 
 import java.lang.annotation.Annotation;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  * Collection of utilities related for reflective operations and type inspections.
  */
 public class ReflectionUtil {
+	private static final Logger logger = LoggerFactory.getLogger(ReflectionUtil.class);
+	private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
 	private ReflectionUtil() {
 	}
 
@@ -125,6 +129,18 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * @param parameter  Parameter on which to search annotation for
+	 * @param annotation annotation to search for
+	 * @return if annotation is present in the parameter or recursively in any of
+	 * the annotated types
+	 */
+	public static boolean isAnnotationPresent(Parameter parameter, Class<? extends Annotation> annotation) {
+		if (parameter.isAnnotationPresent(annotation)) return true;
+
+		return Arrays.stream(parameter.getAnnotations()).anyMatch(a -> isAnnotationPresent(a.annotationType(), annotation));
+	}
+
+	/**
 	 * @param object      Field or Method on which to search annotation for
 	 * @param annotations annotations to search for
 	 * @return if annotation is present in the object or recursively in any of
@@ -147,7 +163,8 @@ public class ReflectionUtil {
 	public static <T> T newInstance(Class<T> clazz) throws GrainReflectionException {
 		try {
 			return getAnyConstructor(clazz).newInstance();
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+		} catch (InstantiationException | IllegalAccessException |
+		         InvocationTargetException | NoSuchMethodException e) {
 			throw new GrainReflectionException(e);
 		}
 	}
@@ -155,7 +172,8 @@ public class ReflectionUtil {
 	public static <T> Optional<T> newInstance(Constructor<T> constructor, Object... params) {
 		try {
 			return Optional.of(constructor.newInstance(params));
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+		} catch (InstantiationException | IllegalAccessException |
+		         InvocationTargetException e) {
 			return Optional.empty();
 		}
 	}
@@ -170,6 +188,30 @@ public class ReflectionUtil {
 	 */
 	public static <T> Class<T> getGenericListTypeArgument(Field f) {
 		return (Class<T>) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+	}
+
+	/**
+	 * Returns the class representing the generic type in a container class
+	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
+	 *
+	 * @param m   Method return a generic type.
+	 * @param <T> Generic type
+	 * @return generic type class
+	 */
+	public static <T> Class<T> getGenericListTypeArgument(Method m) {
+		return (Class<T>) ((ParameterizedType) m.getGenericReturnType()).getActualTypeArguments()[0];
+	}
+
+	/**
+	 * Returns the class representing the generic type in a container class
+	 * e.g. calling for List&lt;String&gt; would return Class&lt;String&gt;.
+	 *
+	 * @param p   Generic method parameter.
+	 * @param <T> Generic type
+	 * @return generic type class
+	 */
+	public static <T> Class<T> getGenericListTypeArgument(Parameter p) {
+		return (Class<T>) ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0];
 	}
 
 	/**
@@ -205,6 +247,13 @@ public class ReflectionUtil {
 		if (c1Package.startsWith(basePackagePrefix)) return 1;
 		if (c2Package.startsWith(basePackagePrefix)) return -1;
 		return 0;
+	}
+
+	public static <T> List<Class<?>> findClasses(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
+		return classes.stream()
+				.map(extractor::apply)
+				.filter(d -> d.equals(clazz) || clazz.isAssignableFrom(d))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -407,5 +456,17 @@ public class ReflectionUtil {
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new GrainReflectionException(String.format("Unable to invoke method '%s'", method.getName()), e);
 		}
+	}
+
+	/**
+	 * Creates a proxy object for provided interfaces that allows calling their
+	 * default methods. Calling non-default methods will result in returning a
+	 * null value and a warning will be logged.
+	 *
+	 * @param interfaces to create a proxy for
+	 * @return proxy object
+	 */
+	public static <T> T createProxy(Class<?>... interfaces) {
+		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, new ProxyInvocationHandler());
 	}
 }

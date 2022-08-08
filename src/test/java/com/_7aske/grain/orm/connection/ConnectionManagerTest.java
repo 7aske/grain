@@ -26,7 +26,7 @@ class ConnectionManagerTest {
 		configuration.set("grain.persistence.provider", "native");
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApp.class.getPackageName(),
 				configuration);
-		ConnectionManager connectionManager = applicationContext.getGrainRegistry().getGrain(ConnectionManager.class);
+		ConnectionManager connectionManager = applicationContext.getGrain(ConnectionManager.class);
 		Assertions.assertEquals("jdbc:mysql://127.0.0.1:3306/test", connectionManager.getConnectionUrl());
 	}
 }
