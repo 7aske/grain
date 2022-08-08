@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class GrainInjectorTest {
 	GrainInjector grainInjector;
@@ -31,7 +31,8 @@ class GrainInjectorTest {
 		grainInjector.inject(TestDefault.class);
 		Optional<TestDefault> testDefault = grainInjector.getContainer().getOptionalGrain(TestDefault.class);
 		assertTrue(testDefault.isPresent());
-		System.out.println(testDefault.get().sayHello("7aske"));
-		testDefault.get().sayGoodbye("7aske");
+		assertEquals("Hello 7aske", testDefault.get().sayHello("7aske"));
+		// Non-default method invocations should silently fail and return null.
+		assertNull(testDefault.get().sayGoodbye("7aske"));
 	}
 }

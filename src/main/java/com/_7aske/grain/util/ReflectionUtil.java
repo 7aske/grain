@@ -15,7 +15,6 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
@@ -468,22 +467,11 @@ public class ReflectionUtil {
 	 * @return proxy object
 	 */
 	public static <T> T createProxy(Class<?>... interfaces) {
-		// Invocation handler that finds the default method implementation and invokes it
-		// when a method is called on the proxy object
-		InvocationHandler ih = (proxy, method, args) -> {
-			if (method.isDefault()) {
-				Constructor<MethodHandles.Lookup> constructor = MethodHandles.Lookup.class
-						.getDeclaredConstructor(Class.class);
-				constructor.setAccessible(true);
-				return constructor.newInstance(method.getDeclaringClass())
-						.in(method.getDeclaringClass())
-						.unreflectSpecial(method, method.getDeclaringClass())
-						.bindTo(proxy)
-						.invokeWithArguments(args);
-			}
-			logger.warn("Proxy call on a non-default method '{}'", method);
-			return null;
-		};
-		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, ih);
+		try {
+			InvocationHandler ih  = new ProxyInvocationHandler();
+			return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, ih);
+		} catch (NoSuchMethodException e) {
+			throw new GrainReflectionException("Unable to create ProxyInvocationHandler", e);
+		}
 	}
 }
