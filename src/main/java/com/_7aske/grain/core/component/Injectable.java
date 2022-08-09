@@ -28,13 +28,14 @@ class Injectable<T> {
 	private List<InjectableReference<?>> dependencies;
 	private final List<InjectableField> valueFields;
 	private final List<Method> afterInitMethods;
+	private final int order;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
 	 */
 	private Injectable<?> provider;
 
-	private Injectable(Class<T> type, String name, Constructor<T> constructor) {
+	private Injectable(Class<T> type, String name, Constructor<T> constructor, int order) {
 		this.name = name;
 		this.type = type;
 		this.constructor = constructor;
@@ -44,10 +45,14 @@ class Injectable<T> {
 		this.injectableFields = new ArrayList<>();
 		this.valueFields = new ArrayList<>();
 		this.afterInitMethods = new ArrayList<>();
+		this.order = order;
 	}
 
-	public static <T> Injectable<T> ofMethod(@NotNull Class<T> clazz, @Nullable String name, Injectable<?> provider) {
-		Injectable<T> injectable = new Injectable<>(clazz, name, null);
+	public static Injectable<?> ofMethod(@NotNull Method method, @Nullable String name, Injectable<?> provider) {
+		int order = Optional.ofNullable(method.getAnnotation(Order.class))
+				.map(Order::value)
+				.orElse(Order.DEFAULT);
+		Injectable<?> injectable = new Injectable<>(method.getReturnType(), name, null, order);
 		injectable.setProvider(provider);
 		return injectable;
 	}
@@ -71,6 +76,10 @@ class Injectable<T> {
 			}
 		}
 
+		this.order = Optional.ofNullable(clazz.getAnnotation(Order.class))
+				.map(Order::value)
+				.orElse(Order.DEFAULT);
+
 
 		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
@@ -81,17 +90,10 @@ class Injectable<T> {
 				.collect(Collectors.toList());
 
 		List<InjectableReference<?>> constructorDependencies = Arrays.asList(this.constructorParameters);
-		// List<DependencyReference> grainMethodDependencies = this.grainMethods.stream()
-		// 		.flatMap(m -> Arrays.stream(m.getParameters()).map(DependencyReference::of))
-		// 		.collect(Collectors.toList());
-		// List<DependencyReference> grainFieldDependencies = this.injectableFields.stream()
-		// 		.map(DependencyReference::of)
-		// 		.collect(Collectors.toList());
 
 		this.dependencies = new ArrayList<>();
-		this.dependencies.addAll(constructorDependencies);
-		// this.dependencies.addAll(grainMethodDependencies);
-		// this.dependencies.addAll(grainFieldDependencies);
+		// Filter added to prevent the Injectable to depend on itself
+		this.dependencies.addAll(constructorDependencies.stream().filter(d -> !d.getType().isAssignableFrom(clazz)).collect(Collectors.toList()));
 
 		this.type = clazz;
 		this.provider = null;
@@ -126,10 +128,6 @@ class Injectable<T> {
 
 	public List<InjectableReference<?>> getDependencies() {
 		return dependencies;
-	}
-
-	public void setDependencies(List<InjectableReference<?>> dependencies) {
-		this.dependencies = dependencies;
 	}
 
 	public Class<?> getType() {
@@ -175,6 +173,10 @@ class Injectable<T> {
 
 	public List<Method> getAfterInitMethods() {
 		return afterInitMethods;
+	}
+
+	public int getOrder() {
+		return order;
 	}
 
 	@Override

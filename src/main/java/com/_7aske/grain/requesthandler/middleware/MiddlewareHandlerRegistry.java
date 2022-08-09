@@ -3,12 +3,12 @@ package com._7aske.grain.requesthandler.middleware;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.core.component.Priority;
-import com._7aske.grain.web.controller.annotation.RequestMapping;
+import com._7aske.grain.core.component.Order;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,9 +28,9 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 		return container.getGrains(Middleware.class)
 				.stream()
 				.sorted(((o1, o2) -> {
-					if (o1.getClass().isAnnotationPresent(Priority.class) && o2.getClass().isAnnotationPresent(Priority.class)) {
-						Priority p1 = o1.getClass().getAnnotation(Priority.class);
-						Priority p2 = o2.getClass().getAnnotation(Priority.class);
+					if (o1.getClass().isAnnotationPresent(Order.class) && o2.getClass().isAnnotationPresent(Order.class)) {
+						Order p1 = o1.getClass().getAnnotation(Order.class);
+						Order p2 = o2.getClass().getAnnotation(Order.class);
 						return -Integer.compare(p1.value(), p2.value());
 					}
 					return 0;

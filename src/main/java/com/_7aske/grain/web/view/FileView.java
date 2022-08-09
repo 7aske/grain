@@ -7,6 +7,7 @@ import java.io.InputStream;
 
 import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 
+// @Refactor logic of resolving file content should be moved to a ViewResolver implementation.
 public class FileView implements View {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private final String path;

@@ -7,4 +7,8 @@ import com._7aske.grain.security.Authentication;
 
 public interface ViewResolver {
 	void resolve(View view, HttpRequest request, HttpResponse response, Session session, Authentication authentication);
+
+	default boolean supports(View view) {
+		return true;
+	}
 }

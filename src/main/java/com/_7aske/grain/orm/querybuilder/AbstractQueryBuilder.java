@@ -9,7 +9,6 @@ import com._7aske.grain.orm.querybuilder.helper.ModelClass;
 import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.util.formatter.StringFormat;
 
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,9 +17,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class AbstractQueryBuilder implements QueryBuilder {
-	public final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy HH:mm:ss.S";
+	public final static String DATE_TIME_FORMAT_STRING = "dd-MM-yyyy HH:mm:ss";
 	// @Refactor ugh
-	public final static String DATE_TIME_FORMAT_STRING2 = "yyyy-MM-dd HH:mm:ss.S";
+	public final static String DATE_TIME_FORMAT_STRING2 = "yyyy-MM-dd HH:mm:ss";
 	public final static String DATE_FORMAT_STRING = "dd-MM-yyyy";
 	public final static String DATE_FORMAT_STRING2 = "yyyy-MM-dd";
 	public final static DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT_STRING);

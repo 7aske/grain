@@ -1,8 +1,8 @@
 package com._7aske.grain.web.view;
 
 import com._7aske.grain.compiler.interpreter.Interpreter;
-import com._7aske.grain.core.component.Default;
 import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Order;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.session.Session;
@@ -11,7 +11,7 @@ import com._7aske.grain.security.Authentication;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 @Grain
-@Default
+@Order(256)
 public class GtlViewResolver implements ViewResolver {
 
 	@Override

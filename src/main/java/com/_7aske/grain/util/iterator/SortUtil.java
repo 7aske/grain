@@ -1,15 +1,15 @@
 package com._7aske.grain.util.iterator;
 
-import com._7aske.grain.core.component.Priority;
+import com._7aske.grain.core.component.Order;
 
 public class SortUtil {
 	private SortUtil() {
 	}
 
 	public static int sortByPriority(Class<?> c1, Class<?> c2) {
-		if (c1.isAnnotationPresent(Priority.class) && c2.isAnnotationPresent(Priority.class)) {
-			Priority p1 = c1.getAnnotation(Priority.class);
-			Priority p2 = c2.getAnnotation(Priority.class);
+		if (c1.isAnnotationPresent(Order.class) && c2.isAnnotationPresent(Order.class)) {
+			Order p1 = c1.getAnnotation(Order.class);
+			Order p2 = c2.getAnnotation(Order.class);
 			return -Integer.compare(p1.value(), p2.value());
 		}
 		return 0;

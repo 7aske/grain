@@ -2,23 +2,25 @@ package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.constants.ValueConstants;
-import com._7aske.grain.web.controller.annotation.PathVariable;
-import com._7aske.grain.web.controller.annotation.RequestParam;
-import com._7aske.grain.web.controller.converter.Converter;
-import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.*;
+import com._7aske.grain.http.HttpContentType;
+import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.http.HttpRequest;
+import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
 import com._7aske.grain.http.json.*;
 import com._7aske.grain.http.session.Session;
-import com._7aske.grain.web.view.TemplateView;
-import com._7aske.grain.web.view.View;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.security.context.SecurityContextHolder;
 import com._7aske.grain.util.HttpPathUtil;
 import com._7aske.grain.util.RequestParams;
-import com._7aske.grain.web.view.ViewResolver;
+import com._7aske.grain.web.controller.annotation.PathVariable;
+import com._7aske.grain.web.controller.annotation.RequestParam;
+import com._7aske.grain.web.controller.converter.Converter;
+import com._7aske.grain.web.controller.converter.ConverterRegistry;
+import com._7aske.grain.web.view.View;
+import com._7aske.grain.web.view.ViewResolverProvider;
 
 import java.lang.reflect.Parameter;
 import java.util.Map;
@@ -28,9 +30,13 @@ import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 public class ControllerHandler implements RequestHandler {
 	public static final String REDIRECT_PREFIX = "redirect:";
 	private final ControllerWrapper controller;
+	private final ConverterRegistry converterRegistry;
+	private final ViewResolverProvider viewResolver;
 
 	public ControllerHandler(ControllerWrapper wrapper) {
 		this.controller = wrapper;
+		this.converterRegistry  = ApplicationContextHolder.getContext().getGrain(ConverterRegistry.class);
+		this.viewResolver = ApplicationContextHolder.getContext().getGrain(ViewResolverProvider.class);
 	}
 
 	@Override
@@ -40,9 +46,6 @@ public class ControllerHandler implements RequestHandler {
 
 		// @CopyPaste from ControllerWrapper
 		String fullControllerMapping = HttpPathUtil.join(controller.getPath(), method.getPath());
-
-		ConverterRegistry converterRegistry = ApplicationContextHolder.getContext().getGrain(ConverterRegistry.class);
-		ViewResolver viewResolver = ApplicationContextHolder.getContext().getGrain(ViewResolver.class);
 
 		// Here we handle Controller method parameter parsing
 		Parameter[] declaredParams = method.getParameters();

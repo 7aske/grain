@@ -98,7 +98,7 @@ public class GrainInjector {
 				// we happen to come across grain method dependencies before their
 				// providers in the injection pipeline.
 				Injectable<?> methodDependency = Injectable.ofMethod(
-						method.getReturnType(),
+						method,
 						grainNameResolver.resolveReferenceName(method),
 						dependency);
 				// We add the dependency to the DependencyContainer allowing
