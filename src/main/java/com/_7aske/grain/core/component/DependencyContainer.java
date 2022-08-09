@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface DependencyContainer {
-	Collection<Object> getAllGrains();
-
 	<T> T getGrain(Class<T> clazz);
 
 	Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz);
@@ -14,5 +12,4 @@ public interface DependencyContainer {
 	<T> Optional<T> getOptionalGrain(Class<T> clazz);
 
 	<T> Collection<T> getGrains(Class<T> clazz);
-
 }

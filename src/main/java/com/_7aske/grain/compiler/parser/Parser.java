@@ -17,6 +17,7 @@ import java.util.Stack;
 import static com._7aske.grain.compiler.lexer.TokenType.*;
 
 public class Parser {
+	public static final String FRAGMENT_START = "@";
 	private final Lexer lexer;
 	private TokenIterator iter;
 	private final Stack<AstNode> parsedStack = new Stack<>();
@@ -94,7 +95,7 @@ public class Parser {
 			node = parseIncludeStatement(curr);
 		} else if (curr.isOfType(IDEN) && iter.isPeekOfType(LPAREN)) {
 			node = createNode(curr);
-			if (((AstSymbolNode) node).getName().startsWith("#")) {
+			if (((AstSymbolNode) node).getName().startsWith(FRAGMENT_START)) {
 				node = parseFragmentCall((AstSymbolNode) node);
 			} else {
 				node = parseFunctionCall((AstSymbolNode) node);

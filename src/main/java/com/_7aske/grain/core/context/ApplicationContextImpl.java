@@ -1,9 +1,9 @@
 package com._7aske.grain.core.context;
 
 import com._7aske.grain.GrainApp;
-import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
@@ -34,8 +34,6 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 		grainInitializer.inject(classes);
 
 		this.dependencyContainer = grainInitializer.getContainer();
-
-		logger.info("Loaded {} Grain classes", dependencyContainer.getAllGrains().size());
 	}
 
 	public ApplicationContextImpl(String basePackage) {
@@ -75,13 +73,5 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 	@Override
 	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
 		return dependencyContainer.getGrainsAnnotatedBy(clazz);
-	}
-
-	/**
-	 * @return 
-	 */
-	@Override
-	public Collection<Object> getAllGrains() {
-		return dependencyContainer.getAllGrains();
 	}
 }

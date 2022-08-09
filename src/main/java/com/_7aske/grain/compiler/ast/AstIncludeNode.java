@@ -7,6 +7,8 @@ import com._7aske.grain.util.formatter.StringFormat;
 
 import java.util.Optional;
 
+import static com._7aske.grain.compiler.parser.Parser.FRAGMENT_START;
+
 public class AstIncludeNode extends AstNode {
 	private String path;
 	private AstSymbolNode identifier;
@@ -37,7 +39,7 @@ public class AstIncludeNode extends AstNode {
 	public Object run(Interpreter interpreter) {
 		Optional<AstFragmentNode> fragmentNode = interpreter.tryIncludeFragment(path);
 		if (fragmentNode.isEmpty()) throw new InterpreterIncludeFailedException(StringFormat.format("Unable to include template '{}'", path));
-		interpreter.putSymbol("#" + identifier.getName(), fragmentNode.get());
+		interpreter.putSymbol(FRAGMENT_START + identifier.getName(), fragmentNode.get());
 		return null; // Should we return null?
 	}
 }

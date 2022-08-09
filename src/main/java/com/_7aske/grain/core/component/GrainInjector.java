@@ -113,9 +113,11 @@ public class GrainInjector {
 		// Second, after resolving all dependencies we check whether there
 		// is any circular dependencies between grains. If yes we need to
 		// throw an exception.
+		logger.debug("Checking for circular dependencies");
 		checkCircularDependencies();
 
 		// Third, we initialize all dependencies and set their instances.
+		logger.debug("Initializing dependencies");
 		for (Injectable<?> dependency : this.container) {
 			// These should be skipped as they are added to the dependency
 			// container but are not actual classes that we should initialize
@@ -135,16 +137,20 @@ public class GrainInjector {
 		interpreter.putSymbols(tmp);
 
 		// Fourth, we evaluate @Value annotations on all dependencies.
+		logger.debug("Evaluating @Value annotations");
 		for (Injectable<?> dependency : this.container) {
 			evaluateValueAnnotations(dependency);
 		}
 
 		// Finally, we call lifecycle methods on all dependencies.
+		logger.debug("Calling lifecycle methods");
 		for (Injectable<?> dependency : this.container) {
 			for (Method method : dependency.getAfterInitMethods()) {
 				ReflectionUtil.invokeMethod(method, dependency.getInstance(), mapMethodParametersToDependencies(method));
 			}
 		}
+
+		logger.debug("Loaded {} Grain classes", container.getAll().size());
 	}
 
 	/**

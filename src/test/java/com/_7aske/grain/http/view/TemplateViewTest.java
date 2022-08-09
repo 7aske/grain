@@ -1,5 +1,6 @@
 package com._7aske.grain.http.view;
 
+import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.web.view.GtlViewResolver;
 import com._7aske.grain.web.view.TemplateView;
@@ -15,7 +16,7 @@ class TemplateViewTest {
 
 	@BeforeEach
 	void setUp() {
-		viewResolver = new GtlViewResolver();
+		viewResolver = new GtlViewResolver(Configuration.createDefault());
 	}
 
 	@Test

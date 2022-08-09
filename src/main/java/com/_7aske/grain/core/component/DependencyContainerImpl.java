@@ -96,14 +96,6 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	}
 
 	@Override
-	public Collection<Object> getAllGrains() {
-		return dependencies.stream()
-				.sorted(Comparator.comparing(Injectable::getOrder))
-				.map(Injectable::getInstance)
-				.collect(Collectors.toList());
-	}
-
-	@Override
 	public <T> T getGrain(Class<T> clazz) {
 		return clazz.cast(getByClass(clazz)
 				.map(Injectable::getInstance)
