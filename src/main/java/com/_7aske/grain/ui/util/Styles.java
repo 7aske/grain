@@ -99,6 +99,24 @@ public class Styles {
 				"  font-family: \"Roboto\", sans-serif;\n" +
 				"  -webkit-font-smoothing: antialiased;\n" +
 				"  -moz-osx-font-smoothing: grayscale;\n" +
+				"}\n"+
+				".alert {\n" +
+				"   font-family: \"Roboto\", sans-serif;\n" +
+				"   margin-top: 0.25em;\n" +
+				"   padding: 15px;\n" +
+				"   color: white;\n" +
+				"   outline: 0;\n" +
+				"   border: 0;\n" +
+				"   font-size: 14px;\n" +
+				"   -webkit-transition: all 0.3 ease;\n" +
+				"   transition: all 0.3 ease;\n" +
+				"}\n" +
+				".alert.error {\n" +
+				"   background-image: linear-gradient(45deg, #FF7C7C, #EB4747);\n" +
+				"}\n" +
+				".alert.logout {\n" +
+				"   background-image: linear-gradient(45deg, #FFEF82, #EFD345);\n" +
+				"   color: #545454;\n" +
 				"}\n";
 	}
 }

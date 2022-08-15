@@ -11,5 +11,5 @@ import java.lang.annotation.*;
 public @interface RequestMapping {
 	String value() default "/";
 
-	HttpMethod method() default HttpMethod.GET;
+	HttpMethod[] method() default {};
 }

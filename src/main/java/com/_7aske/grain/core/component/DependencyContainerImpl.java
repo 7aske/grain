@@ -92,7 +92,11 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
 		}
 
-		return userDefined.stream().findFirst();
+		if (userDefined.size() == 1)
+			return Optional.of(userDefined.get(0));
+
+		// Should be sorted by @Order
+		return list.stream().findFirst();
 	}
 
 	@Override

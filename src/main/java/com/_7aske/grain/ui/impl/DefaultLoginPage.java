@@ -28,9 +28,20 @@ public class DefaultLoginPage implements LoginPage {
 				"        <input name=\"username\" type=\"text\" placeholder=\"Username\"/>\n" +
 				"        <input name=\"password\" type=\"password\" placeholder=\"Password\"/>\n" +
 				"        <button>Login</button>\n" +
+				"        <div style=\"display: none\" class=\"alert error\">Invalid credentials</div>\n" +
+				"        <div style=\"display: none;\" class=\"alert logout\">Successfully logged out</div>\n" +
 				"      </form>\n" +
 				"    </div>\n" +
 				"  </div>\n" +
+				"<script>\n" +
+				"    const params = new URLSearchParams(window.location.search);\n" +
+				"    if (params.has(\"error\")) {\n" +
+				"        document.querySelector(\".alert.error\").style.display = \"block\";\n" +
+				"    }\n" +
+				"    if (params.has(\"logout\")) {\n" +
+				"        document.querySelector(\".alert.logout\").style.display = \"block\";\n" +
+				"    }\n" +
+				"</script>\n" +
 				"</body>\n" +
 				"</html>";
 	}

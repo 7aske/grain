@@ -42,7 +42,7 @@ public class FormLoginAuthenticationEntryPointController {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 			return "redirect:" + configuration.getAuthenticationSuccessUrl();
 		} catch (GrainSecurityException e) {
-			return "redirect:" + configuration.getAuthenticationFailureUrl();
+			return "redirect:" + configuration.getAuthenticationFailureUrl() + "?error";
 		}
 	}
 
@@ -59,7 +59,7 @@ public class FormLoginAuthenticationEntryPointController {
 				store.invalidateSession(token.getId());
 				SecurityContextHolder.getContext().setAuthentication(null);
 			}
-			return "redirect:/login";
+			return "redirect:/login?logout";
 		} catch (GrainSecurityException e) {
 			throw new HttpException.Forbidden(e);
 		}

@@ -41,7 +41,7 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 		if (!user.isEnabled())
 			throw new UserDisabledException("User is disabled");
 
-		if (!passwordEncoder.matches(password, (String) user.getPassword()))
+		if (password == null || !passwordEncoder.matches(password, (String) user.getPassword()))
 			throw new InvalidCredentialsException("Invalid credentials");
 
 		// @Refactor can possibly return empty token instead of throwing

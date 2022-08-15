@@ -2,7 +2,6 @@ package com._7aske.grain.requesthandler.staticlocation;
 
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
-import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 
 import java.io.File;
@@ -34,15 +33,38 @@ public class StaticLocationHandler implements RequestHandler {
 
 
 	@Override
-	public boolean handle(HttpRequest request, HttpResponse response, Session session) {
-		Path path = Paths.get(getPath(), request.getPath());
+	public void handle(HttpRequest request, HttpResponse response) {
+		Path path = Paths.get(location, request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
 			response.setBody(new String(inputStream.readAllBytes()));
 			response.setStatus(HttpStatus.OK);
-			return true;
+			// Finally, we need to set the request handled attribute to true
+			// so that we don't get 404 exception from the HandlerRunner.
+			request.setHandled(true);
 		} catch (IOException ex) {
 			throw new HttpException.NotFound(request.getPath());
+		}
+	}
+
+	@Override
+	public boolean canHandle(HttpRequest request) {
+		HttpMethod method = request.getMethod();
+		String path = request.getPath();
+
+		// we allow only GET http methods
+		if (!method.equals(HttpMethod.GET)) return false;
+
+		if (isResource) {
+			URL url = classLoader.getResource(join(location, path));
+			if (url == null) return false;
+			File file = new File(url.getPath());
+			if (file.isDirectory()) {
+				file = new File(url.getPath() + "/index.html");
+			}
+			return file.exists();
+		} else {
+			return new File(Paths.get(location, path).toAbsolutePath().toString()).exists();
 		}
 	}
 
@@ -73,28 +95,6 @@ public class StaticLocationHandler implements RequestHandler {
 				throw new IOException();
 			return new FileInputStream(file);
 		}
-	}
-
-	@Override
-	public boolean canHandle(String path, HttpMethod method) {
-		// we allow only GET http methods
-		if (!method.equals(HttpMethod.GET)) return false;
-		if (isResource) {
-			URL url = classLoader.getResource(join(getPath(), path));
-			if (url == null) return false;
-			File file = new File(url.getPath());
-			if (file.isDirectory()) {
-				file = new File(url.getPath() + "/index.html");
-			}
-			return file.exists();
-		} else {
-			return new File(Paths.get(getPath(), path).toAbsolutePath().toString()).exists();
-		}
-	}
-
-	@Override
-	public String getPath() {
-		return location;
 	}
 }
 

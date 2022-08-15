@@ -1,6 +1,5 @@
 package com._7aske.grain.security.config;
 
-import com._7aske.grain.core.component.Default;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpMethod;
 import com._7aske.grain.logging.Logger;
@@ -12,7 +11,7 @@ import java.util.UUID;
 /**
  * Default SecurityConfigurer
  */
-@Grain @Default final class DefaultSecurityConfigurer implements SecurityConfigurer {
+@Grain final class DefaultSecurityConfigurer implements SecurityConfigurer {
 	private final Logger logger = LoggerFactory.getLogger(DefaultSecurityConfigurer.class);
 
 	@Override
@@ -31,6 +30,8 @@ import java.util.UUID;
 				.buildDefaultUser();
 		// @formatter:on
 
+		// @Note important to print, otherwise the user wouldn't be able to know
+		// the password and login.
 		logger.info("Created default user with username: {} and password: {}", username, password);
 	}
 

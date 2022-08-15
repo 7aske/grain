@@ -1,55 +1,52 @@
 package com._7aske.grain.requesthandler.handler.runner;
 
+import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.session.Session;
-import com._7aske.grain.requesthandler.handler.Handler;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
-import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
-import com._7aske.grain.requesthandler.middleware.Middleware;
+import com._7aske.grain.util.ReflectionUtil;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HandlerRunner implements Handler {
+/**
+ * HandlerRunner used to run the registry handlers in the order they are registered.
+ */
+@Grain
+public class HandlerRunner {
 	private final List<HandlerRegistry> handlerRegistries;
-	private final HandlerProxyFactory proxyFactory;
 
-	protected HandlerRunner(HandlerProxyFactory proxyFactory) {
-		this.handlerRegistries = new ArrayList<>();
-		this.proxyFactory = proxyFactory;
+	protected HandlerRunner(List<HandlerRegistry> registries) {
+		this.handlerRegistries = registries;
 	}
 
-	public <T extends HandlerRegistry> HandlerRunner addRegistry(HandlerRegistry registry) {
+	/**
+	 * Adds a registry to the list of registries to run for each request.
+	 *
+	 * @param registry the registry to add
+	 * @return this
+	 */
+	public HandlerRunner addRegistry(HandlerRegistry registry) {
 		this.handlerRegistries.add(registry);
+		// We must take into the account the ordering of the registries if
+		// we decide to add a new one at runtime
+		this.handlerRegistries
+				.sort((o1, o2) -> ReflectionUtil.sortByOrder(o1.getClass(), o2.getClass()));
 		return this;
 	}
 
-	public boolean handle(HttpRequest request, HttpResponse response, Session session) {
+	/**
+	 * Runs the handler registries in the order they are registered.
+	 *
+	 * @param request  the request to handle
+	 * @param response the response to write to
+	 */
+	public void handle(HttpRequest request, HttpResponse response) {
 		for (HandlerRegistry registry : handlerRegistries) {
-			List<Handler> handlers = registry.getHandlers(request.getPath(), request.getMethod());
-			if (!handlers.isEmpty()) {
-				AtomicBoolean handled = new AtomicBoolean(false);
-				handlers.forEach(handler -> {
-					if (handled.get()) return;
-					boolean res = false;
-					// We don't proxy middlewares because proxy throws
-					// security exception.
-					if (Middleware.class.isAssignableFrom(handler.getClass())) {
-						res = handler.handle(request, response, session);
-					} else {
-						Handler proxy = proxyFactory.createProxy(handler);
-						res = proxy.handle(request, response, session);
-					}
-					if (res) handled.set(true);
-				});
-				if (handled.get())
-					return true;
-			}
+			registry.handle(request, response);
 		}
 
-		throw new HttpException.NotFound(request.getPath());
+		if (!request.isHandled())
+			throw new HttpException.NotFound(request.getPath());
 	}
 }

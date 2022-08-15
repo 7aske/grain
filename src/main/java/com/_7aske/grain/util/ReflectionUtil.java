@@ -2,7 +2,9 @@ package com._7aske.grain.util;
 
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.core.component.Default;
+import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.component.Primary;
+import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
@@ -169,12 +171,12 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static <T> Optional<T> newInstance(Constructor<T> constructor, Object... params) {
+	public static <T> T newInstance(Constructor<T> constructor, Object... params) {
 		try {
-			return Optional.of(constructor.newInstance(params));
+			return constructor.newInstance(params);
 		} catch (InstantiationException | IllegalAccessException |
 		         InvocationTargetException e) {
-			return Optional.empty();
+			throw new GrainInitializationException("Could not instantiate '" + constructor.getDeclaringClass().getName() + "'", e);
 		}
 	}
 
@@ -376,7 +378,7 @@ public class ReflectionUtil {
 	 * @param method to extract the http method from
 	 * @return extracted request handler path. Throws if the annotation is not found
 	 */
-	public static HttpMethod getAnnotatedHttpMethod(Method method) {
+	public static HttpMethod[] getAnnotatedHttpMethods(Method method) {
 		if (method.isAnnotationPresent(RequestMapping.class))
 			return method.getAnnotation(RequestMapping.class).method();
 		if (method.isAnnotationPresent(GetMapping.class))
@@ -402,7 +404,7 @@ public class ReflectionUtil {
 	 * @param clazz to extract the http method from
 	 * @return extracted request handler path. Throws if the annotation is not found
 	 */
-	public static HttpMethod getAnnotatedHttpMethod(Class<?> clazz) {
+	public static HttpMethod[] getAnnotatedHttpMethods(Class<?> clazz) {
 		if (clazz.isAnnotationPresent(RequestMapping.class))
 			return clazz.getAnnotation(RequestMapping.class).method();
 		if (clazz.isAnnotationPresent(GetMapping.class))
@@ -447,6 +449,19 @@ public class ReflectionUtil {
 	}
 
 	/**
+	 * Gets a value to a field regardless of its visibility and accessibility.
+	 */
+	public static Object getFieldValue(Object object, String fieldName) {
+		try {
+			Field field = object.getClass().getDeclaredField(fieldName);
+			field.setAccessible(true);
+			return field.get(object);
+		} catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new GrainReflectionException(e);
+		}
+	}
+
+	/**
 	 * Invokes a method regardless of its visibility and accessibility.
 	 */
 	public static Object invokeMethod(Method method, Object target, Object... args) {
@@ -468,5 +483,18 @@ public class ReflectionUtil {
 	 */
 	public static <T> T createProxy(Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, new ProxyInvocationHandler());
+	}
+
+	public static int sortByOrder(Class<?> c1, Class<?> c2) {
+		if (c1.isAnnotationPresent(Order.class) && c2.isAnnotationPresent(Order.class)) {
+			Order p1 = c1.getAnnotation(Order.class);
+			Order p2 = c2.getAnnotation(Order.class);
+			return -Integer.compare(p1.value(), p2.value());
+		}
+		return 0;
+	}
+
+	public static int sortByOrder(Object o1, Object o2) {
+		return sortByOrder(o1.getClass(), o2.getClass());
 	}
 }

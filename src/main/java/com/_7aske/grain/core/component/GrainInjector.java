@@ -209,9 +209,9 @@ public class GrainInjector {
 		// We initialize the injectable
 		T instance = ReflectionUtil.newInstance(
 				dependency.getConstructor(),
-				mapConstructorParametersToDependencies(dependency)
-		).orElseThrow(() -> new GrainInitializationException("Could not instantiate '" + dependency.getType() + "'"));
+				mapConstructorParametersToDependencies(dependency));
 		dependency.setInstance(instance);
+		logger.debug("Initialized '{}'", dependency.getType().getName());
 
 		// After initialization, we call @Grain methods and update the appropriate
 		// injectable with the result

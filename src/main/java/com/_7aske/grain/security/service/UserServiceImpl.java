@@ -15,6 +15,10 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public User findByUsername(String username) throws UserNotFoundException {
-		return configuration.getDefaultUser();
+		User user = configuration.getDefaultUser();
+		if (user.getUsername().equals(username))
+			return user;
+
+		return null;
 	}
 }

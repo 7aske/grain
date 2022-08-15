@@ -1,7 +1,8 @@
-package com._7aske.grain.requesthandler.controller;
+package com._7aske.grain.requesthandler.controller.wrapper;
 
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.util.HttpPathUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,22 +12,29 @@ import java.util.List;
 import java.util.regex.Matcher;
 
 import static com._7aske.grain.util.HttpPathUtil.PATH_VARIABLE_PATTERN;
-import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpMethod;
+import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpMethods;
 import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpPath;
 
+/**
+ * Wrapper around a controller Grain component method responsible for handling {@link com._7aske.grain.http.HttpRequest}s.
+ */
 public class ControllerMethodWrapper {
 	private final Method method;
 	private final String path;
-	private final HttpMethod httpMethod;
+	private final List<HttpMethod> httpMethods;
 	// Pattern matching for path variables.
 	private final List<String> pathVariables = new ArrayList<>();
+	private final Object controllerInstance;
 
-	public ControllerMethodWrapper(Method method) {
+	public ControllerMethodWrapper(Method method, Object controllerInstance) {
 		this.method = method;
+		// @Todo If ReflectionUtil#invokeMethod is used to invoke this
+		// is not necessary.
 		this.method.setAccessible(true);
+		this.controllerInstance = controllerInstance;
 
-		this.httpMethod = getAnnotatedHttpMethod(method);
-		this.path = getAnnotatedHttpPath(method);
+		this.httpMethods = List.of(getAnnotatedHttpMethods(method));
+		this.path = HttpPathUtil.join(getAnnotatedHttpPath(method.getDeclaringClass()), getAnnotatedHttpPath(method));
 
 		Matcher matcher = PATH_VARIABLE_PATTERN.matcher(this.path);
 		while (matcher.find()) {
@@ -34,9 +42,10 @@ public class ControllerMethodWrapper {
 		}
 	}
 
-	public Object invoke(Object instance, Object... args) {
+	public Object invoke(Object... args) {
+		// @Todo refactor to use ReflectionUtil#invokeMethod
 		try {
-			return method.invoke(instance, args);
+			return method.invoke(controllerInstance, args);
 		} catch (IllegalAccessException | InvocationTargetException | HttpException e) {
 			if (e.getCause() instanceof HttpException) {
 				throw (HttpException) e.getCause();
@@ -48,32 +57,12 @@ public class ControllerMethodWrapper {
 		}
 	}
 
-	public List<String> getPathVariables() {
-		return pathVariables;
-	}
-
-	public String getPathVariable(int index) {
-		return pathVariables.get(index);
-	}
-
-	public int getParameterCount() {
-		return method.getParameterCount();
-	}
-
-	public Class<?>[] getParameterTypes() {
-		return method.getParameterTypes();
-	}
-
 	public Parameter[] getParameters() {
 		return method.getParameters();
 	}
 
-	public Class<?> getReturnType() {
-		return method.getReturnType();
-	}
-
-	public HttpMethod getHttpMethod() {
-		return httpMethod;
+	public List<HttpMethod> getHttpMethods() {
+		return httpMethods;
 	}
 
 	public String getPath() {

@@ -2,23 +2,18 @@ package com._7aske.grain.requesthandler;
 
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
-import com._7aske.grain.http.json.JsonObject;
-import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
+import com._7aske.grain.http.json.JsonObject;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.http.session.SessionInitializer;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.requesthandler.controller.ControllerHandlerRegistry;
-import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 import com._7aske.grain.requesthandler.handler.runner.HandlerRunner;
-import com._7aske.grain.requesthandler.handler.runner.HandlerRunnerFactory;
-import com._7aske.grain.requesthandler.middleware.MiddlewareHandlerRegistry;
-import com._7aske.grain.requesthandler.staticlocation.StaticHandlerRegistry;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.authentication.provider.HttpRequestAuthenticationProviderStrategy;
 import com._7aske.grain.security.context.SecurityContextHolder;
+import com._7aske.grain.ui.impl.ErrorPage;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -27,36 +22,24 @@ import java.net.Socket;
 import java.util.Objects;
 
 import static com._7aske.grain.core.configuration.ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG;
-import static com._7aske.grain.http.HttpHeaders.*;
+import static com._7aske.grain.http.HttpHeaders.ACCEPT;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
 public class RequestHandlerRunnable implements Runnable {
+	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
 	private final Socket socket;
 	private final Configuration configuration;
 	private final HandlerRunner handlerRunner;
-	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
-	private final ApplicationContext context;
 	private final SessionInitializer sessionInitializer;
-	private HttpRequest httpRequest;
-	private HttpResponse httpResponse;
-	private Session session;
+	private final HttpRequestAuthenticationProviderStrategy provider;
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
-		// @Todo Make static handler registry a Grain
-		StaticHandlerRegistry staticHandlerRegistry = context.getGrain(StaticHandlerRegistry.class);
-		ControllerHandlerRegistry controllerRegistry = context.getGrain(ControllerHandlerRegistry.class);
-		MiddlewareHandlerRegistry middlewareRegistry = context.getGrain(MiddlewareHandlerRegistry.class);
-		this.sessionInitializer = context.getGrain(SessionInitializer.class);
 		this.configuration = context.getConfiguration();
-		this.context = context;
-		HandlerProxyFactory proxyFactory = context.getGrain(HandlerProxyFactory.class);
+		this.handlerRunner = context.getGrain(HandlerRunner.class);
+		this.sessionInitializer = context.getGrain(SessionInitializer.class);
+		this.provider = context.getGrain(HttpRequestAuthenticationProviderStrategy.class);
 
-
-		this.handlerRunner = HandlerRunnerFactory.getRunner(proxyFactory)
-				.addRegistry(middlewareRegistry)
-				.addRegistry(controllerRegistry)
-				.addRegistry(staticHandlerRegistry);
 	}
 
 	@Override
@@ -69,18 +52,13 @@ public class RequestHandlerRunnable implements Runnable {
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
 			Session session = sessionInitializer.initialize(request, response);
+			request.setSession(session);
 
-			// @Refactor to authentication manager or something
-			HttpRequestAuthenticationProviderStrategy provider = context.getGrain(HttpRequestAuthenticationProviderStrategy.class);
 			Authentication authentication = provider.getAuthentication(request);
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-			this.httpRequest = request;
-			this.httpResponse = response;
-			this.session = session;
-
 			try {
-				handlerRunner.handle(request, response, session);
+				handlerRunner.handle(request, response);
 			} catch (HttpException ex) {
 				writeHttpExceptionResponse(request, response, ex);
 			} catch (RuntimeException ex) {

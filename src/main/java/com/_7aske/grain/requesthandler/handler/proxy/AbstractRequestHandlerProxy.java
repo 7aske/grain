@@ -2,14 +2,34 @@ package com._7aske.grain.requesthandler.handler.proxy;
 
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.session.Session;
-import com._7aske.grain.requesthandler.handler.Handler;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
 
-public abstract class AbstractRequestHandlerProxy implements RequestHandlerProxy {
-	protected Handler target;
+/**
+ * HandlerProxy is a component in charge of proxying and potentially modifying or
+ * blocking {@link RequestHandler#handle(HttpRequest, HttpResponse)} method calls.
+ *
+ * @see com._7aske.grain.security.handler.proxy.SecurityHandlerProxy
+ * @see DefaultRequestHandlerProxy
+ */
+public abstract class AbstractRequestHandlerProxy implements RequestHandler {
+	protected RequestHandler target;
 
-	protected AbstractRequestHandlerProxy(Handler target) {
+	/**
+	 * Constructs a new {@link AbstractRequestHandlerProxy} with the given {@link RequestHandler} as the target.
+	 *
+	 * @param target the {@link RequestHandler} to be proxied.
+	 */
+	protected AbstractRequestHandlerProxy(RequestHandler target) {
 		this.target = target;
 	}
-	public abstract boolean handle(HttpRequest request, HttpResponse response, Session session);
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public boolean canHandle(HttpRequest request) {
+		// Usually, we want the proxy target to determine whether the proxy should
+		// execute or not.
+		return target.canHandle(request);
+	}
 }

@@ -1,16 +1,15 @@
 package com._7aske.grain.requesthandler.handler.proxy.factory;
 
-import com._7aske.grain.core.component.Default;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.requesthandler.handler.Handler;
-import com._7aske.grain.requesthandler.handler.proxy.DefaultHandlerProxy;
-import com._7aske.grain.requesthandler.handler.proxy.RequestHandlerProxy;
+import com._7aske.grain.core.component.Order;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
+import com._7aske.grain.requesthandler.handler.proxy.DefaultRequestHandlerProxy;
 
 @Grain
-@Default
+@Order(256)
 public class DefaultRequestHandlerProxyFactory implements HandlerProxyFactory {
 	@Override
-	public RequestHandlerProxy createProxy(Handler target) {
-		return new DefaultHandlerProxy(target);
+	public DefaultRequestHandlerProxy createProxy(RequestHandler target) {
+		return new DefaultRequestHandlerProxy(target);
 	}
 }

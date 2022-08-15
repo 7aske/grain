@@ -1,6 +1,5 @@
 package com._7aske.grain.requesthandler.staticlocation;
 
-import com._7aske.grain.core.component.Default;
 import com._7aske.grain.core.component.Grain;
 
 import java.nio.file.Paths;
@@ -8,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Grain
-@Default
 public class StaticLocationsRegistry {
 	public static final String RESOURCES_PREFIX = "resources:";
 	private final List<String> locations = new ArrayList<>();

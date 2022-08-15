@@ -2,6 +2,7 @@ package com._7aske.grain;
 
 import com._7aske.grain.core.component.Controller;
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ class GrainAppTest {
 	ExecutorService executorService = Executors.newSingleThreadExecutor();
 
 	@Controller
+	@RequestMapping
 	static class TestController {
 		public String get(){
 			return "Test";

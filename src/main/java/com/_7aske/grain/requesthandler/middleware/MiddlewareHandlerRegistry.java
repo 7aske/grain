@@ -1,49 +1,58 @@
 package com._7aske.grain.requesthandler.middleware;
 
+import com._7aske.grain.core.component.AfterInit;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.core.component.Order;
-import com._7aske.grain.http.HttpMethod;
-import com._7aske.grain.requesthandler.handler.Handler;
+import com._7aske.grain.http.HttpRequest;
+import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
-import com._7aske.grain.util.HttpPathUtil;
-import com._7aske.grain.web.controller.annotation.RequestMapping;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
+import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
+import com._7aske.grain.util.ReflectionUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * {@link HandlerRegistry} implementation that uses {@link Middleware}s to handle requests.
+ */
 @Grain
+@Order(255)
 public class MiddlewareHandlerRegistry implements HandlerRegistry {
-	@Inject
-	private DependencyContainer container;
+	private List<RequestHandler> handlers;
+	private final HandlerProxyFactory handlerProxyFactory;
 
-	// @Incomplete allow setting path for middleware classes
-	@Override
-	public boolean canHandle(String path, HttpMethod method) {
-		return true;
+	/**
+	 * Constructs a new {@link MiddlewareHandlerRegistry} instance.
+	 * @param handlerProxyFactory proxy factory used to create proxies for middleware
+	 *                            handlers.
+	 */
+	public MiddlewareHandlerRegistry(HandlerProxyFactory handlerProxyFactory) {
+		this.handlerProxyFactory = handlerProxyFactory;
 	}
 
-	public List<Handler> getHandlers(String path, HttpMethod method) {
-		return container.getGrains(Middleware.class)
+	/**
+	 * Used to load all initialized middleware handlers.
+	 */
+	@AfterInit
+	private void getHandlersInternal(DependencyContainer container) {
+		// @Note Reference the comment in ControllerHandlerRegistry#getHandlersInternal.
+		handlers = container.getGrains(Middleware.class)
 				.stream()
-				.sorted(((o1, o2) -> {
-					if (o1.getClass().isAnnotationPresent(Order.class) && o2.getClass().isAnnotationPresent(Order.class)) {
-						Order p1 = o1.getClass().getAnnotation(Order.class);
-						Order p2 = o2.getClass().getAnnotation(Order.class);
-						return -Integer.compare(p1.value(), p2.value());
-					}
-					return 0;
-				}))
-				.filter(m -> {
-					if (m.getClass().isAnnotationPresent(RequestMapping.class)) {
-						RequestMapping mapping = m.getClass().getAnnotation(RequestMapping.class);
-						return HttpPathUtil.arePathsMatching(path, mapping.value())
-								&& (method == null || method.equals(mapping.method()));
-					}
-					return true;
-				})
-				.map(Handler.class::cast)
+				.map(MiddlewareHandler::new)
 				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void handle(HttpRequest request, HttpResponse response) {
+		handlers.stream()
+				.filter(handler -> handler.canHandle(request))
+				// As middleware handlers are pass-through we need to order them
+				.sorted((o1, o2) -> ReflectionUtil.sortByOrder(o1.getClass(), o2.getClass()))
+				.forEach(handler -> {
+					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
+					proxy.handle(request, response);
+				});
 	}
 }

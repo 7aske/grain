@@ -3,13 +3,15 @@ package com._7aske.grain.core.component;
 import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
-import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -231,8 +233,7 @@ public class GrainInitializer {
 				realParams[i] = deps[i].instance;
 			}
 			// create a new instance
-			dep.instance = newInstance(dep.constructor, realParams)
-					.orElseThrow(() -> new GrainInitializationException(String.format("Could not instantiate grain %s.", dep.clazz)));
+			dep.instance = newInstance(dep.constructor, realParams);
 			dep.initialized = true;
 
 			// Then, we call Grain methods

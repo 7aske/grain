@@ -1,6 +1,8 @@
 package com._7aske.grain.http;
 
 import com._7aske.grain.http.session.Cookie;
+import com._7aske.grain.http.session.Session;
+import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.util.ArrayUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -19,6 +21,12 @@ public class HttpRequest {
 	private final Map<String, Cookie> cookies;
 	private String queryString;
 	private Object body;
+	private Session session;
+	/**
+	 * Determines whether the request has been handled by a handler.
+	 * Do not set this field manually outside the {@link RequestHandler} implementation.
+	 */
+	private boolean handled;
 
 	public HttpRequest() {
 		this.headers = new HashMap<>();
@@ -35,6 +43,8 @@ public class HttpRequest {
 		this.cookies = other.cookies;
 		this.queryString = other.queryString;
 		this.body = other.body;
+		this.session = other.session;
+		this.handled = other.handled;
 	}
 
 	public Cookie getCookie(String name) {
@@ -150,6 +160,14 @@ public class HttpRequest {
 		return queryString;
 	}
 
+	public Session getSession() {
+		return session;
+	}
+
+	public void setSession(Session session) {
+		this.session = session;
+	}
+
 	@Override
 	public String toString() {
 		return "HttpRequest{" +
@@ -162,4 +180,11 @@ public class HttpRequest {
 				'}';
 	}
 
+	public boolean isHandled() {
+		return handled;
+	}
+
+	public void setHandled(boolean handled) {
+		this.handled = handled;
+	}
 }

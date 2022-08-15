@@ -3,7 +3,6 @@ package com._7aske.grain.http.json;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.middleware.Middleware;
 
 import java.util.Objects;
@@ -15,11 +14,10 @@ import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 public class JsonMiddleware implements Middleware {
 
 	@Override
-	public boolean handle(HttpRequest req, HttpResponse res, Session session) {
+	public void handle(HttpRequest req, HttpResponse res) {
 		if (Objects.equals(req.getHeader(CONTENT_TYPE), APPLICATION_JSON)) {
 			JsonParser deserializer = new JsonParser((String) req.getBody());
 			req.setBody(deserializer.parse());
 		}
-		return false;
 	}
 }
