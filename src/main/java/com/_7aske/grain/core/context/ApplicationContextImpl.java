@@ -61,6 +61,11 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 	}
 
 	@Override
+	public void registerGrain(Object grain) {
+		dependencyContainer.registerGrain(grain);
+	}
+
+	@Override
 	public <T> Optional<T> getOptionalGrain(Class<T> clazz) {
 		return dependencyContainer.getOptionalGrain(clazz);
 	}

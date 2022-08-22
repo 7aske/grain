@@ -11,4 +11,6 @@ public interface ApplicationContext {
 	String getPackage();
 
 	<T> T getGrain(Class<T> clazz);
+
+	void registerGrain(Object grain);
 }

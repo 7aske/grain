@@ -10,5 +10,5 @@ interface SecurityContextHolderStrategy {
 
 	void setContext(SecurityContext securityContext);
 
-	SecurityContext crateDefaultContext();
+	SecurityContext createDefaultContext();
 }

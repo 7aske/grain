@@ -18,7 +18,7 @@ class ThreadLocalSecurityContextHolderStrategy implements SecurityContextHolderS
 	}
 
 	@Override
-	public SecurityContext crateDefaultContext() {
+	public SecurityContext createDefaultContext() {
 		return new SecurityContextImpl();
 	}
 

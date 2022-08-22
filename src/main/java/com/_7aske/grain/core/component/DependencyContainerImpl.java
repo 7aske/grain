@@ -100,6 +100,11 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	}
 
 	@Override
+	public void registerGrain(Object grain) {
+		this.dependencies.add(Injectable.ofInitialized(grain));
+	}
+
+	@Override
 	public <T> T getGrain(Class<T> clazz) {
 		return clazz.cast(getByClass(clazz)
 				.map(Injectable::getInstance)

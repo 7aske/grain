@@ -10,7 +10,6 @@ import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.orm.querybuilder.helper.ModelField;
 import com._7aske.grain.util.QueryBuilderUtil;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -210,9 +209,9 @@ public class SqlQueryBuilder extends AbstractQueryBuilder {
 				}
 				if (pageable != null) {
 					builder.append("limit ")
-							.append(pageable.getCount())
+							.append(pageable.getPageSize())
 							.append(" offset ")
-							.append(pageable.getPage() * pageable.getCount());
+							.append(pageable.getPageNumber() * pageable.getPageSize());
 					builder.append(" ");
 				}
 				break;

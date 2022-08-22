@@ -16,7 +16,7 @@ public class DefaultPageable implements Pageable {
 	}
 
 	@Override
-	public int getPage() {
+	public int getPageNumber() {
 		return page;
 	}
 
@@ -25,7 +25,7 @@ public class DefaultPageable implements Pageable {
 	}
 
 	@Override
-	public int getCount() {
+	public int getPageSize() {
 		return count;
 	}
 

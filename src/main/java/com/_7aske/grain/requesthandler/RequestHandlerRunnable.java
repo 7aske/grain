@@ -39,7 +39,6 @@ public class RequestHandlerRunnable implements Runnable {
 		this.handlerRunner = context.getGrain(HandlerRunner.class);
 		this.sessionInitializer = context.getGrain(SessionInitializer.class);
 		this.provider = context.getGrain(HttpRequestAuthenticationProviderStrategy.class);
-
 	}
 
 	@Override

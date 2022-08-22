@@ -129,8 +129,8 @@ public class ControllerMethodHandler implements RequestHandler {
 			response.setStatus(((JsonResponse<?>) result).getStatus());
 			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());
 			response.addHeaders(((JsonResponse<?>) result).getHeaders());
-		} else if (result instanceof JsonObject) {
-			response.setBody(((JsonObject) result).toJsonString());
+		} else if (result instanceof JsonString) {
+			response.setBody(((JsonString) result).toJsonString());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof Object[]) {
 			response.setBody(new JsonArray((Object[]) result).toJsonString());

@@ -32,6 +32,7 @@ public class GrainInjector {
 		this.interpreter = new Interpreter();
 		interpreter.putProperties(configuration.getProperties());
 		interpreter.putSymbol("configuration", configuration);
+		inject(this);
 		inject(configuration);
 		inject(container);
 	}
@@ -46,11 +47,21 @@ public class GrainInjector {
 	 * @param object the object to inject
 	 */
 	public void inject(Object object) {
-		if (!isAnnotationPresent(object.getClass(), Grain.class)) {
+		inject(object.getClass(), object);
+	}
+
+	/**
+	 * Injects the already initialized object. To be used with proxied objects.
+	 *
+	 * @param clazz Type of the object
+	 * @param object Object to inject
+	 */
+	public void inject(Class<?> clazz, Object object) {
+		if (!isAnnotationPresent(clazz, Grain.class)) {
 			logger.warn("Registered Grain {} without @Grain annotation", object.getClass());
 		}
 		Injectable<?> injectable = new Injectable<>(
-				object.getClass(),
+				clazz,
 				GrainNameResolver.getDefault().resolveDeclarationName(object.getClass()));
 		injectable.setObjectInstance(object);
 		container.add(injectable);

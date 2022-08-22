@@ -10,7 +10,7 @@ public class SecurityContextHolder {
 
 	public static @NotNull SecurityContext getContext() {
 		if (holderStrategy.getContext() == null)
-			holderStrategy.setContext(holderStrategy.crateDefaultContext());
+			holderStrategy.setContext(holderStrategy.createDefaultContext());
 		return holderStrategy.getContext();
 	}
 

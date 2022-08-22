@@ -57,6 +57,10 @@ class Injectable<T> {
 		return injectable;
 	}
 
+	public static Injectable<?> ofInitialized(Object grain) {
+		return new Injectable<>(grain.getClass(), null, null, 0);
+	}
+
 	public Injectable(@NotNull Class<T> clazz, @Nullable String name) {
 		this.name = name;
 		if (clazz.isInterface()) {
