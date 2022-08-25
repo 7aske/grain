@@ -9,15 +9,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
-class Injectable<T> {
+class Injectable<T> implements Comparable<Injectable<T>> {
 	private final String name;
 	private final Class<T> type;
 	private final Constructor<T> constructor;
@@ -186,5 +184,16 @@ class Injectable<T> {
 	@Override
 	public boolean equals(Object o) {
 		return o == this;
+	}
+
+	@Override
+	public int compareTo(Injectable<T> o) {
+		return getComparator()
+				.compare(this, o);
+	}
+
+	public static Comparator<Injectable<?>> getComparator() {
+		return Comparator.comparingInt((ToIntFunction<Injectable<?>>) Injectable::getOrder)
+				.thenComparing(Injectable::getType, ReflectionUtil::compareLibraryAndUserPackage);
 	}
 }

@@ -7,6 +7,8 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com._7aske.grain.util.ReflectionUtil.compareLibraryAndUserPackage;
+
 class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable<?>> {
 	private final Collection<Injectable<?>> dependencies;
 
@@ -26,7 +28,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	List<Injectable<?>> getListByName(String name) {
 		return dependencies.stream()
 				.filter(d -> Objects.equals(d.getName().orElse(null), name))
-				.sorted(Comparator.comparing(Injectable::getOrder))
+				.sorted(Injectable.getComparator())
 				.collect(Collectors.toList());
 	}
 
@@ -47,14 +49,14 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	<T> List<Injectable<?>> getListByClass(Class<T> clazz) {
 		return dependencies.stream()
 				.filter(d -> clazz.isAssignableFrom(d.getType()))
-				.sorted(Comparator.comparing(Injectable::getOrder))
+				.sorted(Injectable.getComparator())
 				.collect(Collectors.toList());
 	}
 
 	List<Injectable<?>> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
 		return dependencies.stream()
 				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
-				.sorted(Comparator.comparing(Injectable::getOrder))
+				.sorted(Injectable.getComparator())
 				.collect(Collectors.toList());
 	}
 
@@ -77,7 +79,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return dependencies.iterator();
 	}
 
-	private Optional<Injectable<?>> resolveSingleDependency(String name, List<Injectable<?>> list)  {
+	private Optional<Injectable<?>> resolveSingleDependency(String name, List<Injectable<?>> list) {
 		List<Injectable<?>> userDefined = list.stream()
 				.filter(d -> {
 					String basePackage = GrainApp.getBasePackage() + ".";
