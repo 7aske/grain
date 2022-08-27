@@ -2,12 +2,14 @@ package com._7aske.grain.requesthandler.staticlocation;
 
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Order;
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +34,11 @@ public class StaticHandlerRegistry implements HandlerRegistry {
 				.findFirst()
 				.ifPresent(handler -> {
 					RequestHandler proxy = proxyFactory.createProxy(handler);
-					proxy.handle(request, response);
+					try {
+						proxy.handle(request, response);
+					} catch (IOException e) {
+						throw new GrainRuntimeException(e);
+					}
 				});
 	}
 }

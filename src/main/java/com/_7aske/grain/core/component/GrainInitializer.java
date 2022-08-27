@@ -20,7 +20,10 @@ import static com._7aske.grain.util.ReflectionUtil.*;
 /**
  * Class responsible for initializing all components registered for
  * dependency injection.
+ *
+ * @see GrainInjector
  */
+@Deprecated
 public class GrainInitializer {
 	// Set of parsed dependencies
 	private final Set<Dependency> dependencies;

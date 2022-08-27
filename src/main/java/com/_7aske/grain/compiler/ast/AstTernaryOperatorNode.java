@@ -6,6 +6,7 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import static com._7aske.grain.compiler.util.AstUtil.isFalsy;
 
 public class AstTernaryOperatorNode extends com._7aske.grain.compiler.ast.basic.AstTernaryNode {
+	public static final int PRECEDENCE = 5000;
 
 	public AstTernaryOperatorNode() {
 	}
@@ -14,6 +15,11 @@ public class AstTernaryOperatorNode extends com._7aske.grain.compiler.ast.basic.
 		this.condition = condition;
 		this.left = ifTrue;
 		this.right = ifFalse;
+	}
+
+	@Override
+	public int getPrecedence() {
+		return PRECEDENCE;
 	}
 
 	public AstNode getCondition() {

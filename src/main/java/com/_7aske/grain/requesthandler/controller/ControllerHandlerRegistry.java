@@ -1,6 +1,7 @@
 package com._7aske.grain.requesthandler.controller;
 
 import com._7aske.grain.core.component.*;
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.requesthandler.controller.wrapper.ControllerWrapper;
@@ -11,6 +12,7 @@ import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.view.ViewResolver;
 import com._7aske.grain.web.view.ViewResolverProvider;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +60,11 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 				.findFirst()
 				.ifPresent(handler -> {
 					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
-					proxy.handle(request, response);
+					try {
+						proxy.handle(request, response);
+					} catch (IOException e) {
+						throw new GrainRuntimeException(e);
+					}
 				});
 	}
 }

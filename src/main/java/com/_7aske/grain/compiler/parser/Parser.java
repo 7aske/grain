@@ -3,6 +3,7 @@ package com._7aske.grain.compiler.parser;
 import com._7aske.grain.compiler.ast.*;
 import com._7aske.grain.compiler.ast.basic.AstBinaryNode;
 import com._7aske.grain.compiler.ast.basic.AstNode;
+import com._7aske.grain.compiler.ast.basic.AstTernaryNode;
 import com._7aske.grain.compiler.ast.types.*;
 import com._7aske.grain.compiler.lexer.Lexer;
 import com._7aske.grain.compiler.lexer.Token;
@@ -49,17 +50,23 @@ public class Parser {
 
 		if (iter.isPeekOfType(AND, OR)) {
 			node = parseBooleanNode(iter.next(), node);
-		} else if (iter.isPeekOfType(EQ, NE)) {
+		}
+		if (iter.isPeekOfType(EQ, NE)) {
 			node = parseEqualityNode(iter.next(), node);
-		} else if (iter.isPeekOfType(GT, LT, GE, LE)) {
+		}
+		if (iter.isPeekOfType(GT, LT, GE, LE)) {
 			node = parseRelationalNode(iter.next(), node);
-		} else if (iter.isPeekOfType(ADD, SUB, DIV, MOD, MUL)) {
+		}
+		if (iter.isPeekOfType(ADD, SUB, DIV, MOD, MUL)) {
 			node = parseArithmeticNode(iter.next(), node);
-		} else if (iter.isPeekOfType(ASSN)) {
+		}
+		if (iter.isPeekOfType(ASSN)) {
 			node = parseAssignmentNode(iter.next(), node);
-		} else if (iter.isPeekOfType(DFLT)) {
+		}
+		if (iter.isPeekOfType(DFLT)) {
 			node = parseDefaultNode(iter.next(), node);
-		} else if (iter.isPeekOfType(TERNCOND)) {
+		}
+		if (iter.isPeekOfType(TERNCOND)) {
 			node = parseTernaryOperatorNode(iter.next(), node);
 		}
 
@@ -131,6 +138,9 @@ public class Parser {
 			AstNode parsed = parseSubExpression(AstNotNode.PRECEDENCE);
 			astNotNode.setNode(parsed);
 			node = astNotNode;
+		} else if (curr.isOfType(TERNCOND)) {
+			node = parsedStack.pop();
+			node = parseTernaryOperatorNode(curr, node);
 		} else {
 			node = createNode(curr);
 		}
@@ -194,7 +204,16 @@ public class Parser {
 	}
 
 	private AstNode fixPrecedence(AstNode start, AstNode right) {
-		if (start.getPrecedence() > right.getPrecedence() && start instanceof AstBinaryNode && right instanceof AstBinaryNode) {
+		if (start.getPrecedence() < right.getPrecedence() && start instanceof AstTernaryNode && right instanceof AstBinaryNode) {
+			AstTernaryNode startTernary = (AstTernaryNode) start;
+			AstBinaryNode rightBinary = (AstBinaryNode) right;
+
+			AstNode temp = rightBinary.getRight();
+			rightBinary.setRight(startTernary);
+			startTernary.setCondition(temp);
+
+			return right;
+		} else if (start.getPrecedence() > right.getPrecedence() && start instanceof AstBinaryNode && right instanceof AstBinaryNode) {
 			AstBinaryNode startBinary = (AstBinaryNode) start;
 			AstBinaryNode rightBinary = (AstBinaryNode) right;
 
@@ -421,8 +440,7 @@ public class Parser {
 		iter.next(); // skip TERNELSE
 		AstNode ifFalseNode = parseSubExpression(0);
 		ifNode.setIfFalse(ifFalseNode);
-
-		return ifNode;
+		return fixPrecedence(ifNode, ifNode.getCondition());
 	}
 
 	private AstNode parseIfStatement() {

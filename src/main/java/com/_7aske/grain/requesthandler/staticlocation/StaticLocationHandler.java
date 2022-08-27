@@ -37,7 +37,7 @@ public class StaticLocationHandler implements RequestHandler {
 		Path path = Paths.get(location, request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
-			response.setBody(new String(inputStream.readAllBytes()));
+			response.getOutputStream().write(inputStream.readAllBytes());
 			response.setStatus(HttpStatus.OK);
 			// Finally, we need to set the request handled attribute to true
 			// so that we don't get 404 exception from the HandlerRunner.

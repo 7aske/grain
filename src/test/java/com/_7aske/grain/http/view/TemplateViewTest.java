@@ -8,6 +8,8 @@ import com._7aske.grain.web.view.ViewResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayOutputStream;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -19,13 +21,18 @@ class TemplateViewTest {
 		viewResolver = new GtlViewResolver(Configuration.createDefault());
 	}
 
+	String readResponse(HttpResponse response) {
+		ByteArrayOutputStream baos = (ByteArrayOutputStream) response.getOutputStream();
+		return baos.toString();
+	}
+
 	@Test
 	void test_getContent_hasCode() {
 		TemplateView templateView = new TemplateView("index.html");
 		templateView.addAttribute("username", "test");
 		HttpResponse httpResponse = new HttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
-		String content = httpResponse.getBody();
+		String content = readResponse(httpResponse);
 		System.out.println(content);
 		assertTrue(content.contains("Hello test"));
 		assertTrue(content.contains("Logout"));
@@ -37,7 +44,7 @@ class TemplateViewTest {
 		TemplateView templateView = new TemplateView("index-no-code.html");
 		HttpResponse httpResponse = new HttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
-		String content = httpResponse.getBody();
+		String content = readResponse(httpResponse);
 		assertTrue(content.contains("Log in"));
 		assertTrue(content.contains("Logout"));
 		assertFalse(content.contains("Commented"));
@@ -51,7 +58,7 @@ class TemplateViewTest {
 		templateView.addAttribute("commented", "should-not-show");
 		HttpResponse httpResponse = new HttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
-		String content = httpResponse.getBody();
+		String content = readResponse(httpResponse);
 		System.out.println(content);
 		assertTrue(content.contains("should-show"));
 		assertTrue(content.contains("this-too"));
@@ -63,7 +70,7 @@ class TemplateViewTest {
 		TemplateView templateView = new TemplateView("index-simple-expression.html");
 		HttpResponse httpResponse = new HttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
-		String content = httpResponse.getBody();
+		String content = readResponse(httpResponse);
 		System.out.println(content);
 		assertTrue(content.contains("Result is:20"));
 		assertTrue(content.contains("String is:test"));
@@ -74,7 +81,7 @@ class TemplateViewTest {
 		TemplateView templateView = new TemplateView("include.html");
 		HttpResponse httpResponse = new HttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
-		String content = httpResponse.getBody();
+		String content = readResponse(httpResponse);
 		assertTrue(content.contains("<div class=\"container\">"));
 		assertTrue(content.contains("<div>this is a card</div>"));
 	}

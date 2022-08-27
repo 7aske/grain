@@ -4,6 +4,7 @@ import com._7aske.grain.core.component.AfterInit;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Order;
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
@@ -11,6 +12,7 @@ import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 import com._7aske.grain.util.ReflectionUtil;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 
 	/**
 	 * Constructs a new {@link MiddlewareHandlerRegistry} instance.
+	 *
 	 * @param handlerProxyFactory proxy factory used to create proxies for middleware
 	 *                            handlers.
 	 */
@@ -52,7 +55,11 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 				.sorted((o1, o2) -> ReflectionUtil.sortByOrder(o1.getClass(), o2.getClass()))
 				.forEach(handler -> {
 					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
-					proxy.handle(request, response);
+					try {
+						proxy.handle(request, response);
+					} catch (IOException e) {
+						throw new GrainRuntimeException();
+					}
 				});
 	}
 }

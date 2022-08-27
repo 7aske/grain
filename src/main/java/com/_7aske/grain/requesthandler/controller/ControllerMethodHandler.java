@@ -21,6 +21,7 @@ import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.view.View;
 import com._7aske.grain.web.view.ViewResolver;
 
+import java.io.IOException;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class ControllerMethodHandler implements RequestHandler {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) {
+	public void handle(HttpRequest request, HttpResponse response) throws IOException {
 
 		// Here we handle Controller method parameter parsing
 		Parameter[] declaredParams = method.getParameters();
@@ -121,30 +122,29 @@ public class ControllerMethodHandler implements RequestHandler {
 
 		if (result == null) {
 			String requestContentType = request.getHeader(CONTENT_TYPE);
-			response.setBody(null);
 			response.setHeader(CONTENT_TYPE, requestContentType == null ? HttpContentType.TEXT_PLAIN : requestContentType);
 		} else if (result instanceof View) {
 			viewResolver.resolve((View) result, request, response, request.getSession(), SecurityContextHolder.getContext().getAuthentication());
 		} else if (result instanceof JsonResponse) {
 			response.setStatus(((JsonResponse<?>) result).getStatus());
-			response.setBody(((JsonResponse<?>) result).getBody().toJsonString());
+			response.getOutputStream().write(((JsonResponse<?>) result).getBody().toJsonString().getBytes());
 			response.addHeaders(((JsonResponse<?>) result).getHeaders());
 		} else if (result instanceof JsonString) {
-			response.setBody(((JsonString) result).toJsonString());
+			response.getOutputStream().write(((JsonString) result).toJsonString().getBytes());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof Object[]) {
-			response.setBody(new JsonArray((Object[]) result).toJsonString());
+			response.getOutputStream().write(new JsonArray((Object[]) result).toJsonString().getBytes());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 		} else if (result instanceof String) {
 			if (((String) result).startsWith(REDIRECT_PREFIX)) {
 				response.sendRedirect(((String) result).substring(REDIRECT_PREFIX.length()));
 			} else {
-				response.setBody((String) result);
+				response.getOutputStream().write(((String) result).getBytes());
 				if (response.getHeader(CONTENT_TYPE) == null)
 					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 			}
 		} else {
-			response.setBody(result.toString());
+			response.getOutputStream().write(result.toString().getBytes());
 			if (response.getHeader(CONTENT_TYPE) == null)
 				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 		}

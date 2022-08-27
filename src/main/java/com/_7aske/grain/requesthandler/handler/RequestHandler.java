@@ -3,6 +3,8 @@ package com._7aske.grain.requesthandler.handler;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 
+import java.io.IOException;
+
 /**
  * RequestHandler defines a component interface that is responsible for handling
  * an incoming {@link HttpRequest} and {@link HttpResponse}. RequestHandlers are
@@ -21,7 +23,7 @@ public interface RequestHandler {
 	 * @param request  the {@link HttpRequest} to be handled.
 	 * @param response the {@link HttpResponse} to be handled.
 	 */
-	void handle(HttpRequest request, HttpResponse response);
+	void handle(HttpRequest request, HttpResponse response) throws IOException;
 
 	/**
 	 * Defines whether this particular RequestHandler is eligible for handling

@@ -1,5 +1,6 @@
 package com._7aske.grain.requesthandler.controller;
 
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
@@ -8,6 +9,7 @@ import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.view.ViewResolver;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +35,13 @@ public class ControllerHandler implements RequestHandler {
 		this.methodHandlers.stream()
 				.filter(methodHandler -> methodHandler.canHandle(request))
 				.findFirst()
-				.ifPresent(methodHandler -> methodHandler.handle(request, response));
+				.ifPresent(methodHandler -> {
+					try {
+						methodHandler.handle(request, response);
+					} catch (IOException e) {
+						throw new GrainRuntimeException(e);
+					}
+				});
 	}
 
 	@Override

@@ -17,7 +17,7 @@ import com._7aske.grain.ui.impl.ErrorPage;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Objects;
 
@@ -45,11 +45,13 @@ public class RequestHandlerRunnable implements Runnable {
 	public void run() {
 		long start = System.currentTimeMillis();
 		try (BufferedInputStream reader = new BufferedInputStream(socket.getInputStream());
-		     PrintWriter writer = new PrintWriter(socket.getOutputStream())) {
+		     OutputStream socketOut = socket.getOutputStream()) {
 
 			HttpRequestParser parser = new HttpRequestParser(reader);
 			HttpRequest request = parser.getHttpRequest();
 			HttpResponse response = new HttpResponse();
+			HttpResponseWriter writer = new HttpResponseWriter(response);
+
 			Session session = sessionInitializer.initialize(request, response);
 			request.setSession(session);
 
@@ -64,8 +66,8 @@ public class RequestHandlerRunnable implements Runnable {
 				ex.printStackTrace();
 				writeRuntimeExceptionResponse(request, response, ex);
 			} finally {
+				writer.writeTo(socketOut);
 				long end = System.currentTimeMillis();
-				writer.write(response.getHttpString());
 				if (configuration.getBoolean(REQUEST_HANDLER_ACCESS_LOG, true)) {
 					logger.info("{} {} {} - {} - {}ms",
 							request.getMethod(),
@@ -81,7 +83,7 @@ public class RequestHandlerRunnable implements Runnable {
 		}
 	}
 
-	private void writeRuntimeExceptionResponse(HttpRequest request, HttpResponse response, RuntimeException ex) {
+	private void writeRuntimeExceptionResponse(HttpRequest request, HttpResponse response, RuntimeException ex) throws IOException {
 		response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
@@ -90,26 +92,26 @@ public class RequestHandlerRunnable implements Runnable {
 			jsonObject.putString("status", HttpStatus.INTERNAL_SERVER_ERROR.getReason());
 			jsonObject.putNumber("code", HttpStatus.INTERNAL_SERVER_ERROR.getValue());
 			jsonObject.putString("path", request.getPath());
-			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON)
-					.setBody(jsonObject.toJsonString());
+			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
+			response.getOutputStream().write(jsonObject.toJsonString().getBytes());
 		} else {
-			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
-					.setBody(ErrorPage.getDefault(ex, request.getPath()));
+			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML);
+			response.getOutputStream().write(ErrorPage.getDefault(ex, request.getPath()).getBytes());
 		}
 	}
 
-	private void writeHttpExceptionResponse(HttpRequest request, HttpResponse response, HttpException ex) {
+	private void writeHttpExceptionResponse(HttpRequest request, HttpResponse response, HttpException ex) throws IOException {
 		response.setStatus(ex.getStatus());
 		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
-			if (response.getBody() == null) {
-				response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON)
-						.setBody(ex.getJsonMessage());
+			if (response.length() == 0) {
+				response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
+				response.getOutputStream().write(ex.getJsonMessage().getBytes());
 			}
 		} else {
-			if (response.getBody() == null) {
-				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML)
-						.setBody(ex.getHtmlMessage());
+			if (response.length() == 0) {
+				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML);
+				response.getOutputStream().write(ex.getHtmlMessage().getBytes());
 			}
 		}
 	}

@@ -2,62 +2,29 @@ package com._7aske.grain.http;
 
 import com._7aske.grain.http.session.Cookie;
 
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static com._7aske.grain.http.HttpConstants.CRLF;
 import static com._7aske.grain.http.HttpConstants.HTTP_V1;
 
 public class HttpResponse {
 	private final Map<String, String> headers;
 	private String version = HTTP_V1;
 	private HttpStatus status;
-	private String body;
-	private String cachedHttpString;
 	private final Map<String, Cookie> cookies;
+	private final ByteArrayOutputStream outputStream;
 
 	public HttpResponse() {
-		this(HttpStatus.OK, null);
+		this(HttpStatus.OK);
 	}
 
 	public HttpResponse(HttpStatus status) {
-		this(status, null);
-	}
-
-	public HttpResponse(HttpStatus status, String body) {
 		this.status = status;
-		this.body = body;
 		this.headers = new HashMap<>();
 		this.cookies = new HashMap<>();
-		this.cachedHttpString = null;
-	}
-
-	public String getHttpString() {
-		if (cachedHttpString == null) {
-			StringBuilder builder = new StringBuilder();
-			builder.append(version)
-					.append(" ")
-					.append(status.getValue())
-					.append(" ")
-					.append(status.getReason())
-					.append(CRLF);
-
-			if (!cookies.isEmpty()) {
-				headers.put(HttpHeaders.SET_COOKIE, cookies.values().stream().map(Cookie::toString).collect(Collectors.joining("")));
-			}
-
-			for (Map.Entry<String, String> kv : headers.entrySet()) {
-				builder.append(kv.getKey()).append(": ").append(kv.getValue()).append(CRLF);
-			}
-
-			builder.append(CRLF);
-			if (body != null) {
-				builder.append(body);
-			}
-			cachedHttpString = builder.toString();
-		}
-		return cachedHttpString;
+		this.outputStream = new ByteArrayOutputStream();
 	}
 
 	public void setCookie(Cookie cookie) {
@@ -111,20 +78,20 @@ public class HttpResponse {
 		this.setStatus(HttpStatus.FOUND);
 	}
 
-	public String getBody() {
-		return body;
+
+	public OutputStream getOutputStream() {
+		return this.outputStream;
 	}
 
-	public void setBody(String body) {
-		if (body == null) {
-			this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(0));
-		} else {
-			this.setHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(body.length()));
-		}
-		this.body = body;
+	ByteArrayOutputStream getByteArrayOutputStream() {
+		return this.outputStream;
+	}
+
+	Map<String, Cookie> getCookies() {
+		return cookies;
 	}
 
 	public int length() {
-		return getHttpString().length();
+		return this.getByteArrayOutputStream().size();
 	}
 }

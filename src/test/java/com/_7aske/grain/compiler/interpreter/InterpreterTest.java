@@ -462,6 +462,15 @@ class InterpreterTest {
 	}
 
 	@Test
+	void test_ternaryOperator2() {
+		String code = "print(number % 2 == 0 ? 'a' : 'b')";
+		Interpreter interpreter = new Interpreter(code, null);
+		interpreter.putSymbol("number", 1);
+		interpreter.run();
+		assertEquals("b", interpreter.getContent());
+	}
+
+	@Test
 	void test_ternaryOperatorMethodCalls() {
 		String code = "a = callable() ? nullable() : 2";
 		Interpreter interpreter = new Interpreter(code, null);

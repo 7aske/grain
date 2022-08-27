@@ -5,7 +5,6 @@ import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.util.ArrayUtil;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -55,10 +54,6 @@ public class HttpRequest {
 		return cookies.get(name);
 	}
 
-	private void setCookie(Cookie cookie) {
-		this.cookies.put(HttpHeaders.SET_COOKIE, cookie);
-	}
-
 	public String getVersion() {
 		return version;
 	}
@@ -75,13 +70,9 @@ public class HttpRequest {
 		String[] parts = path.split("\\?");
 		this.path = parts[0];
 		if (parts.length == 2) {
-			try {
-				// TODO: get charset from request?
-				this.queryString = URLDecoder.decode(parts[1], StandardCharsets.UTF_8.toString());
-				putParameters(this.queryString);
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
+			// TODO: get charset from request?
+			this.queryString = URLDecoder.decode(parts[1], StandardCharsets.UTF_8);
+			putParameters(this.queryString);
 		}
 	}
 

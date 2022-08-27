@@ -4,10 +4,13 @@ import com._7aske.grain.compiler.interpreter.Interpreter;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.security.Authentication;
+
+import java.io.IOException;
 
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
@@ -22,13 +25,13 @@ public class GtlViewResolver implements ViewResolver {
 
 	@Override
 	public void resolve(View view, HttpRequest request, HttpResponse response, Session session, Authentication authentication) {
-		// Setting implicit objects
-		view.addAttribute("#request", request);
-		view.addAttribute("#session", session);
-		view.addAttribute("#authentication", authentication);
-		view.addAttribute("#configuration", configuration);
+		populateImplicitObjects(view, request, response, session, authentication, configuration);
 
 		response.setHeader(CONTENT_TYPE, view.getContentType());
-		response.setBody(Interpreter.interpret(view.getContent(), view.getAttributes()));
+		try {
+			response.getOutputStream().write(Interpreter.interpret(view.getContent(), view.getAttributes()).getBytes());
+		} catch (IOException e) {
+			throw new GrainRuntimeException(e);
+		}
 	}
 }

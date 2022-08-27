@@ -6,6 +6,8 @@ import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 
+import java.io.IOException;
+
 /**
  * This implementation of {@link AbstractRequestHandlerProxy} is basically a logging
  * no-op proxy.
@@ -22,7 +24,7 @@ public final class DefaultRequestHandlerProxy extends AbstractRequestHandlerProx
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) {
+	public void handle(HttpRequest request, HttpResponse response) throws IOException {
 		logger.trace("Proxying request for {}", target.getClass());
 		target.handle(request, response);
 	}
