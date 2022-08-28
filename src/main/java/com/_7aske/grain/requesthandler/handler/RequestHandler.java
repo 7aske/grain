@@ -34,4 +34,12 @@ public interface RequestHandler {
 	 * @return true if the RequestHandler is eligible for handling the request, false otherwise.
 	 */
 	boolean canHandle(HttpRequest request);
+
+	/**
+	 * Returns the calculated path for the handler. Used when deciding which
+	 * handler should be used when there are multiple matches.
+	 *
+	 * @return Path of the handler.
+	 */
+	String getPath();
 }

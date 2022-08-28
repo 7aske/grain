@@ -14,7 +14,10 @@ import com._7aske.grain.web.view.ViewResolverProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -55,16 +58,30 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
-		handlers.stream()
+		// @CopyPasta
+		List<RequestHandler> handlers = this.handlers.stream()
 				.filter(handler -> handler.canHandle(request))
-				.findFirst()
-				.ifPresent(handler -> {
-					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
-					try {
-						proxy.handle(request, response);
-					} catch (IOException e) {
-						throw new GrainRuntimeException(e);
-					}
-				});
+				.sorted(Comparator.comparingInt((ToIntFunction<? super RequestHandler>)
+						h -> h.getPath().length()).reversed())
+				.collect(Collectors.toList());
+
+		Optional<RequestHandler> handler = Optional.empty();
+		if (handlers.size() == 1) {
+			handler = Optional.of(handlers.get(0));
+		} else if (handlers.size() > 1) {
+			handler = Optional.ofNullable(handlers.stream()
+					.filter(h -> h.getPath().equals(request.getPath()))
+					.findFirst()
+					.orElse(handlers.get(0)));
+		}
+
+		handler.ifPresent(h -> {
+			RequestHandler proxy = handlerProxyFactory.createProxy(h);
+			try {
+				proxy.handle(request, response);
+			} catch (IOException e) {
+				throw new GrainRuntimeException(e);
+			}
+		});
 	}
 }

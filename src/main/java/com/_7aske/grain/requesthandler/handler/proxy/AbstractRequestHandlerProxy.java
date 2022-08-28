@@ -32,4 +32,9 @@ public abstract class AbstractRequestHandlerProxy implements RequestHandler {
 		// execute or not.
 		return target.canHandle(request);
 	}
+
+	@Override
+	public String getPath() {
+		return target.getPath();
+	}
 }

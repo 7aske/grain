@@ -5,6 +5,7 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.security.Authentication;
+import com._7aske.grain.http.view.util.SecurityUtil;
 
 public interface ViewResolver {
 	void resolve(View view, HttpRequest request, HttpResponse response, Session session, Authentication authentication);
@@ -24,5 +25,6 @@ public interface ViewResolver {
 		view.addAttribute("#session", session);
 		view.addAttribute("#authentication", authentication);
 		view.addAttribute("#configuration", configuration);
+		view.addAttribute("#sec", SecurityUtil.class);
 	}
 }

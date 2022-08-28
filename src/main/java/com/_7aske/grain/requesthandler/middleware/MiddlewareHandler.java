@@ -56,4 +56,9 @@ public class MiddlewareHandler implements RequestHandler {
 		boolean pathMatch = path == null || path.isBlank() || HttpPathUtil.antMatching(path, request.getPath());
 		return methodMatch && pathMatch;
 	}
+
+	@Override
+	public String getPath() {
+		return path;
+	}
 }

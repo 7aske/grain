@@ -99,7 +99,17 @@ public class ControllerMethodHandler implements RequestHandler {
 					// converter for conversion.
 					Converter<?> converter = converterRegistry.getConverter(param.getType());
 					String stringParam = String.join(",", paramValues);
-					params[i] = converter.convert(stringParam);
+					// If no value was submitted we cannot allow converter to
+					// throw an exception. Converters expect valid values.
+					if (stringParam.isBlank()) {
+						// If the value is primitive we don't do anything. You
+						// shouldn't define values as primitive anyway.
+						if (!param.getClass().isPrimitive()) {
+							params[i] = null;
+						}
+					} else {
+						params[i] = converter.convert(stringParam);
+					}
 				} else {
 					params[i] = paramValues[0];
 				}
@@ -161,5 +171,9 @@ public class ControllerMethodHandler implements RequestHandler {
 		boolean canHandlePath = HttpPathUtil.arePathsMatching(request.getPath(), method.getPath());
 
 		return canHandleMethod && canHandlePath;
+	}
+
+	public String getPath() {
+		return method.getPath();
 	}
 }

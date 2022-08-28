@@ -1,5 +1,7 @@
 package com._7aske.grain.security;
 
+import java.util.Objects;
+
 /**
  * Default authority implementation.
  */
@@ -16,5 +18,18 @@ public class BasicAuthority implements Authority {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		BasicAuthority that = (BasicAuthority) o;
+		return name.equals(that.name);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 }

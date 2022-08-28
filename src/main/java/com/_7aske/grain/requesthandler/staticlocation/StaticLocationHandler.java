@@ -96,5 +96,10 @@ public class StaticLocationHandler implements RequestHandler {
 			return new FileInputStream(file);
 		}
 	}
+
+	@Override
+	public String getPath() {
+		return location;
+	}
 }
 

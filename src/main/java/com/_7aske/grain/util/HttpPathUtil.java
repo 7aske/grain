@@ -29,8 +29,10 @@ public class HttpPathUtil {
 
 		int len = patternSegments.length;
 		int pathLen = pathSegments.length;
-		if (len == 1 && pathLen == 1 && patternSegments[0].equals(pathSegments[0])) return true;
-		if (len > pathLen) return false;
+		if (len == 1 && pathLen == 1 && patternSegments[0].equals(pathSegments[0]))
+			return true;
+		if (len > pathLen && !patternSegments[len - 1].equals(MULTIPLE_SEGMENT_WILDCARD))
+			return false;
 		for (int i = 0, ip = 0; i < len && ip < pathLen; i++, ip++) {
 			String patternSegment = patternSegments[i];
 			String pathSegment = pathSegments[ip];

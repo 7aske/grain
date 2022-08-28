@@ -10,7 +10,10 @@ import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.view.ViewResolver;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -21,10 +24,12 @@ public class ControllerHandler implements RequestHandler {
 	 * Wrapped controller methods.
 	 */
 	private final List<ControllerMethodHandler> methodHandlers;
+	private final ControllerWrapper wrapper;
 
 	public ControllerHandler(ControllerWrapper wrapper,
 	                         ConverterRegistry converterRegistry,
 	                         ViewResolver viewResolver) {
+		this.wrapper = wrapper;
 		this.methodHandlers = wrapper.getMethods().stream()
 				.map(method -> new ControllerMethodHandler(method, converterRegistry, viewResolver))
 				.collect(Collectors.toList());
@@ -32,21 +37,38 @@ public class ControllerHandler implements RequestHandler {
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
-		this.methodHandlers.stream()
+		List<ControllerMethodHandler> handlers = this.methodHandlers.stream()
 				.filter(methodHandler -> methodHandler.canHandle(request))
-				.findFirst()
-				.ifPresent(methodHandler -> {
-					try {
-						methodHandler.handle(request, response);
-					} catch (IOException e) {
-						throw new GrainRuntimeException(e);
-					}
-				});
+				.sorted(Comparator.comparingInt((ToIntFunction<? super ControllerMethodHandler>)
+						h -> h.getPath().length()).reversed())
+				.collect(Collectors.toList());
+		Optional<ControllerMethodHandler> handler = Optional.empty();
+		if (handlers.size() == 1) {
+			handler = Optional.of(handlers.get(0));
+		} else if (handlers.size() > 1) {
+			handler = Optional.ofNullable(handlers.stream()
+					.filter(h -> h.getPath().equals(request.getPath()))
+					.findFirst()
+					.orElse(handlers.get(0)));
+		}
+
+		handler.ifPresent(methodHandler -> {
+			try {
+				methodHandler.handle(request, response);
+			} catch (IOException e) {
+				throw new GrainRuntimeException(e);
+			}
+		});
 	}
 
 	@Override
 	public boolean canHandle(HttpRequest request) {
 		return methodHandlers.stream()
 				.anyMatch(methodHandler -> methodHandler.canHandle(request));
+	}
+
+	@Override
+	public String getPath() {
+		return wrapper.getPath();
 	}
 }
