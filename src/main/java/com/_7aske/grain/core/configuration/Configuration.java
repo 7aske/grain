@@ -34,6 +34,8 @@ public final class Configuration extends AbstractConfiguration {
 
 
 		PropertiesResolver propertiesResolver = new PropertiesResolver(profiles);
+		propertiesResolver.resolve("META-INF/application",
+				properties::load);
 		propertiesResolver.resolve("application",
 				properties::load);
 

@@ -36,22 +36,17 @@ public class AstBooleanNode extends AstBinaryNode {
 	@Override
 	public Object run(Interpreter interpreter) {
 		Object leftValue = left.run(interpreter);
-		Object rightValue;
 		switch (operator) {
 			case AND:
-				boolean andLeft = Boolean.parseBoolean(String.valueOf(leftValue));
 				// AND short-circuit
-				if (!andLeft)
+				if (!Boolean.parseBoolean(String.valueOf(leftValue)))
 					return false;
-				rightValue = right.run(interpreter);
-				return andLeft && Boolean.parseBoolean(String.valueOf(rightValue));
+				return Boolean.parseBoolean(String.valueOf(right.run(interpreter)));
 			case OR:
-				boolean orLeft = Boolean.parseBoolean(String.valueOf(leftValue));
 				// OR short-circuit
-				if (orLeft)
+				if (Boolean.parseBoolean(String.valueOf(leftValue)))
 					return true;
-				rightValue = right.run(interpreter);
-				return orLeft || Boolean.parseBoolean(String.valueOf(rightValue));
+				return Boolean.parseBoolean(String.valueOf(right.run(interpreter)));
 		}
 		throw new IllegalStateException("Unknown operator value " + operator);
 	}

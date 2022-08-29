@@ -20,6 +20,7 @@ public class StaticLocationHandler implements RequestHandler {
 	private final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 	private final String location;
 	private final boolean isResource;
+	private static final String INDEX_PAGE = "index.html";
 
 	public StaticLocationHandler(String location) {
 		this.isResource = location.startsWith(RESOURCES_PREFIX);
@@ -56,13 +57,13 @@ public class StaticLocationHandler implements RequestHandler {
 		if (!method.equals(HttpMethod.GET)) return false;
 
 		if (isResource) {
-			URL url = classLoader.getResource(join(location, path));
-			if (url == null) return false;
-			File file = new File(url.getPath());
-			if (file.isDirectory()) {
-				file = new File(url.getPath() + "/index.html");
+			String joined = join(location, path);
+			URL url = classLoader.getResource(joined);
+			if (url == null) {
+				joined = join(joined, INDEX_PAGE);
+				url = classLoader.getResource(joined);
 			}
-			return file.exists();
+			return url != null;
 		} else {
 			return new File(Paths.get(location, path).toAbsolutePath().toString()).exists();
 		}
@@ -70,24 +71,17 @@ public class StaticLocationHandler implements RequestHandler {
 
 	private InputStream getInputStream(Path path) throws IOException {
 		if (isResource) {
-			URL url = classLoader.getResource(path.toString());
-			if (url == null)
-				throw new IOException();
-			File file = new File(url.getPath());
-			if (file.isDirectory()) {
-				file = new File(url.getPath() + "/index.html");
-			} else {
-				return new FileInputStream(file);
+			InputStream resourceAsStream = classLoader.getResourceAsStream(path.toString());
+			if (resourceAsStream == null) {
+				resourceAsStream = classLoader.getResourceAsStream(join(path.toString(), INDEX_PAGE));
 			}
-			if (!file.exists())
-				throw new IOException();
-			return new FileInputStream(file);
+			return resourceAsStream;
 		} else {
 			File file = new File(path.toString());
 			if (!file.exists())
 				throw new IOException();
 			if (file.isDirectory()) {
-				file = new File(path.resolve("index.html").toString());
+				file = new File(path.resolve(INDEX_PAGE).toString());
 			} else {
 				return new FileInputStream(file);
 			}

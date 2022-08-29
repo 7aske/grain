@@ -1,7 +1,6 @@
 package com._7aske.grain.core.configuration;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
@@ -19,6 +18,21 @@ public class PropertiesResolver {
 	public PropertiesResolver(List<String> profiles) {
 		this.classLoader = Thread.currentThread().getContextClassLoader();
 		this.profiles = profiles;
+	}
+
+	public void resolve(String[] filePaths, PropertiesInputStreamConsumer inputStreamConsumer) {
+		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		for (String filePath : filePaths) {
+			resolve(filePath, is -> {
+				is.transferTo(byteArrayOutputStream);
+				byteArrayOutputStream.write('\n');
+			});
+		}
+		ByteArrayInputStream byteArrayInputStream =
+				new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+		try {
+			inputStreamConsumer.accept(byteArrayInputStream);
+		} catch (IOException e) {/*ignored*/}
 	}
 
 	public void resolve(String filePath, PropertiesInputStreamConsumer inputStreamConsumer) {

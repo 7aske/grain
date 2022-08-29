@@ -2,7 +2,6 @@ package com._7aske.grain.logging;
 
 import com._7aske.grain.core.configuration.PropertiesResolver;
 
-import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
@@ -15,23 +14,22 @@ import static java.util.logging.LogManager.getLogManager;
  * this class does the ad-hoc configuration of LogManager.
  */
 public class LoggerFactory {
+	private static final String[] FILE_PATHS = {"META-INF/logging", "logging"};
 	private static final PropertiesResolver PROPERTIES_RESOLVER;
 	// Properties from logging.properties files.
 	private static final Properties properties = new Properties();
 	static {
 		// Profile-less configuration of LogManager.
 		PROPERTIES_RESOLVER = new PropertiesResolver(List.of());
-		PROPERTIES_RESOLVER.resolve("logging", is -> {
-			byte[] bytes = is.readAllBytes();
+		PROPERTIES_RESOLVER.resolve(FILE_PATHS, is -> {
 			// We create a copy of read bytes since we need to use the input stream
 			// twice. Once for properties  and once for the LogManager itself.
 			// InputStream returned from PropertiesResolver#resolve() cannot be
 			// reset to be read from again.
-			try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
-				properties.load(bais);
-				bais.reset();
-				getLogManager().readConfiguration(bais);
-			}
+			properties.load(is);
+			is.reset();
+			getLogManager().readConfiguration(is);
+			is.close();
 		});
 	}
 
