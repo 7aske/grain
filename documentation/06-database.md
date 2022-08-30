@@ -14,13 +14,13 @@ default configuration.
 public class CinemaApp extends GrainApp {
 
   @Override
-  protected void configure(ConfigurationBuilder builder) {
-    builder.setProperty(DATABASE_USER, "grain");
-    builder.setProperty(DATABASE_PASS, "grain");
-    builder.setProperty(DATABASE_NAME, "cinema");
-    builder.setProperty(DATABASE_HOST, "127.0.0.1");
-    builder.setProperty(DATABASE_PORT, 3306);
-    builder.setProperty(DATABASE_DRIVER_CLASS, "com.mysql.jdbc.Driver");
+  protected void configure(Configuration config) {
+    config.set("database.user", "root");
+    config.set("database.pass", "toor");
+    config.set("database.name", "blog");
+    config.set("database.host", "127.0.0.1");
+    config.set("database.port", 3306);
+    config.set("database.driver_class", "com.mysql.jdbc.Driver");
   }
 
   public static void main(String[] args){

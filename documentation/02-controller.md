@@ -90,8 +90,8 @@ View#getContent method with appropriate content type parsed by the View.
  
 * `TemplateView` - subclass of View interface with additional GTL (Grain Template Language)
 processing. `ControllerHandler` will pass some implicit objects to the view such as:
-`HttpRequest` as `request`, `HttpResponse` as `response`, `Session` as `session`
-and `Authentication` as `authentication`.
+`HttpRequest` as `#request`, `HttpResponse` as `#response`, `Session` as `#session`,
+ `Authentication` as `#authentication` and `Configuration` as `#configuration`.
  
 * `JsonResponse`, `JsonObject` - will return a JSON type response with appropriate content type.
 

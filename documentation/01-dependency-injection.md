@@ -110,6 +110,94 @@ public class Configuration {
 }
 ```
 
+## Grain methods
+
+### Hibernate integration
+
+Grain methods are basically factory methods for components that are not a part of
+the user's source code. They are similar to `@Bean` annotated methods you would
+find in spring projects.
+
+```java
+@Grain
+public class HibernateConfiguration {
+
+	@Grain
+	public SessionFactory sessionFactory() {
+		org.hibernate.cfg.Configuration configuration = new org.hibernate.cfg.Configuration();
+
+		GrainClassLoader grainClassLoader = new GrainJarClassLoader(CinemaApp.class.getPackageName());
+		grainClassLoader.loadClasses(cl -> cl.isAnnotationPresent(Entity.class))
+				.forEach(configuration::addAnnotatedClass);
+
+		return configuration.buildSessionFactory();
+	}
+}
+```
+
+This example shows all the code needed to integrate Hibernate in a Grain framework
+project. Rest of the configuration can be placed in `application.properties` file:
+
+```properties
+hibernate.dialect=org.hibernate.dialect.MariaDBDialect
+hibernate.connection.driver_class=org.mariadb.jdbc.Driver
+hibernate.connection.url=jdbc:mariadb://localhost:3306/example
+hibernate.connection.username=root
+hibernate.connection.password=
+hibernate.hbm2ddl.auto=update
+hibernate.show_sql=true
+```
+
+### Thymeleaf integration
+
+Another example can be integration of the Thymeleaf templating library to be used
+alongside the existing GTL engine. As GTL template resolver targets only files 
+with the `.gtl` extension thymeleaf can be seamlessly integrated as this configuration
+only resolves `.html` files as Thymeleaf templates.
+
+```java
+@Grain
+public class ThymeleafConfig {
+
+	private ITemplateResolver htmlTemplateResolver() {
+		StringTemplateResolver resolver
+				= new StringTemplateResolver();
+		resolver.setCacheable(false);
+		return resolver;
+	}
+
+	@Grain
+	public ViewResolver thymeleafViewResolver(Configuration configuration) {
+		return new ViewResolver() {
+			@Override
+			public boolean supports(View view) {
+				return view.getName().endsWith(".html");
+			}
+
+			@Override
+			public void resolve(View view, HttpRequest request, HttpResponse response, Session session, Authentication authentication) {
+				populateImplicitObjects(view, request, response, session, authentication, configuration);
+
+				Context context = new Context();
+				context.setVariables(view.getAttributes());
+
+				TemplateEngine templateEngine = new TemplateEngine();
+				templateEngine.setTemplateResolver(ViewResolverConfig.this.htmlTemplateResolver());
+
+		        String body = templateEngine.process(view.getName(), context);
+
+				try {
+					response.getOutputStream().write(body.getBytes());
+					response.setHeader(CONTENT_TYPE, view.getContentType());
+				} catch (IOException e) {
+					throw new GrainRuntimeException(e);
+				}
+			}
+		};
+	}
+}
+```
+
 ## Lifecycle hooks
 
 Currently, there is only one lifecycle hook - `@AfterInit` which is called after
@@ -183,9 +271,10 @@ public class SecurityHandlerProxyFactory implements HandlerProxyFactory {
 }
 ```
 
-## Primary implementation
+## Component ordering
 
-`@Primary` annotation can be used to tell grain to prioritize certain classes for
-dependency injection in situations where there are multiple classes implementing
-the same interface.
+Components can be injected as lists as well. In that case `@Order` annotation can
+be used to specify the order in which the components will appear in the list.
 
+This annotation can also be used to order `Middleware` components and specify the
+order in which they will be executed.

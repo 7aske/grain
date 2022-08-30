@@ -26,6 +26,7 @@ DO NOT USE IN PRODUCTION!
         * Lifecycle hooks (AfterInit)
         * Conditional loading
         * Field and annotation based injection
+        * Bean-like(Spring) methods
     * Middleware
     * Controllers
         * Request parameter binding
@@ -39,14 +40,13 @@ DO NOT USE IN PRODUCTION!
 * View templating
     * JSP-like scriptlets
     * Compatible with Java
-    *
     * Fragments (reusable HTML components)
     * Form binding to controller method arguments
 * Static directory serving
     * Classpath and non-classpath directories
 * Security
     * Java configuration
-    * Default implementation uses HTTP Cookies for tracking
+    * Default implementation uses HTTP Cookies for session tracking
     * Default login page and user
     * Roles
 * Logging system
@@ -78,13 +78,13 @@ public class BlogApp extends GrainApp {
   }
 
   @Override
-  protected void configure(ConfigurationBuilder builder) {
-    builder.setProperty(DATABASE_USER, "root");
-    builder.setProperty(DATABASE_PASS, "toor");
-    builder.setProperty(DATABASE_NAME, "blog");
-    builder.setProperty(DATABASE_HOST, "127.0.0.1");
-    builder.setProperty(DATABASE_PORT, 3306);
-    builder.setProperty(DATABASE_DRIVER_CLASS, "com.mysql.jdbc.Driver");
+  protected void configure(Configuration config) {
+    config.set("database.user", "root");
+    config.set("database.pass", "toor");
+    config.set("database.name", "blog");
+    config.set("database.host", "127.0.0.1");
+    config.set("database.port", 3306);
+    config.set("database.driver_class", "com.mysql.jdbc.Driver");
   }
   
   public static void main(String[] args) {
@@ -103,6 +103,73 @@ mvn package
 ```
 
 This gives you a grainXXX.jar file that you can add to your project.
+
+## Usage
+
+Using the framework requires a bit of configuration in your `pom.xml` file:
+
+```xml
+...
+<dependencies>
+    ...
+    <dependency>
+        <groupId>com._7aske</groupId>
+        <artifactId>grain</artifactId>
+    </dependency>
+    ...
+</dependencies>
+<build>
+    <plugins>
+        <!-- Grain build plugins -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                </execution>
+            </executions>
+            <configuration>
+                <transformers>
+                    <transformer
+                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.yourapp.App</mainClass>
+                    </transformer>
+                </transformers>
+                <shadedArtifactAttached>true</shadedArtifactAttached>
+                <shadedClassifierName>exec</shadedClassifierName>
+            </configuration>
+        </plugin>
+        <!-- END Grain build plugins -->
+    </plugins>
+</build>
+...
+```
+This configuration is required to build a "fat" jar that can be executed with `java -jar yourapp.jar`.
+
+### Other dependencies
+
+In order to enable logging - or any logger output add slf4j2 dependency:
+
+```xml
+...
+<!-- Logging dependencies -->
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>2.0.0</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.logging.log4j</groupId>
+    <artifactId>log4j-slf4j-impl</artifactId>
+    <version>2.18.0</version>
+</dependency>
+<!-- END Logging dependencies -->
+...
+```
 
 ## Examples
 

@@ -52,14 +52,14 @@ example, a JWT.
 ## Session injection
 
 Session object cannot be injected using the dependency injection system. It is
-rather passed by the request handler runner to its child runners where it can be
-accessed in the for example controllers or the TemplateView.
+rather carried by the request object.
 
 ```java
 @Grain
 public class RequestCountMiddleware implements Middleware {
   @Override
-  public boolean handle(HttpRequest req, HttpResponse res, Session session) {
+  public boolean handle(HttpRequest req, HttpResponse res) {
+    Session session = req.getSession();
     session.put("request-count", ((int) session.get("request-count")) + 1);
     return false;
   }

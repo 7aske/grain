@@ -72,7 +72,7 @@ TemplateView is used preform complex templating using [GTL](#TODO) (Grain Templa
 GTL is evaluated in the HTML page context with some implicit objects available
 to the user. Template is loaded in the same fashion as it is in the FileView, but it
 is parsed and GTL scriptlets are evaluated to produce dynamic content. Additional data
-can be passed to the template using TemplateView#setData method, and it can be accessed from the template as global
+can be passed to the template using TemplateView#addAttribute method, and it can be accessed from the template as global
 variables.
 
 ```java
@@ -82,7 +82,8 @@ public class TemplateView extends FileView {
     super(path);
   }
 
-  public void setData(String key, Object value) {
+  @Override
+  public void addAttribute(@NotNull String key, @Nullable Object value) {
     // add data for GTL interpretation
   }
 
@@ -108,7 +109,7 @@ public class ScreeningController {
   @GetMapping("/{id}")
   public View getScreeningById(@PathVariable("id") Integer id) {
     TemplateView templateView = new TemplateView("screening.html");
-    templateView.setData("screening", screeningService.findById(Screening.class, id));
+    templateView.addAttribute("screening", screeningService.findById(Screening.class, id));
     return templateView;
   }
 }

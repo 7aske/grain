@@ -10,15 +10,14 @@ injection system.
 
 ```java
 @Grain
-@Priority(10)
+@Order(10)
 public class PoweredByMiddleware implements Middleware {
   @Override
-  public boolean handle(HttpRequest httpRequest, HttpResponse httpResponse, Session session) {
+  public void handle(HttpRequest httpRequest, HttpResponse httpResponse) {
     httpResponse.setHeader("X-Powered-By", "Grain");
-    return false;
   }
 }
 ```
 
-`@Priority` sets the priority of the middleware. Lower numbers are called before
+`@Order` sets the priority of the middleware. Lower numbers are called before
 higher. This can be used to configure the middleware chain.
