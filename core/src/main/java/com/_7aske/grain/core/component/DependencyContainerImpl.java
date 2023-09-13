@@ -1,13 +1,11 @@
 package com._7aske.grain.core.component;
 
-import com._7aske.grain.GrainApp;
+import com._7aske.grain.GrainAppRunner;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static com._7aske.grain.util.ReflectionUtil.compareLibraryAndUserPackage;
 
 class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable<?>> {
 	private final Collection<Injectable<?>> dependencies;
@@ -82,7 +80,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	private Optional<Injectable<?>> resolveSingleDependency(String name, List<Injectable<?>> list) {
 		List<Injectable<?>> userDefined = list.stream()
 				.filter(d -> {
-					String basePackage = GrainApp.getBasePackage() + ".";
+					String basePackage = GrainAppRunner.class.getPackageName() + ".";
 					String depPackage = d.getProvider() == null
 							? d.getType().getPackageName()
 							: d.getProvider().getType().getPackageName();

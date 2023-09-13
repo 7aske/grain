@@ -2,6 +2,7 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
+import com._7aske.grain.core.configuration.GrainApplication;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.util.ReflectionUtil;
 
@@ -11,7 +12,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
@@ -68,6 +68,9 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 		} else {
 			try {
 				this.constructor = ReflectionUtil.getBestConstructor(clazz);
+				if (this.constructor == null) {
+					throw new GrainInitializationException("No constructor found for class " + clazz.getName());
+				}
 				this.constructorParameters = new InjectableReference[this.constructor.getParameterCount()];
 				Parameter[] parameters = this.constructor.getParameters();
 				for (int i = 0; i < parameters.length; i++) {
@@ -85,27 +88,30 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 
 		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
-				.collect(Collectors.toList());
+				.toList();
 
 		this.injectableFields = Arrays.stream(clazz.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Inject.class))
-				.collect(Collectors.toList());
+				.toList();
 
 		List<InjectableReference<?>> constructorDependencies = Arrays.asList(this.constructorParameters);
 
 		this.dependencies = new ArrayList<>();
 		// Filter added to prevent the Injectable to depend on itself
-		this.dependencies.addAll(constructorDependencies.stream().filter(d -> !d.getType().isAssignableFrom(clazz)).collect(Collectors.toList()));
+		List<InjectableReference<?>> references = constructorDependencies.stream()
+				.filter(d -> !d.getType().isAssignableFrom(clazz))
+				.toList();
+		this.dependencies.addAll(references);
 
 		this.type = clazz;
 		this.provider = null;
 		this.valueFields = Arrays.stream(clazz.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Value.class))
 				.map(InjectableField::new)
-				.collect(Collectors.toList());
+				.toList();
 		this.afterInitMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, AfterInit.class))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	public T getInstance() {
@@ -154,6 +160,10 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 
 	public boolean isGrainMethodDependency() {
 		return provider != null;
+	}
+
+	public boolean isGrainApplication() {
+		return isAnnotationPresent(type, GrainApplication.class);
 	}
 
 	public Injectable<?> getProvider() {

@@ -54,7 +54,32 @@ DO NOT USE IN PRODUCTION!
 
 ## Quickstart
 
+Framework configuration is all handled in the `parent` module. You must add it as a parent of your project as well.
+
+```xml
+...
+
+<parent>
+    <groupId>com._7aske.grain</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</parent>
+
+<dependencies>
+    ...
+    <dependency>
+        <groupId>com._7aske.grain</groupId>
+        <artifactId>core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    ...
+</dependencies>
+...
+```
+Following this instruction will allow you to build a "fat" jar that can be executed with `java -jar yourapp. jar`.
+
 ```java
+@GrainApplication
 public class BlogApp extends GrainApp {
 
   @Table(name = "post")
@@ -94,6 +119,29 @@ public class BlogApp extends GrainApp {
 }
 ```
 
+Grain does not have a very broad nor complex set of features, but it is very extensible as is any DI system. You can
+add your own components and extend the framework to your needs. In the following example we have integrated Hibernate
+into our application using only one Grain component.
+
+```java
+
+@Grain
+public class HibernateConfiguration {
+
+	@Grain
+	public SessionFactory sessionFactory() {
+		Configuration configuration = new Configuration();
+
+		GrainClassLoader grainClassLoader = new GrainJarClassLoader(CinemaApp.class.getPackageName());
+		grainClassLoader.loadClasses(cl -> cl.isAnnotationPresent(Entity.class))
+				.forEach(configuration::addAnnotatedClass);
+
+		return configuration.buildSessionFactory();
+	}
+}
+
+```
+
 ## Building
 
 Build the source
@@ -103,52 +151,6 @@ mvn package
 ```
 
 This gives you a grainXXX.jar file that you can add to your project.
-
-## Usage
-
-Using the framework requires a bit of configuration in your `pom.xml` file:
-
-```xml
-...
-<dependencies>
-    ...
-    <dependency>
-        <groupId>com._7aske</groupId>
-        <artifactId>grain</artifactId>
-    </dependency>
-    ...
-</dependencies>
-<build>
-    <plugins>
-        <!-- Grain build plugins -->
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <executions>
-                <execution>
-                    <phase>package</phase>
-                    <goals>
-                        <goal>shade</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <transformers>
-                    <transformer
-                            implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                        <mainClass>com.example.yourapp.App</mainClass>
-                    </transformer>
-                </transformers>
-                <shadedArtifactAttached>true</shadedArtifactAttached>
-                <shadedClassifierName>exec</shadedClassifierName>
-            </configuration>
-        </plugin>
-        <!-- END Grain build plugins -->
-    </plugins>
-</build>
-...
-```
-This configuration is required to build a "fat" jar that can be executed with `java -jar yourapp.jar`.
 
 ### Other dependencies
 

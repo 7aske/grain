@@ -1,22 +1,20 @@
 package com._7aske.grain.core.context;
 
-import com._7aske.grain.GrainApp;
+import com._7aske.grain.GrainAppRunner;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.logging.Logger;
-import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.core.configuration.GrainApplication;
 import com._7aske.grain.util.classloader.GrainJarClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.util.ReflectionUtil.isAnyAnnotationPresent;
 
 public class ApplicationContextImpl implements DependencyContainer, ApplicationContext {
-	private static final Logger logger = LoggerFactory.getLogger(ApplicationContextImpl.class);
 	private final String basePackage;
 	private final Configuration configuration;
 	private final DependencyContainer dependencyContainer;
@@ -26,9 +24,9 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 		this.configuration = configuration;
 		GrainInjector grainInitializer = new GrainInjector(configuration);
 
-		Set<Class<?>> classes = Arrays.stream(new String[]{GrainApp.getBasePackage(), basePackage})
+		Set<Class<?>> classes = Arrays.stream(new String[]{GrainAppRunner.class.getPackageName(), basePackage})
 				.flatMap(pkg -> new GrainJarClassLoader(pkg)
-						.loadClasses(cl -> !cl.isAnnotation() && isAnnotationPresent(cl, Grain.class))
+						.loadClasses(cl -> !cl.isAnnotation() && isAnyAnnotationPresent(cl, Grain.class, GrainApplication.class))
 						.stream())
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 		grainInitializer.inject(classes);

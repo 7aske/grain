@@ -62,7 +62,7 @@ public class GrainInjector {
 		}
 		Injectable<?> injectable = new Injectable<>(
 				clazz,
-				GrainNameResolver.getDefault().resolveDeclarationName(object.getClass()));
+				grainNameResolver.resolveDeclarationName(object.getClass()));
 		injectable.setObjectInstance(object);
 		container.add(injectable);
 	}
@@ -79,7 +79,7 @@ public class GrainInjector {
 
 		Injectable<?> injectable = new Injectable<>(
 				clazz,
-				GrainNameResolver.getDefault().resolveDeclarationName(clazz));
+				grainNameResolver.resolveDeclarationName(clazz));
 		initialize(injectable);
 		container.add(injectable);
 	}
@@ -112,6 +112,7 @@ public class GrainInjector {
 						method,
 						grainNameResolver.resolveReferenceName(method),
 						dependency);
+
 				// We add the dependency to the DependencyContainer allowing
 				// other grains to use it.
 				if (checkCondition(method.getAnnotation(Condition.class))) {
@@ -133,10 +134,12 @@ public class GrainInjector {
 			// These should be skipped as they are added to the dependency
 			// container but are not actual classes that we should initialize
 			// in the DI process. Rather we let grain methods do that.
-			if (!dependency.isGrainMethodDependency()) {
-				initialize(dependency);
-			}
-		}
+            if (dependency.isGrainMethodDependency()) {
+                continue;
+            }
+
+            initialize(dependency);
+        }
 
 		// @Temporary
 		// Before running code segments in @Value annotations we need to load
@@ -218,9 +221,9 @@ public class GrainInjector {
 		if (dependency.isInitialized()) return;
 
 		// We initialize the injectable
-		T instance = ReflectionUtil.newInstance(
-				dependency.getConstructor(),
-				mapConstructorParametersToDependencies(dependency));
+	T instance = ReflectionUtil.newInstance(
+			dependency.getConstructor(),
+			mapConstructorParametersToDependencies(dependency));
 		dependency.setInstance(instance);
 		logger.debug("Initialized '{}'", dependency.getType().getName());
 
@@ -321,7 +324,7 @@ public class GrainInjector {
 						}
 					})
 					.map(Injectable::getInstance)
-					.collect(Collectors.toList());
+					.toList();
 		} else {
 			Injectable<T> dependency = injectableReference
 					.resolve(this.container);

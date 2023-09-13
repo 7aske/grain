@@ -143,13 +143,27 @@ public class ReflectionUtil {
 	}
 
 	/**
-	 * @param object      Field or Method on which to search annotation for
-	 * @param annotations annotations to search for
-	 * @return if annotation is present in the object or recursively in any of
-	 * the annotated types
+	 * @param object      Field or Method on which to search annotation for.
+	 * @param annotations Annotations to search for.
+	 * @return If annotation is present in the object.
 	 */
 	public static boolean isAnyAnnotationPresent(AccessibleObject object, Class<? extends Annotation>... annotations) {
-		return Arrays.stream(object.getAnnotations()).anyMatch(a -> Arrays.stream(annotations).anyMatch(a1 -> a1.equals(a.annotationType())));
+		return Arrays.stream(object.getAnnotations())
+				.anyMatch(a -> Arrays.stream(annotations)
+						.anyMatch(a1 -> a1.equals(a.annotationType())));
+	}
+
+	/**
+	 * @param clazz       Class on which to search annotation for.
+	 * @param annotations Annotations to search for.
+	 * @return If annotation is present in the class.
+	 */
+	public static boolean isAnyAnnotationPresent(Class<?> clazz, Class<? extends Annotation>... annotations) {
+		for (Class<? extends Annotation> annotation : annotations) {
+			if (isAnnotationPresent(clazz, annotation)) return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -174,8 +188,9 @@ public class ReflectionUtil {
 	public static <T> T newInstance(Constructor<T> constructor, Object... params) {
 		try {
 			return constructor.newInstance(params);
-		} catch (InstantiationException | IllegalAccessException |
-		         InvocationTargetException e) {
+		} catch (InstantiationException
+				 | IllegalAccessException
+				 | InvocationTargetException e) {
 			throw new GrainInitializationException("Could not instantiate '" + constructor.getDeclaringClass().getName() + "'", e);
 		}
 	}

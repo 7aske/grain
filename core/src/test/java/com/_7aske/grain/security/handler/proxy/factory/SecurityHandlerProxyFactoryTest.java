@@ -23,7 +23,7 @@ class SecurityHandlerProxyFactoryTest {
 	void setUp() {
 		Configuration configuration = Configuration.createDefault();
 		configuration.set("security.enabled", true);
-		applicationContext = new ApplicationContextImpl(TestClass.getBasePackage(), configuration);
+		applicationContext = new ApplicationContextImpl(TestClass.class.getPackageName(), configuration);
 		ApplicationContextHolder.setContext(applicationContext);
 	}
 
