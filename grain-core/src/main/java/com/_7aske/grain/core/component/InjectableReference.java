@@ -7,7 +7,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import static com._7aske.grain.core.component.InjectableReference.ReferenceType.NAME;
 import static com._7aske.grain.core.component.InjectableReference.ReferenceType.TYPE;
@@ -66,7 +65,7 @@ public class InjectableReference<T> {
 			return container.getListByClass(type)
 					.stream()
 					.filter(d -> !d.getType().equals(provider))
-					.collect(Collectors.toList());
+					.toList();
 		}
 
 		if (referenceType == NAME) {

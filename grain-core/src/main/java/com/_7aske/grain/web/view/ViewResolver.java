@@ -10,6 +10,12 @@ import com._7aske.grain.http.view.util.SecurityUtil;
 public interface ViewResolver {
 	void resolve(View view, HttpRequest request, HttpResponse response, Session session, Authentication authentication);
 
+	/**
+	 * Method to check if this view resolver supports the view.
+	 *
+	 * @param view View to check.
+	 * @return True if view is supported, false otherwise.
+	 */
 	default boolean supports(View view) {
 		return true;
 	}

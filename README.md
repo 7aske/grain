@@ -80,7 +80,7 @@ Following this instruction will allow you to build a "fat" jar that can be execu
 
 ```java
 @GrainApplication
-public class BlogApp extends GrainApp {
+public class BlogApp {
 
   @Table(name = "post")
   static final class Post extends Model {
@@ -102,20 +102,20 @@ public class BlogApp extends GrainApp {
     }
   }
 
-  @Override
-  protected void configure(Configuration config) {
+  @Grain
+  public Configuration configuration(Configuration config) {
     config.set("database.user", "root");
     config.set("database.pass", "toor");
     config.set("database.name", "blog");
     config.set("database.host", "127.0.0.1");
     config.set("database.port", 3306);
     config.set("database.driver_class", "com.mysql.jdbc.Driver");
+    return config;
   }
-  
+
   public static void main(String[] args) {
     GrainAppRunner.run(BlogApp.class);
   }
-  
 }
 ```
 

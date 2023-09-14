@@ -113,6 +113,26 @@ public class GrainInjector {
 						grainNameResolver.resolveReferenceName(method),
 						dependency);
 
+				// If the Grain method returns the same type (or subtype) as one of the
+				// parameters in the Grain method parameter list we consider that
+				// as an "Override" injection, and therefore we do not need to
+				// create a new dependency in the container for it.
+				// Example would be a Grain method that is used to update the
+				// Configuration class:
+				// @Grain
+				// public Configuration configuration(Configuration config) {
+				//     config.setSomething("something");
+				//     return config;
+				// }
+				Optional<Injectable<?>> grain = this.container.getByClass(method.getReturnType());
+				if (grain.isPresent()) {
+					boolean isSelfReferencing = Arrays.stream(method.getParameterTypes())
+							.anyMatch(p -> method.getReturnType().isAssignableFrom(p));
+					if (isSelfReferencing) {
+						return;
+					}
+				}
+
 				// We add the dependency to the DependencyContainer allowing
 				// other grains to use it.
 				if (checkCondition(method.getAnnotation(Condition.class))) {
@@ -221,9 +241,9 @@ public class GrainInjector {
 		if (dependency.isInitialized()) return;
 
 		// We initialize the injectable
-	T instance = ReflectionUtil.newInstance(
-			dependency.getConstructor(),
-			mapConstructorParametersToDependencies(dependency));
+		T instance = ReflectionUtil.newInstance(
+				dependency.getConstructor(),
+				mapConstructorParametersToDependencies(dependency));
 		dependency.setInstance(instance);
 		logger.debug("Initialized '{}'", dependency.getType().getName());
 

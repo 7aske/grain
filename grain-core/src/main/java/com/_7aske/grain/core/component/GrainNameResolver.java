@@ -14,6 +14,9 @@ public interface GrainNameResolver {
 		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
 			return grain.name();
 		}
+
+//		String className = clazz.getSimpleName();
+//		return className.substring(0, 1).toLowerCase() + className.substring(1);
 		return null;
 	}
 
@@ -35,6 +38,8 @@ public interface GrainNameResolver {
 			return inject.name();
 		}
 
+//		String className = field.getType().getSimpleName();
+//		return className.substring(0, 1).toLowerCase() + className.substring(1);
 		return null;
 	}
 
@@ -44,6 +49,8 @@ public interface GrainNameResolver {
 			return inject.name();
 		}
 
+//		String className = parameter.getType().getSimpleName();
+//		return className.substring(0, 1).toLowerCase() + className.substring(1);
 		return null;
 	}
 
