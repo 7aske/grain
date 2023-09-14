@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <description>Grain web framework</description>
     <name>grain-parent</name>
+    <url>https://github.com/7aske/grain</url>
 
     <modules>
         <module>grain-core</module>
@@ -53,7 +54,7 @@
             <plugin>
                 <groupId>com._7aske.grain</groupId>
                 <artifactId>grain-maven-plugin</artifactId>
-                <version>1.0.0-SNAPSHOT</version>
+                <version>1.0.0</version>
                 <executions>
                     <execution>
                         <id>package</id>
