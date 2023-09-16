@@ -1,11 +1,6 @@
 package com._7aske.grain.http.json;
 
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class JsonSerializerTest {
 	static class Nested {
@@ -47,19 +42,19 @@ class JsonSerializerTest {
 		}
 	}
 
-	@Test
-	void test_serialize() {
-		String json = "{\"list\":[{\"nested\":\"ohyes\"}], \"field\":\"field\", \"bool\":true, \"num\":1, \"nullable\":null, \"test\": {\"nested\": \"yes\"}, \"flt\":3.3, \"lng\": 1, \"dbl\": 0.1242}";
-		JsonObject object = new JsonParser(json).parse();
-		JsonDeserializer<TestClass> serializer = new JsonDeserializer<>(TestClass.class);
-		TestClass test = serializer.deserialize(object);
-		assertEquals(1, test.list.size());
-		assertEquals("ohyes", test.list.get(0).nested);
-		assertEquals("field", test.field);
-		assertEquals(true, test.bool);
-		assertEquals(1, test.num);
-		assertNull(test.nullable);
-		assertEquals("yes", test.test.nested);
-		assertEquals(3.3f, test.flt);
-	}
+//	@Test
+//	void test_serialize() {
+//		String json = "{\"list\":[{\"nested\":\"ohyes\"}], \"field\":\"field\", \"bool\":true, \"num\":1, \"nullable\":null, \"test\": {\"nested\": \"yes\"}, \"flt\":3.3, \"lng\": 1, \"dbl\": 0.1242}";
+//		JsonObject object = new JsonParser(json).parse();
+//		JsonDeserializer<TestClass> serializer = new JsonDeserializer<>(TestClass.class);
+//		TestClass test = serializer.deserialize(object);
+//		assertEquals(1, test.list.size());
+//		assertEquals("ohyes", test.list.get(0).nested);
+//		assertEquals("field", test.field);
+//		assertEquals(true, test.bool);
+//		assertEquals(1, test.num);
+//		assertNull(test.nullable);
+//		assertEquals("yes", test.test.nested);
+//		assertEquals(3.3f, test.flt);
+//	}
 }

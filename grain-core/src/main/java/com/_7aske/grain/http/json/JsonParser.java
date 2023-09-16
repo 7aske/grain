@@ -1,89 +1,97 @@
 package com._7aske.grain.http.json;
 
 import com._7aske.grain.exception.json.JsonDeserializationException;
+import com._7aske.grain.http.json.nodes.*;
 import com._7aske.grain.util.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
 
 public class JsonParser {
-	private final JsonParserIterator iterator;
+	private JsonParserIterator iterator;
 
-	public JsonParser(String content) {
-		this.iterator = new JsonParserIterator(content);
+	public JsonParser() {
 	}
 
-	private Pair<String, Object> parseEntry() {
+	private Pair<String, JsonNode> parseEntry() {
 		iterator.eatWhitespace();
 		if (!iterator.isPeek("\"")) {
 			throw new JsonDeserializationException("Expected '\"' " + iterator.getInfo());
 		}
+
 		String key = iterator.eatKey();
 		iterator.eatWhitespace();
+
 		if (!iterator.isPeek(":")) {
 			throw new JsonDeserializationException("Expected ':' " + iterator.getInfo());
 		} else {
 			iterator.next(); // skip ':'
 		}
 		iterator.eatWhitespace();
-		Object value = parseValue();
+		JsonNode value = parseValue();
 
 		return Pair.of(key, value);
 	}
 
-	private Object parseValue() {
+	private JsonNode parseValue() {
 		String token = iterator.peek();
-		switch (token) {
-			case "{":
-				return parseObject();
-			case "[":
-				return parseArray();
-			case "\"":
-				return parseString();
-			default:
-				return parseOther();
-		}
+        return switch (token) {
+            case "{" -> parseObject();
+            case "[" -> parseArray();
+            case "\"" -> parseString();
+            default -> parseOther();
+        };
 	}
 
-	private Object parseOther() {
+	private JsonNode parseOther() {
 		iterator.eatWhitespace();
-		String val = iterator.eatWhile(ch -> !ch.isBlank() && !ch.equals(",") && !ch.equals("}") && !ch.equals("]"));
+		String val = iterator.eatWhile(ch ->
+				!ch.isBlank() &&
+				!ch.equals(",") &&
+				!ch.equals("}") &&
+				!ch.equals("]"));
+
+		if (iterator.isPeek("t")) {
+			return new JsonBooleanNode(Boolean.TRUE);
+		}
+
 		if (val.equals("true")) {
-			return Boolean.TRUE;
+			return new JsonBooleanNode(Boolean.TRUE);
 		}
 		if (val.equals("false")) {
-			return Boolean.FALSE;
+			return new JsonBooleanNode(Boolean.FALSE);
 		}
+
 		if (val.equals("null")) {
-			return null;
+			// No need to allocate a new object for null values
+			return JsonNullNode.INSTANCE;
 		}
-		try {
-			double parsed = Double.parseDouble(val);
-			if (parsed == (int) parsed) {
-				// @Warning this may cause issues with large numbers
-				// but removes a lot of headaches with parsing integer types.
-				return Integer.parseInt(val);
-			} else {
-				return parsed;
-			}
-		} catch (NumberFormatException ex) {
-			throw new JsonDeserializationException("Unexpected token '" + val + "' " + iterator.getInfo());
-		}
+
+        try {
+
+            if (val.contains("e") || val.contains("E")) {
+                return new JsonNumberNode(new BigDecimal(val));
+            } else if (val.contains(".")) {
+                return new JsonNumberNode(Double.parseDouble(val));
+            } else {
+                return new JsonNumberNode(Long.parseLong(val));
+            }
+
+        } catch (NumberFormatException ex) {
+            throw new JsonDeserializationException("Unexpected token '" + val + "' " + iterator.getInfo());
+        }
+    }
+
+	private JsonNode parseString() {
+		return new JsonStringNode(iterator.eatKey());
 	}
 
-	private Object parseString() {
-		return iterator.eatKey();
-	}
-
-	private Object parseArray() {
-		List<Object> list = new ArrayList<>();
+	private JsonNode parseArray() {
+		JsonArrayNode list = new JsonArrayNode();
 		iterator.next(); // skip [
 		while (!iterator.isPeek("]")) {
 
 			iterator.eatWhitespace();
-			Object val = parseValue();
+			JsonNode val = parseValue();
 			iterator.eatWhitespace();
 			list.add(val);
 			if (iterator.isPeek(",")) {
@@ -97,16 +105,21 @@ public class JsonParser {
 		return list;
 	}
 
-	private Object parseObject() {
-		Map<String, Object> obj = new HashMap<>();
+	private JsonObjectNode parseObject() {
+
+		JsonObjectNode obj = new JsonObjectNode();
 		iterator.next(); // skip '{'
 		while (!iterator.isPeek("}")) {
-			Pair<String, Object> kv = parseEntry();
+			Pair<String, JsonNode> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
+
 			if (iterator.isPeek(","))
 				iterator.next();
+
 		}
+
 		iterator.eatWhitespace();
+
 		if (iterator.isPeek("}")) {
 			iterator.next(); // skip '}'
 			iterator.eatWhitespace();
@@ -116,31 +129,72 @@ public class JsonParser {
 		throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
 	}
 
-	public JsonObject parse() {
-		Map<String, Object> json = new HashMap<>();
+	public JsonNode parse(String content) {
+		this.iterator = new JsonParserIterator(content);
+
 		iterator.eatWhitespace();
+
 		if (iterator.peek().equals("{")) {
 			iterator.next(); // skip '{'
-		} else {
-			throw new JsonDeserializationException("Expected '{' " + iterator.getInfo());
-		}
 
-		while (iterator.hasNext()) {
-			Pair<String, Object> kv = parseEntry();
-			json.put(kv.getFirst(), kv.getSecond());
+			JsonObjectNode object = new JsonObjectNode();
 
-			iterator.eatWhitespace();
+			while (iterator.hasNext()) {
+				iterator.eatWhitespace();
 
-			if (iterator.isPeek(",")) {
-				iterator.next();
-			} else if (iterator.isPeek("}")) {
-				break;
-			} else {
-				throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
+				if (iterator.isPeek("}")) {
+					break;
+				}
+
+				Pair<String, JsonNode> kv = parseEntry();
+				object.put(kv.getFirst(), kv.getSecond());
+
+				iterator.eatWhitespace();
+
+				if (iterator.isPeek(",")) {
+					iterator.next();
+				} else if (iterator.isPeek("}")) {
+					break;
+				} else {
+					throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
+				}
 			}
+
+			return object;
+
+		} else if (iterator.peek().equals("[")) {
+			iterator.next(); // skip '['
+
+			JsonArrayNode array = new JsonArrayNode();
+
+			// @Refactor
+			while (iterator.hasNext()) {
+				iterator.eatWhitespace();
+
+				if (iterator.isPeek("]")) {
+					break;
+				}
+
+				JsonNode value = parseValue();
+				array.add(value);
+
+				iterator.eatWhitespace();
+
+				if (iterator.isPeek(",")) {
+					iterator.next();
+				} else if (iterator.isPeek("]")) {
+					break;
+				} else {
+					throw new JsonDeserializationException("Expected ']' or ',' " + iterator.getInfo());
+				}
+			}
+
+			return array;
+
 		}
 
-		return new JsonObject(json);
+		return parseValue();
+//		throw new JsonDeserializationException("Invalid start of Json string" + iterator.getInfo());
 	}
 
 }

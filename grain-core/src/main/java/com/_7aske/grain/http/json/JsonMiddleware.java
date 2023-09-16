@@ -16,8 +16,8 @@ public class JsonMiddleware implements Middleware {
 	@Override
 	public void handle(HttpRequest req, HttpResponse res) {
 		if (Objects.equals(req.getHeader(CONTENT_TYPE), APPLICATION_JSON)) {
-			JsonParser deserializer = new JsonParser((String) req.getBody());
-			req.setBody(deserializer.parse());
+			JsonParser parser = new JsonParser();
+			req.setBody(parser.parse((String) req.getBody()));
 		}
 	}
 }
