@@ -1,90 +1,111 @@
 package com._7aske.grain.http.json.nodes;
 
-import java.util.ArrayList;
-import java.util.List;
+import com._7aske.grain.util.ForwardingStream;
 
-public class JsonArrayNode extends JsonNode {
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
+import java.util.stream.Stream;
+
+public class JsonArrayNode extends JsonNode<List<JsonNode<?>>> implements ForwardingStream<JsonNode<?>>, Collection<JsonNode<?>>, Iterable<JsonNode<?>> {
     public JsonArrayNode() {
-        super(new ArrayList<JsonNode>());
+        super(new ArrayList<>());
     }
 
-    public JsonNode get(int index) {
-        return ((List<JsonNode>)value).get(index);
+    public JsonNode<?> get(int index) {
+        return this.value.get(index);
     }
 
-    public void add(JsonNode value) {
-        ((List<JsonNode>) this.value).add(value);
-    }
-
-    /**
-     * @param key
-     * @return
-     */
     @Override
-    public JsonNode get(String key) {
-        throw new UnsupportedOperationException("Cannot call get(String) on JsonArrayNode");
+    public int size() {
+        return value.size();
     }
 
-    /**
-     * @return
-     */
     @Override
-    public Object getValue() {
-        return value;
+    public boolean isEmpty() {
+        return value.isEmpty();
     }
 
-    /**
-     * @return
-     */
     @Override
-    public String getString() {
-        throw new UnsupportedOperationException("Cannot call getString() on JsonArrayNode");
+    public boolean contains(Object o) {
+        return value.contains(o);
     }
 
-    /**
-     * @return
-     */
     @Override
-    public Number getNumber() {
-        throw new UnsupportedOperationException("Cannot call getNumber() on JsonArrayNode");
+    public <T> T[] toArray(T[] a) {
+        return value.toArray(a);
     }
 
-    /**
-     * @return
-     */
+
     @Override
-    public Boolean getBoolean() {
-        throw new UnsupportedOperationException("Cannot call getBoolean() on JsonArrayNode");
+    public boolean remove(Object o) {
+        return this.value.remove(o);
     }
 
-    /**
-     * @return
-     */
     @Override
-    public JsonObjectNode getObject() {
-        throw new UnsupportedOperationException("Cannot call getObject() on JsonArrayNode");
+    public boolean containsAll(Collection<?> c) {
+        return new HashSet<>(this.value).containsAll(c);
     }
 
-    /**
-     * @return
-     */
     @Override
-    public JsonArrayNode getArray() {
+    public boolean addAll(Collection<? extends JsonNode<?>> c) {
+        return false;
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c) {
+        return this.value.removeAll(c);
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        return this.value.retainAll(c);
+    }
+
+    @Override
+    public void clear() {
+        this.value.clear();
+    }
+
+    @Override
+    public JsonArrayNode asArray() {
         return this;
     }
 
-    /**
-     * @return
-     */
 
-    /**
-     * @param key
-     * @param clazz
-     * @param <T>
-     * @return
-     */
     @Override
-    public <T> T get(String key, Class<T> clazz) {
-        throw new UnsupportedOperationException("Cannot call get(String, Class) on JsonArrayNode");
+    public Stream<JsonNode<?>> getStream() {
+        return this.value.stream();
     }
+
+    @Override
+    public void forEach(Consumer<? super JsonNode<?>> action) {
+        ForwardingStream.super.forEach(action);
+    }
+
+    @Override
+    public Object[] toArray() {
+        return ForwardingStream.super.toArray();
+    }
+
+    @Override
+    public <A> A[] toArray(IntFunction<A[]> generator) {
+        return ForwardingStream.super.toArray(generator);
+    }
+
+    @Override
+    public boolean add(JsonNode<?> jsonNode) {
+        return this.value.add(jsonNode);
+    }
+
+    @Override
+    public Spliterator<JsonNode<?>> spliterator() {
+        return ForwardingStream.super.spliterator();
+    }
+
+    @Override
+    public Iterator<JsonNode<?>> iterator() {
+        return ForwardingStream.super.iterator();
+    }
+
 }

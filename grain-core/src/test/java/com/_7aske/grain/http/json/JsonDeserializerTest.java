@@ -1,5 +1,6 @@
 package com._7aske.grain.http.json;
 
+import com._7aske.grain.http.json.annotation.JsonIgnore;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,8 +10,10 @@ class JsonDeserializerTest {
 
 	static class User {
 		String username;
+
 		@JsonIgnore
 		String password;
+
 		User manager;
 	}
 
@@ -19,10 +22,12 @@ class JsonDeserializerTest {
 		User manager = new User();
 		manager.username = "manager";
 		manager.password = "bigsecret";
+
 		User user = new User();
 		user.password = "secret";
 		user.username = "username";
 		user.manager = manager;
+
 		JsonSerializer<User> deserializer = new JsonSerializer<>(User.class);
 		JsonObject jsonObject = (JsonObject) deserializer.serialize(user);
 

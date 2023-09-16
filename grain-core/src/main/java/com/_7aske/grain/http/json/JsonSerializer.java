@@ -1,5 +1,7 @@
 package com._7aske.grain.http.json;
 
+import com._7aske.grain.http.json.annotation.JsonIgnore;
+
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.List;
  * Class responsible for converting an object of class to its JSON
  * string representation.
  */
+@Deprecated
 public class JsonSerializer<T> {
 	private final Class<T> clazz;
 

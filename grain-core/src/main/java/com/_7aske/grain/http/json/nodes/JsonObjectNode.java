@@ -1,55 +1,85 @@
 package com._7aske.grain.http.json.nodes;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-public class JsonObjectNode extends JsonNode {
+public class JsonObjectNode extends JsonNode<Map<String, JsonNode<?>>> implements Map<String, JsonNode<?>> {
 
 	public JsonObjectNode() {
-		super(new HashMap<String, JsonNode>());
+		super(new HashMap<>());
 	}
 
 	@Override
-	public JsonNode get(String key) {
-		return ((Map<String, JsonNode>) value).get(key);
-	}
-
-	@Override
-	public Object getValue() {
-		return value;
-	}
-
-	public String getString() {
-		throw new UnsupportedOperationException("Cannot call getString() on JsonObjectNode");
-	}
-
-	@Override
-	public Number getNumber() {
-		throw new UnsupportedOperationException("Cannot call getString() on JsonObjectNode");
-	}
-
-	@Override
-	public Boolean getBoolean() {
-		throw new UnsupportedOperationException("Cannot call getString() on JsonObjectNode");
-	}
-
-	@Override
-	public JsonObjectNode getObject() {
+	public JsonObjectNode asObject() {
 		return this;
 	}
 
 	@Override
-	public JsonArrayNode getArray() {
-		throw new UnsupportedOperationException("Cannot call getString() on JsonObjectNode");
+	public int size() {
+		return this.value.size();
 	}
 
 	@Override
-	public <T> T get(String key, Class<T> clazz) {
-		return clazz.cast(get(key));
+	public boolean isEmpty() {
+		return this.value.isEmpty();
 	}
 
-	public void put(String key, JsonNode value) {
-		((Map<String, JsonNode>) this.value).put(key, value);
+	@Override
+	public boolean containsKey(Object key) {
+		return this.value.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return this.value.containsValue(value);
+	}
+
+	@Override
+	public JsonNode<?> get(Object key) {
+		return super.get((String) key);
+	}
+
+	@Override
+	public JsonNode<?> put(String key, JsonNode<?> value) {
+		return this.value.put(key, value);
+	}
+
+	@Override
+	public JsonNode<?> remove(Object key) {
+		return this.value.remove(key);
+	}
+
+	@Override
+	public void putAll(Map<? extends String, ? extends JsonNode<?>> m) {
+		this.value.putAll(m);
+	}
+
+	@Override
+	public void clear() {
+		this.value.clear();
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return this.value.keySet();
+	}
+
+	/**
+	 * @return 
+	 */
+	@Override
+	public Collection<JsonNode<?>> values() {
+		return this.value.values();
+	}
+
+	/**
+	 * @return 
+	 */
+	@Override
+	public Set<Entry<String, JsonNode<?>>> entrySet() {
+		return this.value.entrySet();
 	}
 
 //	public static <T> JsonObject of(T object) {

@@ -1,5 +1,6 @@
 package com._7aske.grain.http.json;
 
+import com._7aske.grain.http.json.annotation.JsonIgnore;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
