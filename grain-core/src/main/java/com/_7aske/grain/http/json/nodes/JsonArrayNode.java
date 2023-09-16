@@ -7,64 +7,64 @@ import java.util.function.Consumer;
 import java.util.function.IntFunction;
 import java.util.stream.Stream;
 
-public class JsonArrayNode extends JsonNode<List<JsonNode<?>>> implements ForwardingStream<JsonNode<?>>, Collection<JsonNode<?>>, Iterable<JsonNode<?>> {
+public class JsonArrayNode extends JsonNode implements ForwardingStream<JsonNode>, Collection<JsonNode>, Iterable<JsonNode> {
     public JsonArrayNode() {
         super(new ArrayList<>());
     }
 
-    public JsonNode<?> get(int index) {
-        return this.value.get(index);
+    public JsonNode get(int index) {
+        return getValueAsList().get(index);
     }
 
     @Override
     public int size() {
-        return value.size();
+        return getValueAsList().size();
     }
 
     @Override
     public boolean isEmpty() {
-        return value.isEmpty();
+        return getValueAsList().isEmpty();
     }
 
     @Override
     public boolean contains(Object o) {
-        return value.contains(o);
+        return getValueAsList().contains(o);
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        return value.toArray(a);
+        return getValueAsList().toArray(a);
     }
 
 
     @Override
     public boolean remove(Object o) {
-        return this.value.remove(o);
+        return getValueAsList().remove(o);
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        return new HashSet<>(this.value).containsAll(c);
+        return new HashSet<>(getValueAsList()).containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends JsonNode<?>> c) {
+    public boolean addAll(Collection<? extends JsonNode> c) {
         return false;
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        return this.value.removeAll(c);
+        return getValueAsList().removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        return this.value.retainAll(c);
+        return getValueAsList().retainAll(c);
     }
 
     @Override
     public void clear() {
-        this.value.clear();
+        getValueAsList().clear();
     }
 
     @Override
@@ -74,12 +74,12 @@ public class JsonArrayNode extends JsonNode<List<JsonNode<?>>> implements Forwar
 
 
     @Override
-    public Stream<JsonNode<?>> getStream() {
-        return this.value.stream();
+    public Stream<JsonNode> getStream() {
+        return getValueAsList().stream();
     }
 
     @Override
-    public void forEach(Consumer<? super JsonNode<?>> action) {
+    public void forEach(Consumer<? super JsonNode> action) {
         ForwardingStream.super.forEach(action);
     }
 
@@ -94,17 +94,17 @@ public class JsonArrayNode extends JsonNode<List<JsonNode<?>>> implements Forwar
     }
 
     @Override
-    public boolean add(JsonNode<?> jsonNode) {
-        return this.value.add(jsonNode);
+    public boolean add(JsonNode jsonNode) {
+        return getValueAsList().add(jsonNode);
     }
 
     @Override
-    public Spliterator<JsonNode<?>> spliterator() {
+    public Spliterator<JsonNode> spliterator() {
         return ForwardingStream.super.spliterator();
     }
 
     @Override
-    public Iterator<JsonNode<?>> iterator() {
+    public Iterator<JsonNode> iterator() {
         return ForwardingStream.super.iterator();
     }
 

@@ -1,22 +1,23 @@
 package com._7aske.grain.http.json.nodes;
 
+import java.util.List;
 import java.util.Map;
 
-public abstract class JsonNode<T> {
+public abstract class JsonNode {
     // String, Number, Boolean, Map<String, JsonNode>, List<JsonNode>
-    protected T value;
+    protected Object value;
 
     protected JsonNode() {
     }
 
-    protected JsonNode(T value) {
+    protected JsonNode(Object value) {
         this.value = value;
     }
 
     // @Todo replace with List and Map specific get
-    public JsonNode<?> get(String key) {
+    public JsonNode get(String key) {
         if (value instanceof Map) {
-            return ((Map<String, JsonNode>) value).get(key);
+            return getValueAsMap().get(key);
         }
 
         throw new UnsupportedOperationException("Cannot get key from non-object value");
@@ -27,6 +28,14 @@ public abstract class JsonNode<T> {
      */
     public Object getValue() {
         return value;
+    }
+
+    protected Map<String, JsonNode> getValueAsMap() {
+        return (Map<String, JsonNode>) value;
+    }
+
+    protected List<JsonNode> getValueAsList() {
+        return (List<JsonNode>) value;
     }
 
     public String getString() {

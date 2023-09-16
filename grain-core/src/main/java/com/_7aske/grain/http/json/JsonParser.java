@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public class JsonParser {
 	private JsonParserIterator iterator;
 
-	private Pair<String, JsonNode<?>> parseEntry() {
+	private Pair<String, JsonNode> parseEntry() {
 		iterator.eatWhitespace();
 		if (!iterator.isPeek("\"")) {
 			throw new JsonDeserializationException("Expected '\"' " + iterator.getInfo());
@@ -24,14 +24,14 @@ public class JsonParser {
 			iterator.next(); // skip ':'
 		}
 		iterator.eatWhitespace();
-		JsonNode<?> value = parseValue();
+		JsonNode value = parseValue();
 
 		iterator.eatWhitespace();
 
 		return Pair.of(key, value);
 	}
 
-	private JsonNode<?> parseValue() {
+	private JsonNode parseValue() {
 		String token = iterator.peek();
         return switch (token) {
             case "{" -> parseObject();
@@ -41,7 +41,7 @@ public class JsonParser {
         };
 	}
 
-	private JsonNode<?> parseOther() {
+	private JsonNode parseOther() {
 		iterator.eatWhitespace();
 		String val = iterator.eatWhile(ch ->
 				!ch.isBlank() &&
@@ -80,17 +80,17 @@ public class JsonParser {
         }
     }
 
-	private JsonNode<?> parseString() {
+	private JsonNode parseString() {
 		return new JsonStringNode(iterator.eatKey());
 	}
 
-	private JsonNode<?> parseArray() {
+	private JsonNode parseArray() {
 		JsonArrayNode list = new JsonArrayNode();
 		iterator.next(); // skip [
 		while (!iterator.isPeek("]")) {
 
 			iterator.eatWhitespace();
-			JsonNode<?> val = parseValue();
+			JsonNode val = parseValue();
 			iterator.eatWhitespace();
 			list.add(val);
 			if (iterator.isPeek(",")) {
@@ -109,7 +109,7 @@ public class JsonParser {
 		JsonObjectNode obj = new JsonObjectNode();
 		iterator.next(); // skip '{'
 		while (!iterator.isPeek("}")) {
-			Pair<String, JsonNode<?>> kv = parseEntry();
+			Pair<String, JsonNode> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
 
 			if (iterator.isPeek(","))
@@ -128,7 +128,7 @@ public class JsonParser {
 		throw new JsonDeserializationException("Expected '}' " + iterator.getInfo());
 	}
 
-	public JsonNode<?> parse(String content) {
+	public JsonNode parse(String content) {
 		this.iterator = new JsonParserIterator(content);
 
 		iterator.eatWhitespace();
@@ -145,7 +145,7 @@ public class JsonParser {
 					break;
 				}
 
-				Pair<String, JsonNode<?>> kv = parseEntry();
+				Pair<String, JsonNode> kv = parseEntry();
 				object.put(kv.getFirst(), kv.getSecond());
 
 				iterator.eatWhitespace();
@@ -174,7 +174,7 @@ public class JsonParser {
 					break;
 				}
 
-				JsonNode<?> value = parseValue();
+				JsonNode value = parseValue();
 				array.add(value);
 
 				iterator.eatWhitespace();
