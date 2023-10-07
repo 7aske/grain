@@ -126,7 +126,6 @@ public class JsonParser {
             }
 
         } catch (NumberFormatException ex) {
-			ex.printStackTrace();
             throw new JsonDeserializationException("Unexpected token '" + val + "' " + iter.getInfo());
         }
     }
