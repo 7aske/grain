@@ -49,9 +49,23 @@ public class StringIterator implements Iterator<String> {
 		throw new NoSuchElementException();
 	}
 
-	public boolean isPeek(String val) {
-		if (hasNext())
-			return String.valueOf(content.charAt(index)).equals(val);
+	public boolean isPeek(String val, String... vals) {
+		if (!hasNext()) {
+			return false;
+		}
+
+		String curr = String.valueOf(content.charAt(index));
+
+		if (curr.equals(val)) {
+			return true;
+		}
+
+		for (String v : vals) {
+			if (curr.equals(v)) {
+				return true;
+			}
+		}
+
 		return false;
 	}
 

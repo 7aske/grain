@@ -35,11 +35,11 @@ class JsonSpecTest {
         assertNotNull(parsed);
     }
 
-    @Disabled
     @ParameterizedTest
     @MethodSource("com._7aske.grain.http.json.JsonSpecTest#getJsonSpecsN")
     void test_jsonSpecN(Path file) throws IOException {
-        String jsonString = Files.readString(file);
+        byte[] jsonBytes = Files.readAllBytes(file);
+        String jsonString = new String(jsonBytes);
 
         System.err.println(jsonString);
 
@@ -62,6 +62,7 @@ class JsonSpecTest {
         return Files.list(Path.of("src/test/resources/json"))
                 .filter(path -> path.toString().startsWith("src/test/resources/json/y_"))
                 .filter(path -> path.toString().endsWith(".json"))
+                .sorted()
                 .map(Arguments::of);
     }
 
@@ -69,6 +70,7 @@ class JsonSpecTest {
         return Files.list(Path.of("src/test/resources/json"))
                 .filter(path -> path.toString().startsWith("src/test/resources/json/n_"))
                 .filter(path -> path.toString().endsWith(".json"))
+                .sorted()
                 .map(Arguments::of);
     }
 
@@ -76,6 +78,7 @@ class JsonSpecTest {
         return Files.list(Path.of("src/test/resources/json"))
                 .filter(path -> path.toString().startsWith("src/test/resources/json/i_"))
                 .filter(path -> path.toString().endsWith(".json"))
+                .sorted()
                 .map(Arguments::of);
     }
 }
