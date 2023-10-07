@@ -1,8 +1,8 @@
 package com._7aske.grain.http.json;
 
-import com._7aske.grain.util.iterator.IndexedStringIterator;
+import com._7aske.grain.util.iterator.IndexedCodepointIterator;
 
-public class JsonParserIterator extends IndexedStringIterator {
+public class JsonParserIterator extends IndexedCodepointIterator {
 	public JsonParserIterator(String content) {
 		super(content);
 	}
@@ -10,19 +10,21 @@ public class JsonParserIterator extends IndexedStringIterator {
 
 	public String eatKey() {
 		StringBuilder builder = new StringBuilder();
-		String ch;
-		if (peek().equals("\""))
+		int ch;
+
+		if (peek() == '"')
 			next();
-		while (hasNext() && !(ch = next()).equals("\"")) {
-			if (ch.equals("\\")) {
-				String peek = peek();
-				if (peek.equals("\t") || peek.equals("\n") || peek.equals("\\") || peek.equals("\"")) {
+
+		while (hasNext() && ((ch = next()) != '"')) {
+			if (ch == '\\') {
+				int peek = peek();
+				if (peek == '\t' || peek == '\n' || peek == '\\' || peek == '"') {
 					builder.append(next());
 				} else {
 					// TODO: handle error
 				}
 			} else {
-				builder.append(ch);
+				builder.appendCodePoint(ch);
 			}
 		}
 		return builder.toString();

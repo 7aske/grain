@@ -11,14 +11,14 @@ public class JsonParser {
 
 	private Pair<String, JsonNode> parseEntry() {
 		iter.eatWhitespace();
-		if (!iter.isPeek("\"")) {
+		if (!iter.isPeek('"')) {
 			throw new JsonDeserializationException("Expected '\"' " + iter.getInfo());
 		}
 
 		String key = iter.eatKey();
 		iter.eatWhitespace();
 
-		if (!iter.isPeek(":")) {
+		if (!iter.isPeek(':')) {
 			throw new JsonDeserializationException("Expected ':' " + iter.getInfo());
 		} else {
 			iter.next(); // skip ':'
@@ -32,12 +32,12 @@ public class JsonParser {
 	}
 
 	private JsonNode parseValue() {
-		String token = iter.peek();
+		int token = iter.peek();
         return switch (token) {
-            case "{" -> parseObject();
-            case "[" -> parseArray();
-            case "\"" -> parseString();
-			case "]", "}", "+" ->
+            case '{' -> parseObject();
+            case '[' -> parseArray();
+            case '"' -> parseString();
+			case ']', '}', '+' ->
 					throw new JsonDeserializationException("Unexpected '" + token + "' " + iter.getInfo());
             default -> parseOther();
         };
@@ -46,7 +46,7 @@ public class JsonParser {
 	private JsonNode parseOther() {
 		iter.eatWhitespace();
 
-		if (iter.isPeek("t")) {
+		if (iter.isPeek('t')) {
 			String value = iter.eatWord();
 			if (!value.equals("true")) {
 				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
@@ -55,7 +55,7 @@ public class JsonParser {
 			return new JsonBooleanNode(Boolean.TRUE);
 		}
 
-		if (iter.isPeek("f")) {
+		if (iter.isPeek('f')) {
 			String value = iter.eatWord();
 			if (!value.equals("false")) {
 				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
@@ -64,7 +64,7 @@ public class JsonParser {
 			return new JsonBooleanNode(Boolean.FALSE);
 		}
 
-		if (iter.isPeek("n")) {
+		if (iter.isPeek('n')) {
 			String value = iter.eatWord();
 			if (!value.equals("null")) {
 				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
@@ -76,18 +76,17 @@ public class JsonParser {
 		StringBuilder sb = new StringBuilder();
 		boolean isNegative = false;
 
-		while (iter.hasNext() && !iter.isPeek("}", "]", ",") && !iter.peek().isBlank()) {
-			String curr = iter.next();
+		while (iter.hasNext() && !iter.isPeek('}', ']', ',') && !Character.isSpaceChar(iter.peek()) && iter.peek() != '\n') {
+			int curr = iter.next();
 
-			if (curr.equals("-")) {
+			if (curr == '-') {
 				if (isNegative) {
 					throw new JsonDeserializationException("Unexpected token '" + curr +"'" + iter.getInfo());
 				}
 				isNegative = true;
-				continue;
 			}
 
-			sb.append(curr);
+			sb.appendCodePoint(curr);
 		}
 
 
@@ -98,31 +97,11 @@ public class JsonParser {
         try {
 
             if (val.contains("e") || val.contains("E")) {
-
-				BigDecimal parsed = new BigDecimal(val);
-				if (isNegative) {
-					parsed = parsed.multiply(BigDecimal.valueOf(-1L));
-				}
-
-				return new JsonNumberNode(parsed);
-
+				return new JsonNumberNode(new BigDecimal(val));
             } else if (val.contains(".")) {
-
-				double parsed = Double.parseDouble(val);
-				if (isNegative) {
-					parsed *= -1;
-				}
-
-                return new JsonNumberNode(parsed);
-
+                return new JsonNumberNode(Double.parseDouble(val));
             } else {
-
-				long parsed = Long.parseLong(val);
-				if (isNegative) {
-					parsed *= -1;
-				}
-
-                return new JsonNumberNode(parsed);
+                return new JsonNumberNode(Long.parseLong(val));
             }
 
         } catch (NumberFormatException ex) {
@@ -137,13 +116,13 @@ public class JsonParser {
 	private JsonNode parseArray() {
 		JsonArrayNode arr = new JsonArrayNode();
 		iter.next(); // skip ']'
-		while (!iter.isPeek("]")) {
+		while (!iter.isPeek(']')) {
 
 			iter.eatWhitespace();
 			JsonNode val = parseValue();
 			iter.eatWhitespace();
 			arr.add(val);
-			if (iter.isPeek(",")) {
+			if (iter.isPeek(',')) {
 				iter.next();
 				iter.eatWhitespace();
 			}
@@ -158,18 +137,18 @@ public class JsonParser {
 
 		JsonObjectNode obj = new JsonObjectNode();
 		iter.next(); // skip '{'
-		while (!iter.isPeek("}")) {
+		while (!iter.isPeek('}')) {
 			Pair<String, JsonNode> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
 
-			if (iter.isPeek(","))
+			if (iter.isPeek(','))
 				iter.next();
 
 		}
 
 		iter.eatWhitespace();
 
-		if (iter.isPeek("}")) {
+		if (iter.isPeek('}')) {
 			iter.next(); // skip '}'
 			iter.eatWhitespace();
 			return obj;
@@ -183,7 +162,7 @@ public class JsonParser {
 
 		iter.eatWhitespace();
 
-		if (iter.peek().equals("{")) {
+		if (iter.peek() == '{') {
 			iter.next(); // skip '{'
 
 			JsonObjectNode obj = new JsonObjectNode();
@@ -191,7 +170,7 @@ public class JsonParser {
 			while (iter.hasNext()) {
 				iter.eatWhitespace();
 
-				if (iter.isPeek("}")) {
+				if (iter.isPeek('}')) {
 					iter.next(); // skip '}'
 					break;
 				}
@@ -201,9 +180,9 @@ public class JsonParser {
 
 				iter.eatWhitespace();
 
-				if (iter.isPeek(",")) {
+				if (iter.isPeek(',')) {
 					iter.next();
-				} else if (!iter.isPeek("}")) {
+				} else if (!iter.isPeek('}')) {
 					throw new JsonDeserializationException("Expected '}' " + iter.getInfo());
 				}
 			}
@@ -215,7 +194,7 @@ public class JsonParser {
 
 			return obj;
 
-		} else if (iter.peek().equals("[")) {
+		} else if (iter.peek() == '[') {
 			iter.next(); // skip '['
 
 			JsonArrayNode arr = new JsonArrayNode();
@@ -224,7 +203,7 @@ public class JsonParser {
 			while (iter.hasNext()) {
 				iter.eatWhitespace();
 
-				if (iter.isPeek("]")) {
+				if (iter.isPeek(']')) {
 					break;
 				}
 
@@ -233,19 +212,19 @@ public class JsonParser {
 
 				iter.eatWhitespace();
 
-				if (iter.isPeek(",")) {
+				if (iter.isPeek(',')) {
 					iter.next();
-					if (iter.isPeek("]")) {
+					if (iter.isPeek(']')) {
 						iter.prev(); // for more precise error message
 						throw new JsonDeserializationException("<value> expected, got ',' " + iter.getInfo());
 					}
-				} else if (!iter.isPeek("]")) {
+				} else if (!iter.isPeek(']')) {
 					throw new JsonDeserializationException("Expected ']' or ',' " + iter.getInfo());
 				}
 			}
 
 			// Check if array was closed properly
-			if (!iter.isPeek("]")) {
+			if (!iter.isPeek(']')) {
 				throw new JsonDeserializationException("',' or ']' expected " + iter.getInfo());
 			}
 			iter.next(); // skip ']'
