@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 
 public class JsonParser {
-	private JsonParserIterator iter;
 	private final int[] VALID_NUMBER_TOKENS = new int[]{
 			'-', '+', 'e', 'E', '.'
 	};
+	private static final int MAX_NESTING_DEPTH = 512;
+	private int nestingDepth = 0;
+	private JsonParserIterator iter;
 
 	private Pair<String, JsonNode> parseEntry() {
 		iter.eatWhitespace();
@@ -174,6 +176,8 @@ public class JsonParser {
 	}
 
 	private JsonNode parseArray() {
+		validateNestingDepth();
+
 		JsonArrayNode arr = new JsonArrayNode();
 		iter.next(); // skip ']'
 		while (!iter.isPeek(']')) {
@@ -194,6 +198,7 @@ public class JsonParser {
 	}
 
 	private JsonObjectNode parseObject() {
+		validateNestingDepth();
 
 		JsonObjectNode obj = new JsonObjectNode();
 		iter.next(); // skip '{'
@@ -201,8 +206,12 @@ public class JsonParser {
 			Pair<String, JsonNode> kv = parseEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
 
-			if (iter.isPeek(','))
+			if (iter.isPeek(',')) {
 				iter.next();
+				if (!iter.hasNext()) {
+					throw new JsonDeserializationException("Unexpected end of Json string" + iter.getInfo());
+				}
+			}
 
 		}
 
@@ -217,6 +226,12 @@ public class JsonParser {
 		throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
 	}
 
+	private void validateNestingDepth() {
+		if (nestingDepth++ > MAX_NESTING_DEPTH) {
+			throw new JsonDeserializationException("Max nesting depth exceeded");
+		}
+	}
+
 	public JsonNode parse(String content) {
 		this.iter = new JsonParserIterator(content);
 
@@ -229,7 +244,7 @@ public class JsonParser {
 
 				JsonObjectNode obj = new JsonObjectNode();
 
-				while (iter.hasNext()) {
+				while (true) {
 					iter.eatWhitespace();
 
 					if (iter.isPeek('}')) {
@@ -249,7 +264,9 @@ public class JsonParser {
 							throw new JsonUnexpectedTokenException(iter.peek(), "<key>", iter.getInfo());
 						}
 					} else if (!iter.isPeek('}')) {
-						throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
+						throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+					} else if (!iter.hasNext()) {
+						throw new JsonDeserializationException("Invalid end of Json string " + iter.getInfo());
 					}
 				}
 

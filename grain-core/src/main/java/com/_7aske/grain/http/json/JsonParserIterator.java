@@ -21,6 +21,18 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 		}
 
 		while (hasNext() && ((ch = next()) != '"')) {
+			if (ch == 0) {
+				throw new JsonDeserializationException("Unexpected end of input " + getInfo());
+			}
+
+			if (ch == 10) {
+				throw new JsonDeserializationException("Unexpected end of line " + getInfo());
+			}
+
+			if (ch == 9) {
+				throw new JsonDeserializationException("Unexpected tab " + getInfo());
+			}
+
 			if (ch == '\\') {
 
 				int peek = peek();
@@ -35,7 +47,7 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 						builder.appendCodePoint(next);
 					}
 				} else if (peek == 't' || peek == 'n' || peek == '\\' || peek == '"' || peek == 'r' || peek == 'b' || peek == 'f' || peek == '/') {
-					builder.append(ch);
+					builder.appendCodePoint(ch);
 					builder.appendCodePoint(next());
 				} else {
 					throw new JsonDeserializationException("Invalid escape sequence " + getInfo());
