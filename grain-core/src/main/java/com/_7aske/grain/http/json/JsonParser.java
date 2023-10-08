@@ -6,6 +6,7 @@ import com._7aske.grain.http.json.nodes.*;
 import com._7aske.grain.util.Pair;
 
 import java.math.BigDecimal;
+import java.util.NoSuchElementException;
 
 public class JsonParser {
 	private JsonParserIterator iter;
@@ -28,6 +29,7 @@ public class JsonParser {
 			iter.next(); // skip ':'
 		}
 		iter.eatWhitespace();
+
 		JsonNode value = parseValue();
 
 		iter.eatWhitespace();
@@ -220,90 +222,98 @@ public class JsonParser {
 
 		iter.eatWhitespace();
 
-		if (iter.peek() == '{') {
-			iter.next(); // skip '{'
+		try {
 
-			JsonObjectNode obj = new JsonObjectNode();
+			if (iter.peek() == '{') {
+				iter.next(); // skip '{'
 
-			while (iter.hasNext()) {
-				iter.eatWhitespace();
+				JsonObjectNode obj = new JsonObjectNode();
 
-				if (iter.isPeek('}')) {
-					iter.next(); // skip '}'
-					break;
-				}
+				while (iter.hasNext()) {
+					iter.eatWhitespace();
 
-				Pair<String, JsonNode> kv = parseEntry();
-				obj.put(kv.getFirst(), kv.getSecond());
-
-				iter.eatWhitespace();
-
-				if (iter.isPeek(',')) {
-					iter.next();
-				} else if (!iter.isPeek('}')) {
-					throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
-				}
-			}
-
-			iter.eatWhitespace();
-			if (iter.hasNext()) {
-				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-			}
-
-			return obj;
-
-		} else if (iter.peek() == '[') {
-			iter.next(); // skip '['
-
-			JsonArrayNode arr = new JsonArrayNode();
-
-			// @Refactor
-			while (iter.hasNext()) {
-				iter.eatWhitespace();
-
-				if (iter.isPeek(']')) {
-					break;
-				}
-
-				JsonNode value = parseValue();
-				arr.add(value);
-
-				iter.eatWhitespace();
-
-				if (iter.isPeek(',')) {
-					iter.next();
-					if (iter.isPeek(']')) {
-						iter.prev(); // for more precise error message
-						throw new JsonUnexpectedTokenException(iter.peek(), "<value>", iter.getInfo());
+					if (iter.isPeek('}')) {
+						iter.next(); // skip '}'
+						break;
 					}
-				} else if (!iter.isPeek(']')) {
-					iter.rewind();
+
+					Pair<String, JsonNode> kv = parseEntry();
+					obj.put(kv.getFirst(), kv.getSecond());
+
+					iter.eatWhitespace();
+
+					if (iter.isPeek(',')) {
+						iter.next();
+						if (iter.isPeek('}')) {
+							iter.prev(); // for more precise error message
+							throw new JsonUnexpectedTokenException(iter.peek(), "<key>", iter.getInfo());
+						}
+					} else if (!iter.isPeek('}')) {
+						throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
+					}
+				}
+
+				iter.eatWhitespace();
+				if (iter.hasNext()) {
 					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 				}
+
+				return obj;
+
+			} else if (iter.peek() == '[') {
+				iter.next(); // skip '['
+
+				JsonArrayNode arr = new JsonArrayNode();
+
+				// @Refactor
+				while (iter.hasNext()) {
+					iter.eatWhitespace();
+
+					if (iter.isPeek(']')) {
+						break;
+					}
+
+					JsonNode value = parseValue();
+					arr.add(value);
+
+					iter.eatWhitespace();
+
+					if (iter.isPeek(',')) {
+						iter.next();
+						if (iter.isPeek(']')) {
+							iter.prev(); // for more precise error message
+							throw new JsonUnexpectedTokenException(iter.peek(), "<value>", iter.getInfo());
+						}
+					} else if (!iter.isPeek(']')) {
+						iter.rewind();
+						throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+					}
+				}
+
+				// Check if array was closed properly
+				if (!iter.isPeek(']')) {
+					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+				}
+				iter.next(); // skip ']'
+
+				iter.eatWhitespace();
+				if (iter.hasNext()) {
+					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+				}
+
+				return arr;
+
 			}
 
-			// Check if array was closed properly
-			if (!iter.isPeek(']')) {
-				iter.rewind();
-				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-			}
-			iter.next(); // skip ']'
-
+			JsonNode value = parseValue();
 			iter.eatWhitespace();
 			if (iter.hasNext()) {
-				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+				throw new JsonDeserializationException("Invalid end of Json string" + iter.getInfo());
 			}
-
-			return arr;
-
+			return value;
+		} catch (NoSuchElementException ignored) {
+			throw new JsonDeserializationException("Unexpected end of Json string" + iter.getInfo());
 		}
-
-		JsonNode value = parseValue();
-		iter.eatWhitespace();
-		if (iter.hasNext()) {
-			throw new JsonDeserializationException("Invalid end of Json string" + iter.getInfo());
-		}
-		return value;
 	}
 
 	private boolean isValidNumber(int c) {

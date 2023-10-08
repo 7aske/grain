@@ -1,5 +1,6 @@
 package com._7aske.grain.http.json;
 
+import com._7aske.grain.exception.json.JsonDeserializationException;
 import com._7aske.grain.util.iterator.IndexedCodepointIterator;
 
 public class JsonParserIterator extends IndexedCodepointIterator {
@@ -15,13 +16,29 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 		if (peek() == '"')
 			next();
 
+		if (!hasNext()) {
+			throw new JsonDeserializationException("Unexpected end of input " + getInfo());
+		}
+
 		while (hasNext() && ((ch = next()) != '"')) {
 			if (ch == '\\') {
+
 				int peek = peek();
-				if (peek == '\t' || peek == '\n' || peek == '\\' || peek == '"') {
-					builder.append(next());
+				if (peek == 'u') {
+					builder.appendCodePoint(ch);
+					builder.appendCodePoint(next());
+					for (int i = 0; i < 4; i++) {
+						int next = next();
+						if ((next < '0' || next > '9') && (next < 'A' || next > 'F') && (next < 'a' || next > 'f')) {
+							throw new JsonDeserializationException("Invalid unicode escape sequence " + getInfo());
+						}
+						builder.appendCodePoint(next);
+					}
+				} else if (peek == 't' || peek == 'n' || peek == '\\' || peek == '"' || peek == 'r' || peek == 'b' || peek == 'f' || peek == '/') {
+					builder.append(ch);
+					builder.appendCodePoint(next());
 				} else {
-					// TODO: handle error
+					throw new JsonDeserializationException("Invalid escape sequence " + getInfo());
 				}
 			} else {
 				builder.appendCodePoint(ch);
