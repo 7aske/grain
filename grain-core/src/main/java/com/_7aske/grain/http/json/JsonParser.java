@@ -1,6 +1,7 @@
 package com._7aske.grain.http.json;
 
 import com._7aske.grain.exception.json.JsonDeserializationException;
+import com._7aske.grain.exception.json.JsonUnexpectedTokenException;
 import com._7aske.grain.http.json.nodes.*;
 import com._7aske.grain.util.Pair;
 
@@ -8,18 +9,21 @@ import java.math.BigDecimal;
 
 public class JsonParser {
 	private JsonParserIterator iter;
+	private final int[] VALID_NUMBER_TOKENS = new int[]{
+			'-', '+', 'e', 'E', '.'
+	};
 
 	private Pair<String, JsonNode> parseEntry() {
 		iter.eatWhitespace();
 		if (!iter.isPeek('"')) {
-			throw new JsonDeserializationException("Expected '\"' " + iter.getInfo());
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 		}
 
 		String key = iter.eatKey();
 		iter.eatWhitespace();
 
 		if (!iter.isPeek(':')) {
-			throw new JsonDeserializationException("Expected ':' " + iter.getInfo());
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 		} else {
 			iter.next(); // skip ':'
 		}
@@ -38,7 +42,7 @@ public class JsonParser {
             case '[' -> parseArray();
             case '"' -> parseString();
 			case ']', '}', '+' ->
-					throw new JsonDeserializationException("Unexpected '" + token + "' " + iter.getInfo());
+					throw new JsonUnexpectedTokenException(token, iter.getInfo());
             default -> parseOther();
         };
 	}
@@ -49,7 +53,7 @@ public class JsonParser {
 		if (iter.isPeek('t')) {
 			String value = iter.eatWord();
 			if (!value.equals("true")) {
-				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
+				throw new JsonUnexpectedTokenException(value, iter.getInfo());
 			}
 
 			return new JsonBooleanNode(Boolean.TRUE);
@@ -58,7 +62,7 @@ public class JsonParser {
 		if (iter.isPeek('f')) {
 			String value = iter.eatWord();
 			if (!value.equals("false")) {
-				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
+				throw new JsonUnexpectedTokenException(value, iter.getInfo());
 			}
 
 			return new JsonBooleanNode(Boolean.FALSE);
@@ -67,46 +71,100 @@ public class JsonParser {
 		if (iter.isPeek('n')) {
 			String value = iter.eatWord();
 			if (!value.equals("null")) {
-				throw new JsonDeserializationException("Unexpected token '" + value + "'" + iter.getInfo());
+				throw new JsonUnexpectedTokenException(value, iter.getInfo());
 			}
 
 			return JsonNullNode.INSTANCE;
 		}
 
-		StringBuilder sb = new StringBuilder();
+		StringBuilder intPart = new StringBuilder();
+		StringBuilder decPart = new StringBuilder();
+		StringBuilder expPart = new StringBuilder();
 		boolean isNegative = false;
+		boolean isExponent = false;
+		boolean isDecimal = false;
 
-		while (iter.hasNext() && !iter.isPeek('}', ']', ',') && !Character.isSpaceChar(iter.peek()) && iter.peek() != '\n') {
+		while (iter.hasNext()) {
+
+			if (!isValidNumber(iter.peek())) {
+				break;
+			}
+
 			int curr = iter.next();
 
 			if (curr == '-') {
 				if (isNegative) {
-					throw new JsonDeserializationException("Unexpected token '" + curr +"'" + iter.getInfo());
+					throw new JsonUnexpectedTokenException(curr, iter.getInfo());
 				}
 				isNegative = true;
 			}
 
-			sb.appendCodePoint(curr);
+			if (curr == 'e' || curr == 'E') {
+				if (isExponent) {
+					throw new JsonUnexpectedTokenException(curr, iter.getInfo());
+				}
+				isExponent = true;
+			}
+
+			if (curr == '.') {
+				if (isDecimal) {
+					throw new JsonUnexpectedTokenException(curr, iter.getInfo());
+				}
+				isDecimal = true;
+			}
+
+			if (isExponent) {
+				expPart.appendCodePoint(curr);
+			} else if (isDecimal) {
+				decPart.appendCodePoint(curr);
+			} else {
+				intPart.appendCodePoint(curr);
+			}
 		}
 
+		if (intPart.isEmpty() || (isDecimal && decPart.isEmpty()) || (isExponent && expPart.isEmpty())) {
+			// @Warning This is not a correct location
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
+
+		// Json spec validation
+
+		// negative number with leading zeros: -0123
+		if (isNegative && !isDecimal && intPart.length() > 2 && intPart.charAt(1) == '0') {
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
+
+		// decimal part has no numbers: 123.
+		if (isDecimal && decPart.length() == 1) {
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
+
+		// zero length int part in decimal: -.123
+		if (isNegative && isDecimal && intPart.length() == 1) {
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
+
+		// leading zeros in int part: 000123
+		if (intPart.length() > 1 && intPart.charAt(0) == '0') {
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
 
 		// If it is not any of these it must be a number
+		try {
+			Number value;
 
-		String val = sb.toString();
+			if (isExponent) {
+				value = new BigDecimal(intPart + decPart.toString() + expPart);
+			} else if (isDecimal) {
+				value = Double.parseDouble(intPart + decPart.toString());
+			} else {
+				value = Long.parseLong(intPart.toString());
+			}
 
-        try {
-
-            if (val.contains("e") || val.contains("E")) {
-				return new JsonNumberNode(new BigDecimal(val));
-            } else if (val.contains(".")) {
-                return new JsonNumberNode(Double.parseDouble(val));
-            } else {
-                return new JsonNumberNode(Long.parseLong(val));
-            }
-
-        } catch (NumberFormatException ex) {
-            throw new JsonDeserializationException("Unexpected token '" + val + "' " + iter.getInfo());
-        }
+			return new JsonNumberNode(value);
+		} catch (NumberFormatException ex) {
+			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+		}
     }
 
 	private JsonNode parseString() {
@@ -154,7 +212,7 @@ public class JsonParser {
 			return obj;
 		}
 
-		throw new JsonDeserializationException("Expected '}' " + iter.getInfo());
+		throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
 	}
 
 	public JsonNode parse(String content) {
@@ -183,13 +241,13 @@ public class JsonParser {
 				if (iter.isPeek(',')) {
 					iter.next();
 				} else if (!iter.isPeek('}')) {
-					throw new JsonDeserializationException("Expected '}' " + iter.getInfo());
+					throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
 				}
 			}
 
 			iter.eatWhitespace();
 			if (iter.hasNext()) {
-				throw new JsonDeserializationException("Unexpected token '" + iter.peek() + "' " + iter.getInfo());
+				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 			}
 
 			return obj;
@@ -216,31 +274,50 @@ public class JsonParser {
 					iter.next();
 					if (iter.isPeek(']')) {
 						iter.prev(); // for more precise error message
-						throw new JsonDeserializationException("<value> expected, got ',' " + iter.getInfo());
+						throw new JsonUnexpectedTokenException(iter.peek(), "<value>", iter.getInfo());
 					}
 				} else if (!iter.isPeek(']')) {
-					throw new JsonDeserializationException("Expected ']' or ',' " + iter.getInfo());
+					iter.rewind();
+					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 				}
 			}
 
 			// Check if array was closed properly
 			if (!iter.isPeek(']')) {
-				throw new JsonDeserializationException("',' or ']' expected " + iter.getInfo());
+				iter.rewind();
+				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 			}
 			iter.next(); // skip ']'
 
 			iter.eatWhitespace();
 			if (iter.hasNext()) {
-				throw new JsonDeserializationException("Unexpected token '" + iter.peek() + "' " + iter.getInfo());
+				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 			}
-
 
 			return arr;
 
 		}
 
-		return parseValue();
-//		throw new JsonDeserializationException("Invalid start of Json string" + iterator.getInfo());
+		JsonNode value = parseValue();
+		iter.eatWhitespace();
+		if (iter.hasNext()) {
+			throw new JsonDeserializationException("Invalid end of Json string" + iter.getInfo());
+		}
+		return value;
+	}
+
+	private boolean isValidNumber(int c) {
+		if ('0' <= c && c <= '9') {
+			return true;
+		}
+
+		for (int valid : VALID_NUMBER_TOKENS) {
+			if (c == valid) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 }

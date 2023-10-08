@@ -7,6 +7,5 @@ import static com._7aske.grain.http.HttpStatus.BAD_REQUEST;
 public class JsonDeserializationException extends HttpException {
 	public JsonDeserializationException(String message) {
 		super(message, BAD_REQUEST, null);
-
 	}
 }

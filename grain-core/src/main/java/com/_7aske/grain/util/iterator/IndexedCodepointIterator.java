@@ -30,7 +30,7 @@ public class IndexedCodepointIterator extends CodepointIterator {
 		return character;
 	}
 
-	public String getInfo() {
-		return String.format("at character %d, row %d", character, row);
+	public IteratorPositionInformation getInfo() {
+		return new IteratorPositionInformation(row, character);
 	}
 }
