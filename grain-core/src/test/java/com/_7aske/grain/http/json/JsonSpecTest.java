@@ -3,7 +3,6 @@ package com._7aske.grain.http.json;
 import com._7aske.grain.exception.json.JsonDeserializationException;
 import com._7aske.grain.http.json.nodes.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -46,13 +45,14 @@ class JsonSpecTest {
         assertThrows(JsonDeserializationException.class, () -> parser.parse(jsonString));
     }
 
-    @Disabled
     @ParameterizedTest
     @MethodSource("com._7aske.grain.http.json.JsonSpecTest#getJsonSpecsI")
     void test_jsonSpecI(Path file) throws IOException {
-        String jsonString = Files.readString(file);
+        byte[] jsonBytes = Files.readAllBytes(file);
+        String jsonString = new String(jsonBytes);
 
         System.err.println(jsonString);
+
 
         parser.parse(jsonString);
     }

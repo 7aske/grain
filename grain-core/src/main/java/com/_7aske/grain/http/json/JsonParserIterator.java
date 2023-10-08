@@ -9,7 +9,7 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 	}
 
 
-	public String eatKey() {
+	public String eatString() {
 		StringBuilder builder = new StringBuilder();
 		int ch;
 

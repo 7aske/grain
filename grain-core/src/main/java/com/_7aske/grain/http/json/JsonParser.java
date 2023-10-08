@@ -7,22 +7,24 @@ import com._7aske.grain.util.Pair;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 public class JsonParser {
 	private final int[] VALID_NUMBER_TOKENS = new int[]{
 			'-', '+', 'e', 'E', '.'
 	};
 	private static final int MAX_NESTING_DEPTH = 512;
+	private static final Pattern LONG_PATTERN = Pattern.compile("[+-]?[0-9]+");
 	private int nestingDepth = 0;
 	private JsonParserIterator iter;
 
-	private Pair<String, JsonNode> parseEntry() {
+	private Pair<String, JsonNode> parseJsonEntry() {
 		iter.eatWhitespace();
 		if (!iter.isPeek('"')) {
 			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 		}
 
-		String key = iter.eatKey();
+		String key = iter.eatString();
 		iter.eatWhitespace();
 
 		if (!iter.isPeek(':')) {
@@ -32,28 +34,28 @@ public class JsonParser {
 		}
 		iter.eatWhitespace();
 
-		JsonNode value = parseValue();
+		JsonNode value = parseJsonValue();
 
 		iter.eatWhitespace();
 
 		return Pair.of(key, value);
 	}
 
-	private JsonNode parseValue() {
+	private JsonNode parseJsonValue() {
 		int token = iter.peek();
         return switch (token) {
-            case '{' -> parseObject();
-            case '[' -> parseArray();
-            case '"' -> parseString();
+            case '{' -> parseJsonObject();
+            case '[' -> parseJsonArray();
+            case '"' -> parseJsonString();
+			case 't', 'f' -> parseJsonBoolean();
+			case 'n' -> parseJsonNull();
 			case ']', '}', '+' ->
 					throw new JsonUnexpectedTokenException(token, iter.getInfo());
-            default -> parseOther();
+            default -> parseJsonNumber();
         };
 	}
 
-	private JsonNode parseOther() {
-		iter.eatWhitespace();
-
+	private JsonNode parseJsonBoolean() {
 		if (iter.isPeek('t')) {
 			String value = iter.eatWord();
 			if (!value.equals("true")) {
@@ -72,6 +74,10 @@ public class JsonParser {
 			return new JsonBooleanNode(Boolean.FALSE);
 		}
 
+		throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
+	}
+
+	private JsonNode parseJsonNull() {
 		if (iter.isPeek('n')) {
 			String value = iter.eatWord();
 			if (!value.equals("null")) {
@@ -81,6 +87,10 @@ public class JsonParser {
 			return JsonNullNode.INSTANCE;
 		}
 
+		return parseJsonNumber();
+    }
+
+	private JsonNode parseJsonNumber() {
 		StringBuilder intPart = new StringBuilder();
 		StringBuilder decPart = new StringBuilder();
 		StringBuilder expPart = new StringBuilder();
@@ -162,20 +172,20 @@ public class JsonParser {
 			} else if (isDecimal) {
 				value = Double.parseDouble(intPart + decPart.toString());
 			} else {
-				value = Long.parseLong(intPart.toString());
+				value = parseLong(intPart.toString());
 			}
 
 			return new JsonNumberNode(value);
 		} catch (NumberFormatException ex) {
 			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 		}
-    }
-
-	private JsonNode parseString() {
-		return new JsonStringNode(iter.eatKey());
 	}
 
-	private JsonNode parseArray() {
+	private JsonNode parseJsonString() {
+		return new JsonStringNode(iter.eatString());
+	}
+
+	private JsonNode parseJsonArray() {
 		validateNestingDepth();
 
 		JsonArrayNode arr = new JsonArrayNode();
@@ -183,7 +193,7 @@ public class JsonParser {
 		while (!iter.isPeek(']')) {
 
 			iter.eatWhitespace();
-			JsonNode val = parseValue();
+			JsonNode val = parseJsonValue();
 			iter.eatWhitespace();
 			arr.add(val);
 			if (iter.isPeek(',')) {
@@ -197,13 +207,13 @@ public class JsonParser {
 		return arr;
 	}
 
-	private JsonObjectNode parseObject() {
+	private JsonObjectNode parseJsonObject() {
 		validateNestingDepth();
 
 		JsonObjectNode obj = new JsonObjectNode();
 		iter.next(); // skip '{'
 		while (!iter.isPeek('}')) {
-			Pair<String, JsonNode> kv = parseEntry();
+			Pair<String, JsonNode> kv = parseJsonEntry();
 			obj.put(kv.getFirst(), kv.getSecond());
 
 			if (iter.isPeek(',')) {
@@ -226,12 +236,6 @@ public class JsonParser {
 		throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
 	}
 
-	private void validateNestingDepth() {
-		if (nestingDepth++ > MAX_NESTING_DEPTH) {
-			throw new JsonDeserializationException("Max nesting depth exceeded");
-		}
-	}
-
 	public JsonNode parse(String content) {
 		this.iter = new JsonParserIterator(content);
 
@@ -252,7 +256,7 @@ public class JsonParser {
 						break;
 					}
 
-					Pair<String, JsonNode> kv = parseEntry();
+					Pair<String, JsonNode> kv = parseJsonEntry();
 					obj.put(kv.getFirst(), kv.getSecond());
 
 					iter.eatWhitespace();
@@ -290,7 +294,7 @@ public class JsonParser {
 						break;
 					}
 
-					JsonNode value = parseValue();
+					JsonNode value = parseJsonValue();
 					arr.add(value);
 
 					iter.eatWhitespace();
@@ -322,7 +326,7 @@ public class JsonParser {
 
 			}
 
-			JsonNode value = parseValue();
+			JsonNode value = parseJsonValue();
 			iter.eatWhitespace();
 			if (iter.hasNext()) {
 				throw new JsonDeserializationException("Invalid end of Json string" + iter.getInfo());
@@ -333,6 +337,41 @@ public class JsonParser {
 		}
 	}
 
+	/**
+	 * Try to parse the string into a long, if it fails and matches the pattern
+	 * for integer numbers that means that it is too big to fit in a long and
+	 * then parse it into a BigDecimal.
+	 *
+	 * @param value string to parse
+	 * @return parsed number
+	 */
+	private Number parseLong(String value) {
+		try {
+			return Long.parseLong(value);
+		} catch (NumberFormatException ex) {
+			if (LONG_PATTERN.matcher(value).matches()) {
+				return new BigDecimal(value);
+			}
+			throw ex;
+		}
+	}
+
+
+	/**
+	 * Validate nesting depth to prevent stack overflow.
+	 */
+	private void validateNestingDepth() {
+		if (nestingDepth++ > MAX_NESTING_DEPTH) {
+			throw new JsonDeserializationException("Max nesting depth exceeded");
+		}
+	}
+
+	/**
+	 * Checks whether a provided character is a valid number token.
+	 *
+	 * @param c character to check
+	 * @return true if character is a valid number token
+	 */
 	private boolean isValidNumber(int c) {
 		if ('0' <= c && c <= '9') {
 			return true;
