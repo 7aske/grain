@@ -7,6 +7,7 @@ import com._7aske.grain.util.Pair;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class JsonParser {
@@ -14,7 +15,7 @@ public class JsonParser {
 			'-', '+', 'e', 'E', '.'
 	};
 	private static final int MAX_NESTING_DEPTH = 512;
-	private static final Pattern LONG_PATTERN = Pattern.compile("[+-]?[0-9]+");
+	private static final Pattern LONG_PATTERN = Pattern.compile("[+-]?\\d+");
 	private int nestingDepth = 0;
 	private JsonParserIterator iter;
 
@@ -29,9 +30,9 @@ public class JsonParser {
 
 		if (!iter.isPeek(':')) {
 			throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-		} else {
-			iter.next(); // skip ':'
 		}
+
+		iter.next(); // skip ':'
 		iter.eatWhitespace();
 
 		JsonNode value = parseJsonValue();
@@ -168,7 +169,7 @@ public class JsonParser {
 			Number value;
 
 			if (isExponent) {
-				value = new BigDecimal(intPart + decPart.toString() + expPart);
+				value = parseBigDecimal(intPart + decPart.toString() + expPart);
 			} else if (isDecimal) {
 				value = Double.parseDouble(intPart + decPart.toString());
 			} else {
@@ -198,9 +199,22 @@ public class JsonParser {
 			arr.add(val);
 			if (iter.isPeek(',')) {
 				iter.next();
-				iter.eatWhitespace();
+				if (iter.isPeek(']')) {
+					iter.prev(); // for more precise error message
+					throw new JsonUnexpectedTokenException(iter.peek(), "<value>", iter.getInfo());
+				}
+			} else if (!iter.isPeek(']')) {
+				iter.rewind();
+				throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 			}
 		}
+
+		iter.eatWhitespace();
+
+		if (!iter.isPeek(']')) {
+			throw new JsonUnexpectedTokenException(iter.peek(), "]", iter.getInfo());
+		}
+
 		iter.next(); // skip ']'
 		iter.eatWhitespace();
 
@@ -218,23 +232,29 @@ public class JsonParser {
 
 			if (iter.isPeek(',')) {
 				iter.next();
+				// Trailing comma check
+				if (iter.isPeek('}')) {
+					iter.rewind();
+					throw new JsonUnexpectedTokenException(iter.peek(), "<key>", iter.getInfo());
+				}
+
+				// Unclosed object check
 				if (!iter.hasNext()) {
 					throw new JsonDeserializationException("Unexpected end of Json string" + iter.getInfo());
 				}
 			}
-
 		}
 
 		iter.eatWhitespace();
 
-		if (iter.isPeek('}')) {
-			iter.next(); // skip '}'
-			iter.eatWhitespace();
-			return obj;
-		}
+        if (!iter.isPeek('}')) {
+            throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
+        }
 
-		throw new JsonUnexpectedTokenException(iter.peek(), "}", iter.getInfo());
-	}
+		iter.next(); // skip '}'
+		iter.eatWhitespace();
+		return obj;
+    }
 
 	public JsonNode parse(String content) {
 		this.iter = new JsonParserIterator(content);
@@ -244,37 +264,7 @@ public class JsonParser {
 		try {
 
 			if (iter.peek() == '{') {
-				iter.next(); // skip '{'
-
-				JsonObjectNode obj = new JsonObjectNode();
-
-				while (true) {
-					iter.eatWhitespace();
-
-					if (iter.isPeek('}')) {
-						iter.next(); // skip '}'
-						break;
-					}
-
-					Pair<String, JsonNode> kv = parseJsonEntry();
-					obj.put(kv.getFirst(), kv.getSecond());
-
-					iter.eatWhitespace();
-
-					if (iter.isPeek(',')) {
-						iter.next();
-						if (iter.isPeek('}')) {
-							iter.prev(); // for more precise error message
-							throw new JsonUnexpectedTokenException(iter.peek(), "<key>", iter.getInfo());
-						}
-					} else if (!iter.isPeek('}')) {
-						throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-					} else if (!iter.hasNext()) {
-						throw new JsonDeserializationException("Invalid end of Json string " + iter.getInfo());
-					}
-				}
-
-				iter.eatWhitespace();
+				JsonObjectNode obj = parseJsonObject();
 				if (iter.hasNext()) {
 					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 				}
@@ -282,42 +272,7 @@ public class JsonParser {
 				return obj;
 
 			} else if (iter.peek() == '[') {
-				iter.next(); // skip '['
-
-				JsonArrayNode arr = new JsonArrayNode();
-
-				// @Refactor
-				while (iter.hasNext()) {
-					iter.eatWhitespace();
-
-					if (iter.isPeek(']')) {
-						break;
-					}
-
-					JsonNode value = parseJsonValue();
-					arr.add(value);
-
-					iter.eatWhitespace();
-
-					if (iter.isPeek(',')) {
-						iter.next();
-						if (iter.isPeek(']')) {
-							iter.prev(); // for more precise error message
-							throw new JsonUnexpectedTokenException(iter.peek(), "<value>", iter.getInfo());
-						}
-					} else if (!iter.isPeek(']')) {
-						iter.rewind();
-						throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-					}
-				}
-
-				// Check if array was closed properly
-				if (!iter.isPeek(']')) {
-					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
-				}
-				iter.next(); // skip ']'
-
-				iter.eatWhitespace();
+				JsonNode arr = parseJsonArray();
 				if (iter.hasNext()) {
 					throw new JsonUnexpectedTokenException(iter.peek(), iter.getInfo());
 				}
@@ -334,6 +289,29 @@ public class JsonParser {
 			return value;
 		} catch (NoSuchElementException ignored) {
 			throw new JsonDeserializationException("Unexpected end of Json string" + iter.getInfo());
+		}
+	}
+
+	/**
+	 * Parse a string into a BigDecimal. If the number is too big to fit in a
+	 * BigDecimal - return infinity.
+	 *
+	 * @param value string to parse
+	 * @return parsed number
+	 */
+	public Number parseBigDecimal(String value) {
+		try {
+			return new BigDecimal(value);
+		} catch (NumberFormatException ex) {
+			if (Objects.equals(ex.getMessage(), "Too many nonzero exponent digits.")) {
+				if (value.startsWith("-")) {
+					return Double.NEGATIVE_INFINITY;
+				} else {
+					return Double.POSITIVE_INFINITY;
+				}
+			}
+
+			throw ex;
 		}
 	}
 
