@@ -44,6 +44,9 @@ public class HandlerRunner {
 	public void handle(HttpRequest request, HttpResponse response) {
 		for (HandlerRegistry registry : handlerRegistries) {
 			registry.handle(request, response);
+			// Prevent multiple handlers from handling the request
+			if (request.isHandled())
+				return;
 		}
 
 		if (!request.isHandled())

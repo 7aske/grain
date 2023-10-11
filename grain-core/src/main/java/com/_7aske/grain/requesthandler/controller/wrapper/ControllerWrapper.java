@@ -5,7 +5,6 @@ import com._7aske.grain.web.controller.annotation.RequestMapping;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpPath;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
@@ -30,7 +29,7 @@ public class ControllerWrapper {
 				// and its annotations.
 				.filter(m -> isAnnotationPresent(m, RequestMapping.class))
 				.map((Method method) -> new ControllerMethodWrapper(method, controller))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	/**

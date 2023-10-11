@@ -14,6 +14,7 @@ import java.util.List;
  * Class responsible for conv JSON
  * string representation.
  */
+@Deprecated
 public class JsonDeserializer<T> {
 	private final Class<T> clazz;
 

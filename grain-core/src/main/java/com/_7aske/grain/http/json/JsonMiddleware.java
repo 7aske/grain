@@ -1,6 +1,5 @@
 package com._7aske.grain.http.json;
 
-import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.requesthandler.middleware.Middleware;
@@ -10,7 +9,7 @@ import java.util.Objects;
 import static com._7aske.grain.http.HttpContentType.APPLICATION_JSON;
 import static com._7aske.grain.http.HttpHeaders.CONTENT_TYPE;
 
-@Grain
+@Deprecated
 public class JsonMiddleware implements Middleware {
 
 	@Override

@@ -9,15 +9,70 @@ import com._7aske.grain.http.json.nodes.*;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.io.OutputStream;
+import java.lang.reflect.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Grain
 public class JsonMapper {
+    private static final int DEFAULT_INDENT = 2;
+    private static final boolean DEFAULT_PRETTY_PRINT = false;
+    private int indentSize;
+    private boolean prettyPrint;
+
+    public JsonMapper() {
+        this(DEFAULT_INDENT, DEFAULT_PRETTY_PRINT);
+    }
+
+    public JsonMapper(JsonMapper jsonMapper) {
+        this.indentSize = jsonMapper.indentSize;
+        this.prettyPrint = jsonMapper.prettyPrint;
+    }
+
+    public JsonMapper(int indentSize) {
+        this(indentSize, DEFAULT_PRETTY_PRINT);
+    }
+
+    public JsonMapper(boolean prettyPrint) {
+        this(DEFAULT_INDENT, prettyPrint);
+    }
+
+    public JsonMapper(int indentSize, boolean prettyPrint) {
+        this.indentSize = indentSize;
+        this.prettyPrint = prettyPrint;
+    }
+
+    public JsonMapper withIndent(int indentSize) {
+        JsonMapper jsonMapper = new JsonMapper(this);
+        jsonMapper.indentSize = indentSize;
+        return jsonMapper;
+    }
+
+    public JsonMapper withPrettyPrint(boolean prettyPrint) {
+        JsonMapper jsonMapper = new JsonMapper(this);
+        jsonMapper.prettyPrint = prettyPrint;
+        return jsonMapper;
+    }
+
+    public void writeValue(JsonNode root, OutputStream outputStream, boolean pretty, int indent) throws IOException {
+        JsonWriter jsonWriter = new JsonWriter(pretty, indent);
+        jsonWriter.write(root, outputStream);
+    }
+
+    public void writeValue(JsonNode root, OutputStream outputStream, boolean pretty) throws IOException {
+        writeValue(root, outputStream, pretty, indentSize);
+    }
+
+    public void writeValue(JsonNode root, OutputStream outputStream) throws IOException {
+        writeValue(root, outputStream, prettyPrint);
+    }
+
+    public void writeValue(Object object, OutputStream outputStream) throws IOException {
+        writeValue(mapValue(object), outputStream, prettyPrint);
+    }
 
     public String stringifyValue(JsonNode root, boolean pretty, int indent) throws IOException {
         JsonWriter jsonWriter = new JsonWriter(pretty, indent);
@@ -25,16 +80,25 @@ public class JsonMapper {
     }
 
     public String stringifyValue(JsonNode root, boolean pretty) throws IOException {
-        return stringifyValue(root, pretty, 2);
+        return stringifyValue(root, pretty, indentSize);
     }
 
     public String stringifyValue(JsonNode root) throws IOException {
-        return stringifyValue(root, false);
+        return stringifyValue(root, prettyPrint);
     }
 
-    public <T> T parseValue(String json, Class<T> clazz) {
+    public Object parseValue(String json, Class<?> clazz) {
         JsonParser parser = new JsonParser();
-        return mapValue(parser.parse(json), clazz);
+        return mapValue(parser.parse(json), clazz, false);
+    }
+
+    public Object parseValue(String json, Parameter param) {
+        JsonParser parser = new JsonParser();
+        boolean isList = List.class.isAssignableFrom(param.getType());
+        Class<?> type = isList
+                ? ReflectionUtil.getGenericListTypeArgument(param)
+                : param.getType();
+        return mapValue(parser.parse(json), type, isList);
     }
 
     public JsonNode mapValue(Object value) {
@@ -44,6 +108,12 @@ public class JsonMapper {
             return list.stream()
                     .map(this::mapValue)
                     .collect(Collectors.toCollection(JsonArrayNode::new));
+        } else if (value instanceof Map<?, ?> map) {
+            JsonObjectNode object = new JsonObjectNode();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                object.put(entry.getKey().toString(), mapValue(entry.getValue()));
+            }
+            return object;
         } else if (value instanceof Set<?> set) {
             return set.stream()
                     .map(this::mapValue)
@@ -75,48 +145,56 @@ public class JsonMapper {
         }
     }
 
-    public <T> T mapValue(JsonNode root, Class<T> clazz) {
+    public Object mapValue(JsonNode root, Class<?> clazz, boolean isList) {
         if (root == null) return null;
 
         try {
-            Constructor<T> constructor = ReflectionUtil.getAnyConstructor(clazz);
-            T instance = constructor.newInstance();
 
+            if (isList) {
+                // @Warning won't work with nested lists
+                return root.asArray().stream()
+                        .map(node -> mapValue(node, clazz, List.class.isAssignableFrom(clazz)))
+                        .toList();
+            } else {
+                Constructor<?> constructor = ReflectionUtil.getAnyConstructor(clazz);
+                Object instance = constructor.newInstance();
 
-            for (Field field : clazz.getDeclaredFields()) {
-                field.setAccessible(true);
-                if (ReflectionUtil.isAnnotationPresent(field, JsonIgnore.class)) {
-                    continue;
+                for (Field field : clazz.getDeclaredFields()) {
+                    field.setAccessible(true);
+                    if (ReflectionUtil.isAnnotationPresent(field, JsonIgnore.class)) {
+                        continue;
+                    }
+
+                    if (String.class.isAssignableFrom(field.getType())) {
+                        field.set(instance, getFieldValue(field, root).getString());
+                    } else if (Number.class.isAssignableFrom(field.getType())) {
+                        field.set(instance, getFieldValue(field, root).getNumber());
+                    } else if (Boolean.class.isAssignableFrom(field.getType())) {
+                        field.set(instance, getFieldValue(field, root).getBoolean());
+                    } else if (Object[].class.isAssignableFrom(field.getType())) {
+                        JsonArrayNode array = getFieldValue(field, root).asArray();
+                        field.set(instance, array.getStream()
+                                .map(node -> mapValue(node, field.getType(), false))
+                                .toArray());
+                    } else if (Set.class.isAssignableFrom(field.getType())) {
+                        JsonArrayNode array = getFieldValue(field, root).asArray();
+                        field.set(instance, array.getStream()
+                                .map(node -> mapValue(node, field.getType(), false))
+                                .collect(Collectors.toSet()));
+                    } else if (List.class.isAssignableFrom(field.getType())) {
+                        JsonArrayNode array = getFieldValue(field, root).asArray();
+                        field.set(instance, array.getStream()
+                                .map(node -> mapValue(node, field.getType(), false))
+                                .toList());
+                    } else {
+                        field.set(instance, mapValue(getFieldValue(field, root), field.getType(), false));
+                    }
+
                 }
 
-                if (String.class.isAssignableFrom(field.getType())) {
-                    field.set(instance, getFieldValue(field, root).getString());
-                } else if (Number.class.isAssignableFrom(field.getType())) {
-                    field.set(instance, getFieldValue(field, root).getNumber());
-                } else if (Boolean.class.isAssignableFrom(field.getType())) {
-                    field.set(instance, getFieldValue(field, root).getBoolean());
-                } else if (Object[].class.isAssignableFrom(field.getType())) {
-                    JsonArrayNode array = getFieldValue(field, root).asArray();
-                    field.set(instance, array.getStream()
-                            .map(node -> mapValue(node, field.getType()))
-                            .toArray());
-                } else if (Set.class.isAssignableFrom(field.getType())) {
-                    JsonArrayNode array = getFieldValue(field, root).asArray();
-                    field.set(instance, array.getStream()
-                            .map(node -> mapValue(node, field.getType()))
-                            .collect(Collectors.toSet()));
-                } else if (List.class.isAssignableFrom(field.getType())) {
-                    JsonArrayNode array = getFieldValue(field, root).asArray();
-                    field.set(instance, array.getStream()
-                            .map(node -> mapValue(node, field.getType()))
-                            .toList());
-                } else {
-                    field.set(instance, mapValue(getFieldValue(field, root), field.getType()));
-                }
-
+                return instance;
             }
 
-            return instance;
 
         } catch (NoSuchMethodException | InvocationTargetException |
                  InstantiationException | IllegalAccessException e) {

@@ -204,7 +204,16 @@ public class ReflectionUtil {
 	 * @return generic type class
 	 */
 	public static <T> Class<T> getGenericListTypeArgument(Field f) {
-		return (Class<T>) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+		Object result = ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0];
+		if (result instanceof Class) {
+			return (Class<T>) result;
+		}
+
+		if (result instanceof ParameterizedType) {
+			return (Class<T>) ((ParameterizedType) result).getRawType();
+		}
+
+		throw new GrainRuntimeException("Could not get generic type argument for field " + f.getName());
 	}
 
 	/**
@@ -228,7 +237,16 @@ public class ReflectionUtil {
 	 * @return generic type class
 	 */
 	public static <T> Class<T> getGenericListTypeArgument(Parameter p) {
-		return (Class<T>) ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0];
+		Object result = ((ParameterizedType) p.getParameterizedType()).getActualTypeArguments()[0];
+		if (result instanceof Class) {
+			return (Class<T>) result;
+		}
+
+		if (result instanceof ParameterizedType) {
+			return (Class<T>) ((ParameterizedType) result).getRawType();
+		}
+
+		throw new GrainRuntimeException("Could not get generic type argument for parameter " + p.getName());
 	}
 
 	/**

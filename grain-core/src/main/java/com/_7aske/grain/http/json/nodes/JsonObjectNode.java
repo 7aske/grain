@@ -46,6 +46,45 @@ public class JsonObjectNode extends JsonNode implements Map<String, JsonNode> {
 		return getValueAsMap().put(key, value);
 	}
 
+	public JsonNode putString(String key, String value) {
+		if (value == null) {
+			return putNull(key);
+		}
+		return getValueAsMap().put(key, new JsonStringNode(value));
+	}
+
+	public JsonNode putNumber(String key, Number value) {
+		if (value == null) {
+			return putNull(key);
+		}
+		return getValueAsMap().put(key, new JsonNumberNode(value));
+	}
+
+	public JsonNode putBoolean(String key, Boolean value) {
+		if (value == null) {
+			return putNull(key);
+		}
+		return getValueAsMap().put(key, new JsonBooleanNode(value));
+	}
+
+	public JsonNode putObject(String key, JsonObjectNode value) {
+		if (value == null) {
+			return putNull(key);
+		}
+		return getValueAsMap().put(key, value);
+	}
+
+	public JsonNode putArray(String key, JsonArrayNode value) {
+		if (value == null) {
+			return putNull(key);
+		}
+		return getValueAsMap().put(key, value);
+	}
+
+	public JsonNode putNull(String key) {
+		return getValueAsMap().put(key, new JsonNullNode());
+	}
+
 	@Override
 	public JsonNode remove(Object key) {
 		return getValueAsMap().remove(key);

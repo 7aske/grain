@@ -4,7 +4,8 @@ import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
-import com._7aske.grain.http.json.JsonObject;
+import com._7aske.grain.http.json.JsonWriter;
+import com._7aske.grain.http.json.nodes.JsonObjectNode;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.http.session.SessionInitializer;
 import com._7aske.grain.logging.Logger;
@@ -32,6 +33,7 @@ public class RequestHandlerRunnable implements Runnable {
 	private final HandlerRunner handlerRunner;
 	private final SessionInitializer sessionInitializer;
 	private final HttpRequestAuthenticationProviderStrategy provider;
+	private final JsonWriter jsonWriter = new JsonWriter(false);
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
 		this.socket = socket;
@@ -87,13 +89,15 @@ public class RequestHandlerRunnable implements Runnable {
 		response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
-			JsonObject jsonObject = new JsonObject();
+			JsonObjectNode jsonObject = new JsonObjectNode();
 			jsonObject.putString("error", ex.getMessage());
 			jsonObject.putString("status", HttpStatus.INTERNAL_SERVER_ERROR.getReason());
 			jsonObject.putNumber("code", HttpStatus.INTERNAL_SERVER_ERROR.getValue());
 			jsonObject.putString("path", request.getPath());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
-			response.getOutputStream().write(jsonObject.toJsonString().getBytes());
+			try(OutputStream outputStream = response.getOutputStream()) {
+				jsonWriter.write(jsonObject, outputStream);
+			}
 		} else {
 			response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML);
 			response.getOutputStream().write(ErrorPage.getDefault(ex, request.getPath()).getBytes());
@@ -106,7 +110,14 @@ public class RequestHandlerRunnable implements Runnable {
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
 			if (response.length() == 0) {
 				response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
-				response.getOutputStream().write(ex.getJsonMessage().getBytes());
+				JsonObjectNode jsonObject = new JsonObjectNode();
+				jsonObject.putString("error", ex.getMessage());
+				jsonObject.putString("status", ex.getStatus().getReason());
+				jsonObject.putNumber("code", ex.getStatus().getValue());
+				jsonObject.putString("path", ex.getPath());
+				try(OutputStream outputStream = response.getOutputStream()) {
+					jsonWriter.write(jsonObject, outputStream);
+				}
 			}
 		} else {
 			if (response.length() == 0) {

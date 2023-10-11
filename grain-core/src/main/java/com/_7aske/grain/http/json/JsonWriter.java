@@ -70,21 +70,23 @@ public class JsonWriter {
         writer.write("\"");
     }
 
-    private void writeArray(JsonArrayNode array, Writer writer, int i) throws IOException {
+    private void writeArray(JsonArrayNode array, Writer writer, int indent) throws IOException {
         writer.write("[");
         if (prettyPrint) {
             writer.write("\n");
         }
 
-        for (int j = 0; j < array.size(); j++) {
+        for (int i = 0; i < array.size(); i++) {
             if (prettyPrint) {
-                indent(writer, i);
+                indent(writer, indent);
             }
 
-            write(array.get(j), writer, i);
+            write(array.get(i), writer, indent);
 
             if (i == array.size() - 1) {
-                writer.write("\n");
+                if (prettyPrint) {
+                    writer.write("\n");
+                }
                 break;
             }
 
@@ -96,7 +98,7 @@ public class JsonWriter {
         }
 
         if (prettyPrint) {
-            indent(writer, i - indentSize);
+            indent(writer, indent - 1);
         }
 
         writer.write("]");

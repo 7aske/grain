@@ -4,6 +4,7 @@ import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.http.json.JsonMapper;
 import com._7aske.grain.requesthandler.controller.wrapper.ControllerWrapper;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.controller.converter.ConverterRegistry;
@@ -14,7 +15,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 
 /**
  * {@link RequestHandler} implementation that wraps a {@link com._7aske.grain.core.component.Controller} instance.
@@ -27,12 +27,13 @@ public class ControllerHandler implements RequestHandler {
 	private final ControllerWrapper wrapper;
 
 	public ControllerHandler(ControllerWrapper wrapper,
-	                         ConverterRegistry converterRegistry,
-	                         ViewResolver viewResolver) {
+							 ConverterRegistry converterRegistry,
+							 ViewResolver viewResolver,
+							 JsonMapper jsonMapper) {
 		this.wrapper = wrapper;
 		this.methodHandlers = wrapper.getMethods().stream()
-				.map(method -> new ControllerMethodHandler(method, converterRegistry, viewResolver))
-				.collect(Collectors.toList());
+				.map(method -> new ControllerMethodHandler(method, converterRegistry, viewResolver, jsonMapper))
+				.toList();
 	}
 
 	@Override
@@ -41,7 +42,7 @@ public class ControllerHandler implements RequestHandler {
 				.filter(methodHandler -> methodHandler.canHandle(request))
 				.sorted(Comparator.comparingInt((ToIntFunction<? super ControllerMethodHandler>)
 						h -> h.getPath().length()).reversed())
-				.collect(Collectors.toList());
+				.toList();
 		Optional<ControllerMethodHandler> handler = Optional.empty();
 		if (handlers.size() == 1) {
 			handler = Optional.of(handlers.get(0));

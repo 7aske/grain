@@ -4,6 +4,7 @@ import com._7aske.grain.core.component.*;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.http.json.JsonMapper;
 import com._7aske.grain.requesthandler.controller.wrapper.ControllerWrapper;
 import com._7aske.grain.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
@@ -30,13 +31,16 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 	private final ConverterRegistry converterRegistry;
 	private final ViewResolver viewResolver;
 	private final HandlerProxyFactory handlerProxyFactory;
+	private final JsonMapper jsonMapper;
 
 	public ControllerHandlerRegistry(HandlerProxyFactory handlerProxyFactory,
-	                                 ConverterRegistry converterRegistry,
-	                                 ViewResolverProvider viewResolver) {
+									 ConverterRegistry converterRegistry,
+									 ViewResolverProvider viewResolver,
+									 JsonMapper jsonMapper) {
 		this.handlerProxyFactory = handlerProxyFactory;
 		this.converterRegistry = converterRegistry;
 		this.viewResolver = viewResolver;
+		this.jsonMapper = jsonMapper;
 	}
 
 	@AfterInit
@@ -51,7 +55,7 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 		handlers = container.getGrainsAnnotatedBy(Controller.class)
 				.stream()
 				.map(ControllerWrapper::new)
-				.map(wrapper -> new ControllerHandler(wrapper, converterRegistry, viewResolver))
+				.map(wrapper -> new ControllerHandler(wrapper, converterRegistry, viewResolver, jsonMapper))
 				.collect(Collectors.toList());
 	}
 
@@ -59,20 +63,20 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
 		// @CopyPasta
-		List<RequestHandler> handlers = this.handlers.stream()
+		List<RequestHandler> availableHandlers = this.handlers.stream()
 				.filter(handler -> handler.canHandle(request))
 				.sorted(Comparator.comparingInt((ToIntFunction<? super RequestHandler>)
 						h -> h.getPath().length()).reversed())
-				.collect(Collectors.toList());
+				.toList();
 
 		Optional<RequestHandler> handler = Optional.empty();
-		if (handlers.size() == 1) {
-			handler = Optional.of(handlers.get(0));
-		} else if (handlers.size() > 1) {
-			handler = Optional.ofNullable(handlers.stream()
+		if (availableHandlers.size() == 1) {
+			handler = Optional.of(availableHandlers.get(0));
+		} else if (availableHandlers.size() > 1) {
+			handler = Optional.ofNullable(availableHandlers.stream()
 					.filter(h -> h.getPath().equals(request.getPath()))
 					.findFirst()
-					.orElse(handlers.get(0)));
+					.orElse(availableHandlers.get(0)));
 		}
 
 		handler.ifPresent(h -> {

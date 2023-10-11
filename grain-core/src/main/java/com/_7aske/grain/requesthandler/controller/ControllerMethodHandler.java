@@ -7,8 +7,10 @@ import com._7aske.grain.http.HttpRequest;
 import com._7aske.grain.http.HttpResponse;
 import com._7aske.grain.http.form.FormBody;
 import com._7aske.grain.http.form.FormDataMapper;
-import com._7aske.grain.http.json.*;
+import com._7aske.grain.http.json.JsonMapper;
+import com._7aske.grain.http.json.JsonResponse;
 import com._7aske.grain.http.json.annotation.JsonBody;
+import com._7aske.grain.http.json.nodes.JsonNode;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.requesthandler.controller.wrapper.ControllerMethodWrapper;
 import com._7aske.grain.requesthandler.handler.RequestHandler;
@@ -23,6 +25,7 @@ import com._7aske.grain.web.view.View;
 import com._7aske.grain.web.view.ViewResolver;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +44,16 @@ public class ControllerMethodHandler implements RequestHandler {
 	private final ControllerMethodWrapper method;
 	private final ConverterRegistry converterRegistry;
 	private final ViewResolver viewResolver;
+	private final JsonMapper jsonMapper;
 
 	public ControllerMethodHandler(ControllerMethodWrapper method,
 	                               ConverterRegistry converterRegistry,
-	                               ViewResolver viewResolver) {
+	                               ViewResolver viewResolver,
+								   JsonMapper jsonMapper) {
 		this.method = method;
 		this.converterRegistry = converterRegistry;
 		this.viewResolver = viewResolver;
+		this.jsonMapper= jsonMapper;
 	}
 
 	@Override
@@ -65,7 +71,7 @@ public class ControllerMethodHandler implements RequestHandler {
 			} else if (param.getType().equals(Session.class)) {
 				params[i] = request.getSession();
 			} else if (param.isAnnotationPresent(JsonBody.class)) {
-				params[i] = new JsonDeserializer<>(param.getType()).deserialize((JsonObject) request.getBody());
+				params[i] = jsonMapper.parseValue((String) request.getBody(), param);
 			} else if (param.isAnnotationPresent(FormBody.class)) {
 				// Mapping request params from HttpRequest.parameters to either
 				// a Map<String, String> or a class specified by the method parameter.
@@ -125,7 +131,7 @@ public class ControllerMethodHandler implements RequestHandler {
 					params[i] = value;
 				}
 			} else if (Map.class.isAssignableFrom(param.getType())) {
-				params[i] = ((JsonObject) request.getBody()).getData();
+				params[i] = jsonMapper.parseValue((String) request.getBody(), param.getType());
 			}
 		}
 
@@ -134,23 +140,29 @@ public class ControllerMethodHandler implements RequestHandler {
 		if (result == null) {
 			String requestContentType = request.getHeader(CONTENT_TYPE);
 			response.setHeader(CONTENT_TYPE, requestContentType == null ? HttpContentType.TEXT_PLAIN : requestContentType);
-		} else if (result instanceof View) {
-			viewResolver.resolve((View) result, request, response, request.getSession(), SecurityContextHolder.getContext().getAuthentication());
-		} else if (result instanceof JsonResponse) {
-			response.setStatus(((JsonResponse<?>) result).getStatus());
-			response.getOutputStream().write(((JsonResponse<?>) result).getBody().toJsonString().getBytes());
-			response.addHeaders(((JsonResponse<?>) result).getHeaders());
-		} else if (result instanceof JsonString) {
-			response.getOutputStream().write(((JsonString) result).toJsonString().getBytes());
+		} else if (result instanceof View view) {
+			viewResolver.resolve(view, request, response, request.getSession(), SecurityContextHolder.getContext().getAuthentication());
+		} else if (result instanceof JsonResponse<?> jsonResponse) {
+			response.setStatus(jsonResponse.getStatus());
+			response.addHeaders(jsonResponse.getHeaders());
+			try (OutputStream outputStream = response.getOutputStream()) {
+				jsonMapper.writeValue(jsonResponse.getBody(), outputStream);
+			}
+		} else if (result instanceof JsonNode node) {
+			try (OutputStream outputStream = response.getOutputStream()) {
+				jsonMapper.writeValue(node, outputStream);
+			}
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
-		} else if (result instanceof Object[]) {
-			response.getOutputStream().write(new JsonArray((Object[]) result).toJsonString().getBytes());
+		} else if (result instanceof Object[] objArr) {
+			try (OutputStream outputStream = response.getOutputStream()) {
+				jsonMapper.writeValue(jsonMapper.mapValue(objArr), outputStream);
+			}
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
-		} else if (result instanceof String) {
-			if (((String) result).startsWith(REDIRECT_PREFIX)) {
-				response.sendRedirect(((String) result).substring(REDIRECT_PREFIX.length()));
+		} else if (result instanceof String str) {
+			if (str.startsWith(REDIRECT_PREFIX)) {
+				response.sendRedirect(str.substring(REDIRECT_PREFIX.length()));
 			} else {
-				response.getOutputStream().write(((String) result).getBytes());
+				response.getOutputStream().write(str.getBytes());
 				if (response.getHeader(CONTENT_TYPE) == null)
 					response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_PLAIN);
 			}

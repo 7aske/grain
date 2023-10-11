@@ -325,6 +325,14 @@ public class JsonParser {
 	 */
 	private Number parseLong(String value) {
 		try {
+			return Integer.parseInt(value);
+		} catch (NumberFormatException ex) {
+			if (!LONG_PATTERN.matcher(value).matches()) {
+				throw ex; // Otherwise can't fit.
+			}
+		}
+
+		try {
 			return Long.parseLong(value);
 		} catch (NumberFormatException ex) {
 			if (LONG_PATTERN.matcher(value).matches()) {

@@ -1,11 +1,8 @@
 package com._7aske.grain.exception.http;
 
-import com._7aske.grain.http.json.JsonDeserializer;
-import com._7aske.grain.http.json.JsonObject;
-import com._7aske.grain.http.json.JsonSerializer;
-import com._7aske.grain.ui.impl.ErrorPage;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.http.HttpStatus;
+import com._7aske.grain.ui.impl.ErrorPage;
 
 import static com._7aske.grain.http.HttpStatus.*;
 
@@ -52,15 +49,6 @@ public abstract class HttpException extends GrainRuntimeException {
 
 	public String getHtmlMessage() {
 		return new ErrorPage(this).getContent();
-	}
-
-	public String getJsonMessage() {
-		JsonObject jsonObject = new JsonObject();
-		jsonObject.putString("error", this.getMessage());
-		jsonObject.putString("status", this.getStatus().getReason());
-		jsonObject.putNumber("code", this.getStatus().getValue());
-		jsonObject.putString("path", this.getPath());
-		return jsonObject.toJsonString();
 	}
 
 	public static final class BadRequest extends HttpException {

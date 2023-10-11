@@ -46,7 +46,7 @@ class JsonMapperTest {
 
         JsonMapper jsonMapper = new JsonMapper();
 
-        User parsed = jsonMapper.parseValue(json, User.class);
+        User parsed = (User) jsonMapper.parseValue(json, User.class);
 
         assertEquals(user.username, parsed.username);
         assertNull(parsed.password);

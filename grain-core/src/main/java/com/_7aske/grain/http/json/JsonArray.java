@@ -2,6 +2,7 @@ package com._7aske.grain.http.json;
 
 import java.util.*;
 
+@Deprecated
 public class JsonArray implements List<Object>, JsonString {
 	private final List<Object> data;
 

@@ -1,5 +1,6 @@
 package com._7aske.grain.http.json;
 
+import com._7aske.grain.http.HttpContentType;
 import com._7aske.grain.http.HttpHeaders;
 import com._7aske.grain.http.HttpStatus;
 
@@ -9,20 +10,19 @@ import java.util.Map;
 public final class JsonResponse<T> {
 	private HttpStatus status;
 	private Map<String, String> headers;
-	private JsonString body;
+	private T body;
 
 	private JsonResponse() {
 		this.status = HttpStatus.OK;
 		this.headers = new HashMap<>();
-		this.headers.put(HttpHeaders.CONTENT_TYPE, "application/json");
+		this.headers.put(HttpHeaders.CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 	}
 
 	private JsonResponse(T object) {
-		JsonSerializer<T> deserializer = new JsonSerializer<>((Class<T>) object.getClass());
-		this.body = (JsonString) deserializer.serialize(object);
+		this.body = object;
 		this.status = HttpStatus.OK;
 		this.headers = new HashMap<>();
-		this.headers.put(HttpHeaders.CONTENT_TYPE, "application/json");
+		this.headers.put(HttpHeaders.CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 	}
 
 	public static <T> JsonResponse<T> ok(T object) {
@@ -31,11 +31,15 @@ public final class JsonResponse<T> {
 		return tJsonResponse;
 	}
 
+	public static <T> Builder<T> body(T object) {
+		return new Builder<T>().body(object);
+	}
+
 	public Map<String, String> getHeaders() {
 		return headers;
 	}
 
-	public JsonString getBody() {
+	public T getBody() {
 		return body;
 	}
 
@@ -43,7 +47,7 @@ public final class JsonResponse<T> {
 		return status;
 	}
 
-	private static final class Builder<T> {
+	public static final class Builder<T> {
 		private final JsonResponse<T> instance;
 
 		public Builder() {
@@ -62,9 +66,12 @@ public final class JsonResponse<T> {
 			return this;
 		}
 
-		public JsonResponse<T> body(T object) {
-			JsonSerializer<T> deserializer = new JsonSerializer<>((Class<T>) object.getClass());
-			instance.body = (JsonString) deserializer.serialize(object);
+		public Builder<T> body(T object) {
+			instance.body = object;
+			return this;
+		}
+
+		public JsonResponse<T> build() {
 			return instance;
 		}
 	}

@@ -14,20 +14,20 @@ class JsonParserTests {
 		JsonNode test = deserializer.parse(json);
 		System.out.println(test);
 		assertFalse(test.get("valid_auth").getBoolean());
-		assertEquals(1L, test.get("count").getValue());
-		assertEquals(1L, test.get("limit").getValue());
-		assertEquals(139L, test.get("total").getValue());
-		assertEquals(2582L, test.get("result").asArray().get(0).get("id").getValue());
+		assertEquals(1, test.get("count").getValue());
+		assertEquals(1, test.get("limit").getValue());
+		assertEquals(139, test.get("total").getValue());
+		assertEquals(2582, test.get("result").asArray().get(0).get("id").getValue());
 		assertEquals("", test.get("result").asArray().get(0).get("cospar_id").getValue());
 		assertEquals("1631750396", test.get("result").asArray().get(0).get("sort_date").getValue());
 		assertEquals("Inspiration4", test.get("result").asArray().get(0).get("name").getValue());
-		assertEquals(1L, test.get("result").asArray().get(0).get("provider").get("id").getValue());
+		assertEquals(1, test.get("result").asArray().get(0).get("provider").get("id").getValue());
 		assertEquals("SpaceX", test.get("result").asArray().get(0).get("provider").get("name").getValue());
-		assertEquals(1L, test.get("result").asArray().get(0).get("vehicle").get("id").getValue());
+		assertEquals(1, test.get("result").asArray().get(0).get("vehicle").get("id").getValue());
 		assertEquals("Falcon 9", test.get("result").asArray().get(0).get("vehicle").get("name").getValue());
-		assertEquals(4026L, test.get("result").asArray().get(0).get("missions").asArray().get(0).get("id").getValue());
+		assertEquals(4026, test.get("result").asArray().get(0).get("missions").asArray().get(0).get("id").getValue());
 		assertNull(test.get("result").asArray().get(0).get("missions").asArray().get(0).get("description").getValue());
-		assertEquals(18L, test.get("result").asArray().get(0).get("tags").asArray().get(1).get("id").getValue());
+		assertEquals(18, test.get("result").asArray().get(0).get("tags").asArray().get(1).get("id").getValue());
 	}
 
 	static final class User {
