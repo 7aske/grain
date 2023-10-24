@@ -8,6 +8,7 @@ public class CodepointIterator implements Iterator<Integer> {
 	protected final String content;
 	protected final int endIndex;
 	protected int index = 0;
+	private int lastChar;
 
 	public CodepointIterator(String content) {
 		this.content = content;
@@ -21,8 +22,22 @@ public class CodepointIterator implements Iterator<Integer> {
 
 	@Override
 	public Integer next() {
-		if (hasNext())
-			return content.codePointAt(index++);
+		if (hasNext()) {
+			int ch = content.codePointAt(index);
+			// For example: emojis are 3-4 bytes long and can be completely
+			// stored in the int value as whole. But due to the way the iterator
+			// is implemented when we increment the index it will only skip
+			// the first 2 bytes of the emoji in question. So the second call
+			// to next will return the second 2 bytes of the emoji. Since we don't
+			// want to return garbage values we increment the index by how many chars
+			// is the current codepoint long.
+			index += Character.charCount(ch);
+
+			// Store the last char for the prev() method.
+			lastChar = ch;
+
+			return ch;
+		}
 		throw new NoSuchElementException();
 	}
 
@@ -39,7 +54,7 @@ public class CodepointIterator implements Iterator<Integer> {
 
 	public Integer prev() {
 		if (index > 0)
-			return content.codePointAt(index - 1);
+			return content.codePointAt(index - Character.charCount(lastChar));
 		throw new NoSuchElementException();
 	}
 

@@ -102,9 +102,9 @@ public class JsonMapper {
     }
 
     public JsonNode mapValue(Object value) {
-        if (value == null) return JsonNullNode.INSTANCE;
-
-        if (value instanceof List<?> list) {
+        if (value == null) {
+            return JsonNullNode.INSTANCE;
+        } else if (value instanceof List<?> list) {
             return list.stream()
                     .map(this::mapValue)
                     .collect(Collectors.toCollection(JsonArrayNode::new));
@@ -146,7 +146,9 @@ public class JsonMapper {
     }
 
     public Object mapValue(JsonNode root, Class<?> clazz, boolean isList) {
-        if (root == null) return null;
+        if (root == null || JsonNullNode.INSTANCE.equals(root)) {
+            return null;
+        }
 
         try {
 

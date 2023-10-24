@@ -13,8 +13,9 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 		StringBuilder builder = new StringBuilder();
 		int ch;
 
-		if (peek() == '"')
+		if (peek() == '"') {
 			next();
+		}
 
 		if (!hasNext()) {
 			throw new JsonDeserializationException("Unexpected end of input " + getInfo());
@@ -39,6 +40,9 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 				if (peek == 'u') {
 					builder.appendCodePoint(ch);
 					builder.appendCodePoint(next());
+					// Unicode escape sequences are 4 characters long. If something
+					// bad happens during parsing of the unicode escape sequence,
+					// we throw.
 					for (int i = 0; i < 4; i++) {
 						int next = next();
 						if ((next < '0' || next > '9') && (next < 'A' || next > 'F') && (next < 'a' || next > 'f')) {
@@ -46,7 +50,7 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 						}
 						builder.appendCodePoint(next);
 					}
-				} else if (peek == 't' || peek == 'n' || peek == '\\' || peek == '"' || peek == 'r' || peek == 'b' || peek == 'f' || peek == '/') {
+				} else if (isValidEscapeCharacter(peek)) {
 					builder.appendCodePoint(ch);
 					builder.appendCodePoint(next());
 				} else {
@@ -57,5 +61,16 @@ public class JsonParserIterator extends IndexedCodepointIterator {
 			}
 		}
 		return builder.toString();
+	}
+
+	private boolean isValidEscapeCharacter(int ch) {
+		return  ch == 't'  ||
+				ch == 'n'  ||
+				ch == 'r'  ||
+				ch == 'b'  ||
+				ch == 'f'  ||
+				ch == '\\' ||
+				ch == '"'  ||
+				ch == '/';
 	}
 }

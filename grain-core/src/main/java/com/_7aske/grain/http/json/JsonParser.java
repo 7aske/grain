@@ -257,6 +257,10 @@ public class JsonParser {
     }
 
 	public JsonNode parse(String content) {
+		if (content == null) {
+			return JsonNullNode.INSTANCE;
+		}
+
 		this.iter = new JsonParserIterator(content);
 
 		iter.eatWhitespace();
@@ -284,11 +288,11 @@ public class JsonParser {
 			JsonNode value = parseJsonValue();
 			iter.eatWhitespace();
 			if (iter.hasNext()) {
-				throw new JsonDeserializationException("Invalid end of Json string" + iter.getInfo());
+				throw new JsonDeserializationException("Invalid end of Json string " + iter.getInfo());
 			}
 			return value;
 		} catch (NoSuchElementException ignored) {
-			throw new JsonDeserializationException("Unexpected end of Json string" + iter.getInfo());
+			throw new JsonDeserializationException("Unexpected end of Json string " + iter.getInfo());
 		}
 	}
 
