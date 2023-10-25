@@ -22,7 +22,6 @@ public class JsonMapper {
     private static final boolean DEFAULT_PRETTY_PRINT = false;
     private int indentSize;
     private boolean prettyPrint;
-    private final JsonParser parser = new JsonParser();
 
     public JsonMapper() {
         this(DEFAULT_INDENT, DEFAULT_PRETTY_PRINT);
@@ -89,6 +88,7 @@ public class JsonMapper {
     }
 
     public Object parseValue(String json, Class<?> clazz) {
+        JsonParser parser = new JsonParser();
         return mapValue(parser.parse(json), clazz);
     }
 
@@ -137,6 +137,7 @@ public class JsonMapper {
     }
 
     public Object mapValue(String jsonString, Parameter param) {
+        JsonParser parser = new JsonParser();
         return mapValue(parser.parse(jsonString), param);
     }
 
@@ -164,10 +165,6 @@ public class JsonMapper {
                 return root.asArray().getStream()
                         .map(node -> mapValue(node, paramType.getActualTypeArguments()[0]))
                         .collect(Collectors.toSet());
-            } else if (Object[].class.isAssignableFrom(clazz)) {
-                return root.asArray().getStream()
-                        .map(node -> mapValue(node, paramType.getActualTypeArguments()[0]))
-                        .toArray();
             }
 
         } else if (type instanceof Class<?> clazz) {
@@ -193,11 +190,6 @@ public class JsonMapper {
                         field.set(instance, getFieldValue(field, root).getNumber());
                     } else if (Boolean.class.isAssignableFrom(field.getType())) {
                         field.set(instance, getFieldValue(field, root).getBoolean());
-                    } else if (Object[].class.isAssignableFrom(field.getType())) {
-                        JsonArrayNode array = getFieldValue(field, root).asArray();
-                        field.set(instance, array.getStream()
-                                .map(node -> mapValue(node, field.getType()))
-                                .toArray());
                     } else if (Set.class.isAssignableFrom(field.getType())) {
                         JsonArrayNode array = getFieldValue(field, root).asArray();
                         field.set(instance, array.getStream()
