@@ -303,7 +303,7 @@ public class JsonParser {
 	 * @param value string to parse
 	 * @return parsed number
 	 */
-	public Number parseBigDecimal(String value) {
+	private Number parseBigDecimal(String value) {
 		try {
 			return new BigDecimal(value);
 		} catch (NumberFormatException ex) {

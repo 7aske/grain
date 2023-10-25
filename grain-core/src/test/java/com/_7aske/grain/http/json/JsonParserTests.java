@@ -3,6 +3,11 @@ package com._7aske.grain.http.json;
 import com._7aske.grain.http.json.nodes.JsonNode;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JsonParserTests {
@@ -49,5 +54,45 @@ class JsonParserTests {
         System.out.println(test);
 
         assertEquals(longText, test.get("longText").getValue());
+    }
+
+    static final class Data {
+        int number;
+    }
+
+    public static void testMethodListParameter(List<List<Data>> data) {
+    }
+
+    public static void testMethodMapParameter(Map<String, List<Data>> data) {
+    }
+
+    @Test
+    void test_listMapping() throws Exception {
+        Method method = JsonParserTests.class.getMethod("testMethodListParameter", List.class);
+        Parameter parameter = method.getParameters()[0];
+
+        String jsonString = "[[{\"number\": 1}]]";
+
+        JsonMapper mapper = new JsonMapper();
+        JsonParser parser = new JsonParser();
+        List<List<Data>> test = (List<List<Data>>) mapper.mapValue(parser.parse(jsonString), parameter);
+        System.out.println(test);
+
+        assertEquals(1, test.get(0).get(0).number);
+    }
+
+    @Test
+    void test_mapMapping() throws Exception {
+        Method method = JsonParserTests.class.getMethod("testMethodMapParameter", Map.class);
+        Parameter parameter = method.getParameters()[0];
+
+        String jsonString = "{\"data\": [{\"number\": 1}]}";
+
+        JsonMapper mapper = new JsonMapper();
+        JsonParser parser = new JsonParser();
+        Map<String, List<Data>> test = (Map<String, List<Data>>) mapper.mapValue(parser.parse(jsonString), parameter);
+        System.out.println(test);
+
+        assertEquals(1, test.get("data").get(0).number);
     }
 }

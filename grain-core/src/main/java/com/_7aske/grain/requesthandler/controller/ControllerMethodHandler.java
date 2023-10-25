@@ -71,7 +71,7 @@ public class ControllerMethodHandler implements RequestHandler {
 			} else if (param.getType().equals(Session.class)) {
 				params[i] = request.getSession();
 			} else if (param.isAnnotationPresent(JsonBody.class)) {
-				params[i] = jsonMapper.parseValue((String) request.getBody(), param);
+				params[i] = jsonMapper.mapValue((String) request.getBody(), param);
 			} else if (param.isAnnotationPresent(FormBody.class)) {
 				// Mapping request params from HttpRequest.parameters to either
 				// a Map<String, String> or a class specified by the method parameter.
@@ -131,7 +131,7 @@ public class ControllerMethodHandler implements RequestHandler {
 					params[i] = value;
 				}
 			} else if (Map.class.isAssignableFrom(param.getType())) {
-				params[i] = jsonMapper.parseValue((String) request.getBody(), param.getType());
+				params[i] = jsonMapper.mapValue((String) request.getBody(), param);
 			}
 		}
 

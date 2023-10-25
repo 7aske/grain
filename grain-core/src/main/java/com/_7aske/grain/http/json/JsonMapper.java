@@ -22,6 +22,7 @@ public class JsonMapper {
     private static final boolean DEFAULT_PRETTY_PRINT = false;
     private int indentSize;
     private boolean prettyPrint;
+    private final JsonParser parser = new JsonParser();
 
     public JsonMapper() {
         this(DEFAULT_INDENT, DEFAULT_PRETTY_PRINT);
@@ -88,17 +89,7 @@ public class JsonMapper {
     }
 
     public Object parseValue(String json, Class<?> clazz) {
-        JsonParser parser = new JsonParser();
-        return mapValue(parser.parse(json), clazz, false);
-    }
-
-    public Object parseValue(String json, Parameter param) {
-        JsonParser parser = new JsonParser();
-        boolean isList = List.class.isAssignableFrom(param.getType());
-        Class<?> type = isList
-                ? ReflectionUtil.getGenericListTypeArgument(param)
-                : param.getType();
-        return mapValue(parser.parse(json), type, isList);
+        return mapValue(parser.parse(json), clazz);
     }
 
     public JsonNode mapValue(Object value) {
@@ -145,19 +136,46 @@ public class JsonMapper {
         }
     }
 
-    public Object mapValue(JsonNode root, Class<?> clazz, boolean isList) {
+    public Object mapValue(String jsonString, Parameter param) {
+        return mapValue(parser.parse(jsonString), param);
+    }
+
+    public Object mapValue(JsonNode root, Parameter param) {
+        return mapValue(root, param.getParameterizedType());
+    }
+
+    public Object mapValue(JsonNode root, Type type) {
         if (root == null || JsonNullNode.INSTANCE.equals(root)) {
             return null;
         }
 
-        try {
+        if (type instanceof ParameterizedType paramType) {
 
-            if (isList) {
-                // @Warning won't work with nested lists
-                return root.asArray().stream()
-                        .map(node -> mapValue(node, clazz, List.class.isAssignableFrom(clazz)))
+            Class<?> clazz = (Class<?>) paramType.getRawType();
+
+            if (List.class.isAssignableFrom(clazz)) {
+                return root.asArray().getStream()
+                        .map(node -> mapValue(node, paramType.getActualTypeArguments()[0]))
                         .toList();
-            } else {
+            } else if (Map.class.isAssignableFrom(clazz)) {
+                return root.asObject().entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> mapValue(entry.getValue(), paramType.getActualTypeArguments()[1])));
+            } else if (Set.class.isAssignableFrom(clazz)) {
+                return root.asArray().getStream()
+                        .map(node -> mapValue(node, paramType.getActualTypeArguments()[0]))
+                        .collect(Collectors.toSet());
+            } else if (Object[].class.isAssignableFrom(clazz)) {
+                return root.asArray().getStream()
+                        .map(node -> mapValue(node, paramType.getActualTypeArguments()[0]))
+                        .toArray();
+            }
+
+        } else if (type instanceof Class<?> clazz) {
+            try {
+                if (Object[].class.isAssignableFrom(clazz)) {
+                    throw new GrainRuntimeException("Cannot Object[] parameters");
+                }
+
                 Constructor<?> constructor = ReflectionUtil.getAnyConstructor(clazz);
                 Object instance = constructor.newInstance();
 
@@ -167,7 +185,9 @@ public class JsonMapper {
                         continue;
                     }
 
-                    if (String.class.isAssignableFrom(field.getType())) {
+                    if (field.getType().isPrimitive()) {
+                        field.set(instance, getFieldValue(field, root).getValue());
+                    } else if (String.class.isAssignableFrom(field.getType())) {
                         field.set(instance, getFieldValue(field, root).getString());
                     } else if (Number.class.isAssignableFrom(field.getType())) {
                         field.set(instance, getFieldValue(field, root).getNumber());
@@ -176,32 +196,31 @@ public class JsonMapper {
                     } else if (Object[].class.isAssignableFrom(field.getType())) {
                         JsonArrayNode array = getFieldValue(field, root).asArray();
                         field.set(instance, array.getStream()
-                                .map(node -> mapValue(node, field.getType(), false))
+                                .map(node -> mapValue(node, field.getType()))
                                 .toArray());
                     } else if (Set.class.isAssignableFrom(field.getType())) {
                         JsonArrayNode array = getFieldValue(field, root).asArray();
                         field.set(instance, array.getStream()
-                                .map(node -> mapValue(node, field.getType(), false))
+                                .map(node -> mapValue(node, field.getType()))
                                 .collect(Collectors.toSet()));
                     } else if (List.class.isAssignableFrom(field.getType())) {
                         JsonArrayNode array = getFieldValue(field, root).asArray();
                         field.set(instance, array.getStream()
-                                .map(node -> mapValue(node, field.getType(), false))
+                                .map(node -> mapValue(node, field.getType()))
                                 .toList());
                     } else {
-                        field.set(instance, mapValue(getFieldValue(field, root), field.getType(), false));
+                        field.set(instance, mapValue(getFieldValue(field, root), field.getType()));
                     }
-
                 }
-
                 return instance;
+
+            } catch (NoSuchMethodException | InvocationTargetException |
+                     InstantiationException | IllegalAccessException e) {
+                throw new GrainRuntimeException(e);
             }
-
-
-        } catch (NoSuchMethodException | InvocationTargetException |
-                 InstantiationException | IllegalAccessException e) {
-            throw new GrainRuntimeException(e);
         }
+
+        throw new GrainRuntimeException("Cannot map value");
     }
 
     private String getFieldName(Field field) {
