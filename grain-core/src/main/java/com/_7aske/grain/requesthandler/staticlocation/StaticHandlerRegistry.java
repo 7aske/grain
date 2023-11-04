@@ -11,12 +11,11 @@ import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Grain
 @Order(257)
 public class StaticHandlerRegistry implements HandlerRegistry {
-	private final List<RequestHandler> handlers;
+	private final List<? extends RequestHandler> handlers;
 	private final HandlerProxyFactory proxyFactory;
 
 	public StaticHandlerRegistry(StaticLocationsRegistry locationsRegistry, HandlerProxyFactory proxyFactory) {
@@ -24,7 +23,7 @@ public class StaticHandlerRegistry implements HandlerRegistry {
 		this.handlers = locationsRegistry.getStaticLocations()
 				.stream()
 				.map(StaticLocationHandler::new)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

@@ -94,4 +94,8 @@ public class HttpResponse {
 	public int length() {
 		return this.getByteArrayOutputStream().size();
 	}
+
+	public boolean isEmpty() {
+		return this.length() == 0;
+	}
 }

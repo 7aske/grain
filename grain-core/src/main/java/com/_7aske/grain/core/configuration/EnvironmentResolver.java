@@ -9,13 +9,10 @@ public class EnvironmentResolver {
 		void accept(String key, String value);
 	}
 
-	public EnvironmentResolver() {
-	}
-
 	public void resolve(PropertiesEnvironmentConsumer consumer) {
 		System.getenv().forEach((key, value) -> {
 			String adapted = adaptEnvKey(key);
-			if (adapted.length() > 0 && Character.isLetter(key.charAt(0))) {
+			if (!adapted.isEmpty() && Character.isLetter(key.charAt(0))) {
 				consumer.accept(adapted, value);
 			}
 		});

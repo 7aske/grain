@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 // @Warning we manually add this class in the dependency injection pipeline
 // do not mark it with @Grain
@@ -19,18 +18,12 @@ public final class Configuration extends AbstractConfiguration {
 
 	private Configuration() {
 		super(new Properties());
-		set(ConfigurationKey.SERVER_HOST, "0.0.0.0");
-		set(ConfigurationKey.SERVER_PORT, 8080);
-		set(ConfigurationKey.SERVER_THREADS, 100);
-		set(ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG, true);
-		set(ConfigurationKey.SESSION_ENABLED, true);
-		set(ConfigurationKey.SECURITY_ENABLED, false);
 
 		String profilesString = Optional.ofNullable(System.getenv(PROFILES_ENV_VARIABLE))
 				.orElse(",");
 		List<String> profiles = Arrays.stream(profilesString
 						.split("\\s*,\\s*"))
-				.collect(Collectors.toList());
+				.toList();
 
 
 		PropertiesResolver propertiesResolver = new PropertiesResolver(profiles);

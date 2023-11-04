@@ -13,7 +13,6 @@ public class Level extends java.util.logging.Level {
 	// Additional levels for logging.
 	public static final java.util.logging.Level TRACE = new Level("TRACE", java.util.logging.Level.FINEST.intValue(), DEFAULT_BUNDLE);
 	public static final java.util.logging.Level DEBUG = new Level("DEBUG", java.util.logging.Level.CONFIG.intValue(), DEFAULT_BUNDLE);
-	public static final java.util.logging.Level WARN = new Level("WARN", java.util.logging.Level.WARNING.intValue(), DEFAULT_BUNDLE);
 	public static final java.util.logging.Level ERROR = new Level("ERROR", java.util.logging.Level.SEVERE.intValue(), DEFAULT_BUNDLE);
 
 	static List<java.util.logging.Level> ADDITIONAL_LEVELS = List.of(

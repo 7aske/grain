@@ -15,74 +15,74 @@ public abstract class AbstractConfiguration {
 		return properties;
 	}
 
-	public AbstractConfiguration set(ConfigurationKey prop, Object value) {
-		return set(prop.getKey(), value);
-	}
-
 	public AbstractConfiguration set(String prop, Object value) {
 		properties.put(prop, value);
 		return this;
 	}
 
 	public String get(String prop, String defaultValue) {
-		Object retval = properties.getOrDefault(prop, defaultValue);
-		if (retval instanceof String) {
-			return (String) retval;
+		Object obj = properties.getOrDefault(prop, defaultValue);
+		if (obj instanceof String retval) {
+			return retval;
 		}
 
-		return retval == null ? defaultValue : retval.toString();
+		return obj == null ? defaultValue : obj.toString();
 	}
 
-	public String get(ConfigurationKey prop, String defaultValue) {
-		return get(prop.getKey(), defaultValue);
-	}
-
-	public String get(ConfigurationKey prop) {
-		return get(prop.getKey(), null);
-	}
 
 	public String get(String prop) {
 		return get(prop, null);
 	}
 
-	public boolean getBoolean(ConfigurationKey prop) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Boolean.class, Boolean::parseBoolean, false);
+	public boolean getBoolean(String prop) {
+		return Boolean.TRUE.equals(
+				PropertiesHelper.getProperty(prop,
+						properties,
+						Boolean.class,
+						Boolean::parseBoolean,
+						false));
 	}
 
-	public boolean getBoolean(ConfigurationKey prop, boolean defaultValue) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Boolean.class, Boolean::parseBoolean, defaultValue);
+	public boolean getBoolean(String prop, boolean defaultValue) {
+		return Boolean.TRUE.equals(
+				PropertiesHelper.getProperty(
+						prop,
+						properties,
+						Boolean.class,
+						Boolean::parseBoolean,
+						defaultValue));
 	}
 
-	public Integer getInt(ConfigurationKey prop) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Integer.class, Integer::parseInt);
+	public Integer getInt(String prop) {
+		return PropertiesHelper.getProperty(prop, properties, Integer.class, Integer::parseInt);
 	}
 
-	public Integer getInt(ConfigurationKey prop, Integer defaultValue) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Integer.class, Integer::parseInt, defaultValue);
+	public Integer getInt(String prop, Integer defaultValue) {
+		return PropertiesHelper.getProperty(prop, properties, Integer.class, Integer::parseInt, defaultValue);
 	}
 
-	public Long getLong(ConfigurationKey prop) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Long.class, Long::parseLong);
+	public Long getLong(String prop) {
+		return PropertiesHelper.getProperty(prop, properties, Long.class, Long::parseLong);
 	}
 
-	public Long getLong(ConfigurationKey prop, Long defaultValue) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Long.class, Long::parseLong, defaultValue);
+	public Long getLong(String prop, Long defaultValue) {
+		return PropertiesHelper.getProperty(prop, properties, Long.class, Long::parseLong, defaultValue);
 	}
 
-	public Float getFloat(ConfigurationKey prop) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Float.class, Float::parseFloat);
+	public Float getFloat(String prop) {
+		return PropertiesHelper.getProperty(prop, properties, Float.class, Float::parseFloat);
 	}
 
-	public Float getFloat(ConfigurationKey prop, Float defaultValue) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Float.class, Float::parseFloat, defaultValue);
+	public Float getFloat(String prop, Float defaultValue) {
+		return PropertiesHelper.getProperty(prop, properties, Float.class, Float::parseFloat, defaultValue);
 	}
 
-	public Double getDouble(ConfigurationKey prop) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Double.class, Double::parseDouble);
+	public Double getDouble(String prop) {
+		return PropertiesHelper.getProperty(prop, properties, Double.class, Double::parseDouble);
 	}
 
-	public Double getDouble(ConfigurationKey prop, Double defaultValue) {
-		return PropertiesHelper.getProperty(prop.getKey(), properties, Double.class, Double::parseDouble, defaultValue);
+	public Double getDouble(String prop, Double defaultValue) {
+		return PropertiesHelper.getProperty(prop, properties, Double.class, Double::parseDouble, defaultValue);
 	}
 
 	public Properties getPropertiesWithPrefix(String prefix) {

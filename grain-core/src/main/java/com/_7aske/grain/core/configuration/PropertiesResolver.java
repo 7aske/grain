@@ -21,17 +21,16 @@ public class PropertiesResolver {
 	}
 
 	public void resolve(String[] filePaths, PropertiesInputStreamConsumer inputStreamConsumer) {
-		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		for (String filePath : filePaths) {
-			resolve(filePath, is -> {
-				is.transferTo(byteArrayOutputStream);
-				byteArrayOutputStream.write('\n');
-			});
-		}
-		ByteArrayInputStream byteArrayInputStream =
-				new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-		try {
-			inputStreamConsumer.accept(byteArrayInputStream);
+		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			for (String filePath : filePaths) {
+				resolve(filePath, is -> {
+					is.transferTo(byteArrayOutputStream);
+					// if the file doesn't end with a new line
+					byteArrayOutputStream.write(System.lineSeparator().getBytes());
+				});
+			}
+
+			inputStreamConsumer.accept(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
 		} catch (IOException e) {/*ignored*/}
 	}
 

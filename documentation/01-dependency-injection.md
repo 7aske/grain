@@ -251,7 +251,7 @@ public class TestGrainReferenceGrain {
 ```java
 @Grain
 public class TestGrainReferenceGrain {
-  @Value("server.port < 1000")
+  @Value("grain.server.port < 1000")
   private boolean requiresElevation;
 }
 ```
@@ -265,7 +265,7 @@ is truthy the Grain is loaded.
 
 ```java
 @Grain
-@Condition("security.enabled")
+@Condition("grain.security.enabled")
 public class SecurityHandlerProxyFactory implements HandlerProxyFactory {
   // implementation ...    
 }

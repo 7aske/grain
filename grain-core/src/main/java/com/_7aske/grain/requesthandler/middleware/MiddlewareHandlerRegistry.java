@@ -14,7 +14,6 @@ import com._7aske.grain.util.ReflectionUtil;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * {@link HandlerRegistry} implementation that uses {@link Middleware}s to handle requests.
@@ -22,7 +21,7 @@ import java.util.stream.Collectors;
 @Grain
 @Order(255)
 public class MiddlewareHandlerRegistry implements HandlerRegistry {
-	private List<RequestHandler> handlers;
+	private List<? extends RequestHandler> handlers;
 	private final HandlerProxyFactory handlerProxyFactory;
 
 	/**
@@ -44,7 +43,7 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 		handlers = container.getGrains(Middleware.class)
 				.stream()
 				.map(MiddlewareHandler::new)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override

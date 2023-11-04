@@ -20,7 +20,7 @@ class ConfigurationTest {
 		public Configuration configuration;
 
 		public void changeConfiguration() {
-			configuration.set("server.host", "127.0.0.1");
+			configuration.set("grain.server.host", "127.0.0.1");
 		}
 	}
 
@@ -34,7 +34,7 @@ class ConfigurationTest {
 	void testConfiguration_isInjected() {
 		ApplicationContext applicationContext = new ApplicationContextImpl(TestApplication.class.getPackageName());
 		TestClass testObject = applicationContext.getGrain(TestClass.class);
-		Assertions.assertEquals("0.0.0.0", testObject.configuration.get("server.host"));
+		Assertions.assertEquals("0.0.0.0", testObject.configuration.get("grain.server.host"));
 	}
 
 	@Test
@@ -43,6 +43,6 @@ class ConfigurationTest {
 		TestClass testObject = applicationContext.getGrain(TestClass.class);
 		testObject.changeConfiguration();
 		TestClass2 testObject2 = applicationContext.getGrain(TestClass2.class);
-		Assertions.assertEquals("127.0.0.1", testObject2.configuration.get("server.host"));
+		Assertions.assertEquals("127.0.0.1", testObject2.configuration.get("grain.server.host"));
 	}
 }

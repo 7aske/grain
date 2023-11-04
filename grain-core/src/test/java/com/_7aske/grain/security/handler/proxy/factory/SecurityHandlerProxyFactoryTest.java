@@ -3,6 +3,7 @@ package com._7aske.grain.security.handler.proxy.factory;
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
@@ -22,7 +23,7 @@ class SecurityHandlerProxyFactoryTest {
 	@BeforeEach
 	void setUp() {
 		Configuration configuration = Configuration.createDefault();
-		configuration.set("security.enabled", true);
+		configuration.set(ConfigurationKey.SECURITY_ENABLED, true);
 		applicationContext = new ApplicationContextImpl(TestClass.class.getPackageName(), configuration);
 		ApplicationContextHolder.setContext(applicationContext);
 	}

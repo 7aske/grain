@@ -65,6 +65,14 @@ Framework configuration is all handled in the `parent` module. You must add it a
     <version>1.0.0-SNAPSHOT</version>
 </parent>
 
+<repositories>
+    <repository>
+        <id>7aske-repository-releases</id>
+        <name>7aske repository</name>
+        <url>https://maven.7aske.xyz/releases</url>
+    </repository>
+</repositories>
+
 <dependencies>
     ...
     <dependency>
@@ -76,7 +84,7 @@ Framework configuration is all handled in the `parent` module. You must add it a
 </dependencies>
 ...
 ```
-Following this instruction will allow you to build a "fat" jar that can be executed with `java -jar yourapp. jar`.
+Following this instruction will allow you to build a "fat" jar that can be executed with `java -jar yourapp.jar`.
 
 ```java
 @GrainApplication

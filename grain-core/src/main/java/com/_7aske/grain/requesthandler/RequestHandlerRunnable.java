@@ -5,6 +5,7 @@ import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.http.*;
 import com._7aske.grain.http.json.JsonWriter;
+import com._7aske.grain.http.json.nodes.JsonNode;
 import com._7aske.grain.http.json.nodes.JsonObjectNode;
 import com._7aske.grain.http.session.Session;
 import com._7aske.grain.http.session.SessionInitializer;
@@ -89,13 +90,9 @@ public class RequestHandlerRunnable implements Runnable {
 		response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
-			JsonObjectNode jsonObject = new JsonObjectNode();
-			jsonObject.putString("error", ex.getMessage());
-			jsonObject.putString("status", HttpStatus.INTERNAL_SERVER_ERROR.getReason());
-			jsonObject.putNumber("code", HttpStatus.INTERNAL_SERVER_ERROR.getValue());
-			jsonObject.putString("path", request.getPath());
 			response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
 			try(OutputStream outputStream = response.getOutputStream()) {
+				JsonNode jsonObject = getErrorJsonResponse(ex, request);
 				jsonWriter.write(jsonObject, outputStream);
 			}
 		} else {
@@ -108,22 +105,37 @@ public class RequestHandlerRunnable implements Runnable {
 		response.setStatus(ex.getStatus());
 		if (Objects.equals(request.getHeader(ACCEPT), HttpContentType.APPLICATION_JSON) ||
 				Objects.equals(request.getHeader(CONTENT_TYPE), HttpContentType.APPLICATION_JSON)) {
-			if (response.length() == 0) {
+			if (response.isEmpty()) {
 				response.setHeader(CONTENT_TYPE, HttpContentType.APPLICATION_JSON);
-				JsonObjectNode jsonObject = new JsonObjectNode();
-				jsonObject.putString("error", ex.getMessage());
-				jsonObject.putString("status", ex.getStatus().getReason());
-				jsonObject.putNumber("code", ex.getStatus().getValue());
-				jsonObject.putString("path", ex.getPath());
 				try(OutputStream outputStream = response.getOutputStream()) {
+					JsonNode jsonObject = getErrorJsonResponse(ex);
 					jsonWriter.write(jsonObject, outputStream);
 				}
 			}
 		} else {
-			if (response.length() == 0) {
+			if (response.isEmpty()) {
 				response.setHeader(CONTENT_TYPE, HttpContentType.TEXT_HTML);
 				response.getOutputStream().write(ex.getHtmlMessage().getBytes());
 			}
 		}
+	}
+
+
+	private JsonNode getErrorJsonResponse(RuntimeException ex, HttpRequest request) {
+		JsonObjectNode jsonObject = new JsonObjectNode();
+		jsonObject.putString("error", ex.getMessage());
+		jsonObject.putString("status", HttpStatus.INTERNAL_SERVER_ERROR.getReason());
+		jsonObject.putNumber("code", HttpStatus.INTERNAL_SERVER_ERROR.getValue());
+		jsonObject.putString("path", request.getPath());
+		return jsonObject;
+	}
+
+	private JsonNode getErrorJsonResponse(HttpException ex) {
+		JsonObjectNode jsonObject = new JsonObjectNode();
+		jsonObject.putString("error", ex.getMessage());
+		jsonObject.putString("status", ex.getStatus().getReason());
+		jsonObject.putNumber("code", ex.getStatus().getValue());
+		jsonObject.putString("path", ex.getPath());
+		return jsonObject;
 	}
 }
