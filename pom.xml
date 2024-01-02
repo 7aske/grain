@@ -72,11 +72,6 @@
                 <version>3.1.2</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.1.1</version>
-            </plugin>
-            <plugin>
                 <groupId>com.7aske.grain</groupId>
                 <artifactId>grain-maven-plugin</artifactId>
                 <version>1.0.1</version>
@@ -130,6 +125,14 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.1</version>
+                <configuration>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
@@ -144,25 +147,8 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.7.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <failOnError>false</failOnError>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <phase>package</phase>
-                    </execution>
-                </executions>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.1</version>
             </plugin>
         </plugins>
     </build>
@@ -198,49 +184,32 @@
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <configuration>
-                            <preparationProfiles>deploy-central</preparationProfiles>
-                            <preparationGoals>central-publishing:publish</preparationGoals>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>release-prepare</id>
-                                <goals>
-                                    <goal>prepare</goal>
-                                </goals>
-                                <phase>deploy</phase>
-                            </execution>
-                        </executions>
+                        <artifactId>maven-site-plugin</artifactId>
+                        <version>3.7.1</version>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.3</version>
                         <configuration>
-                            <preparationProfiles>deploy-central</preparationProfiles>
-                            <preparationGoals>central-publishing:publish</preparationGoals>
+                            <failOnError>false</failOnError>
                         </configuration>
                         <executions>
                             <execution>
-                                <id>release-perform</id>
+                                <id>attach-javadocs</id>
                                 <goals>
-                                    <goal>perform</goal>
+                                    <goal>jar</goal>
                                 </goals>
-                                <phase>deploy</phase>
+                                <phase>package</phase>
                             </execution>
                         </executions>
                     </plugin>
                     <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.1.6</version>
-                        <extensions>true</extensions>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
                         <configuration>
-                            <skipPublishing>true</skipPublishing>
-                            <publishingServerId>central</publishingServerId>
-                            <tokenEnabled>true</tokenEnabled>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -273,25 +242,6 @@
                     <url>https://maven.7aske.xyz/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.0.1</version>
-                        <executions>
-                            <execution>
-                                <id>default</id>
-                                <goals>
-                                    <goal>prepare</goal>
-                                    <goal>perform</goal>
-                                </goals>
-                                <phase>deploy</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     </profiles>
 
