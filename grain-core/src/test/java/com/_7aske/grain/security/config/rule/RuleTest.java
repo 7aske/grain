@@ -1,6 +1,6 @@
 package com._7aske.grain.security.config.rule;
 
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

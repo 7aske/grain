@@ -1,6 +1,6 @@
 package com._7aske.grain.security.config.builder;
 
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 
 public interface RulePatternBuilder {
 

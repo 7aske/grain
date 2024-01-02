@@ -1,6 +1,6 @@
 package com._7aske.grain.web.controller.annotation;
 
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 
 import java.lang.annotation.*;
 

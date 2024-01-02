@@ -1,7 +1,8 @@
 package com._7aske.grain.http.view;
 
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.http.HttpResponse;
+import com._7aske.grain.web.http.GrainHttpResponse;
+import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.view.GtlViewResolver;
 import com._7aske.grain.web.view.TemplateView;
 import com._7aske.grain.web.view.ViewResolver;
@@ -21,16 +22,16 @@ class TemplateViewTest {
 		viewResolver = new GtlViewResolver(Configuration.createDefault());
 	}
 
-	String readResponse(HttpResponse response) {
+	String readResponse(HttpResponse response) throws Exception {
 		ByteArrayOutputStream baos = (ByteArrayOutputStream) response.getOutputStream();
 		return baos.toString();
 	}
 
 	@Test
-	void test_getContent_hasCode() {
+	void test_getContent_hasCode() throws Exception {
 		TemplateView templateView = new TemplateView("index.html");
 		templateView.addAttribute("username", "test");
-		HttpResponse httpResponse = new HttpResponse();
+		HttpResponse httpResponse = new GrainHttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
 		String content = readResponse(httpResponse);
 		System.out.println(content);
@@ -40,9 +41,9 @@ class TemplateViewTest {
 	}
 
 	@Test
-	void test_getContent_noCode() {
+	void test_getContent_noCode() throws Exception {
 		TemplateView templateView = new TemplateView("index-no-code.html");
-		HttpResponse httpResponse = new HttpResponse();
+		HttpResponse httpResponse = new GrainHttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
 		String content = readResponse(httpResponse);
 		assertTrue(content.contains("Log in"));
@@ -51,12 +52,12 @@ class TemplateViewTest {
 	}
 
 	@Test
-	void test_getContent_onlyVariables() {
+	void test_getContent_onlyVariables() throws Exception {
 		TemplateView templateView = new TemplateView("index-only-variables.html");
 		templateView.addAttribute("username", "should-show");
 		templateView.addAttribute("test", "this-too");
 		templateView.addAttribute("commented", "should-not-show");
-		HttpResponse httpResponse = new HttpResponse();
+		HttpResponse httpResponse = new GrainHttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
 		String content = readResponse(httpResponse);
 		System.out.println(content);
@@ -66,9 +67,9 @@ class TemplateViewTest {
 	}
 
 	@Test
-	void test_getContent_simpleExpression() {
+	void test_getContent_simpleExpression() throws Exception {
 		TemplateView templateView = new TemplateView("index-simple-expression.html");
-		HttpResponse httpResponse = new HttpResponse();
+		HttpResponse httpResponse = new GrainHttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
 		String content = readResponse(httpResponse);
 		System.out.println(content);
@@ -77,9 +78,9 @@ class TemplateViewTest {
 	}
 
 	@Test
-	void test_include() {
+	void test_include() throws Exception {
 		TemplateView templateView = new TemplateView("include.html");
-		HttpResponse httpResponse = new HttpResponse();
+		HttpResponse httpResponse = new GrainHttpResponse();
 		viewResolver.resolve(templateView, null, httpResponse, null, null);
 		String content = readResponse(httpResponse);
 		assertTrue(content.contains("<div class=\"container\">"));

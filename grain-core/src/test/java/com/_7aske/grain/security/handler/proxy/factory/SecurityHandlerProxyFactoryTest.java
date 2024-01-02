@@ -6,7 +6,7 @@ import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
-import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
+import com._7aske.grain.web.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

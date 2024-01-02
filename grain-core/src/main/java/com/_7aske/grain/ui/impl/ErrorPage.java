@@ -1,25 +1,28 @@
 package com._7aske.grain.ui.impl;
 
 import com._7aske.grain.annotation.NotNull;
-import com._7aske.grain.annotation.Nullable;
-import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpContentType;
-import com._7aske.grain.web.view.View;
 import com._7aske.grain.ui.util.Styles;
+import com._7aske.grain.web.http.ContentType;
+import com._7aske.grain.web.http.HttpStatus;
+import com._7aske.grain.web.view.View;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Map;
 
 public class ErrorPage implements View {
-	private final HttpException exception;
+	private final Throwable exception;
+	private final String path;
+	private final HttpStatus status;
 
-	public ErrorPage(HttpException exception) {
+	public ErrorPage(Throwable exception, HttpStatus status, String path) {
 		this.exception = exception;
+		this.status = status;
+		this.path = path;
 	}
 
-	public static String getDefault(Throwable exception, String path) {
-		return new ErrorPage(new HttpException.InternalServerError(exception, path)).getContent();
+	public static String getDefault(Throwable exception, HttpStatus status, String path) {
+		return new ErrorPage(exception, status, path).getContent();
 	}
 
 	public @NotNull String getContent() {
@@ -33,17 +36,25 @@ public class ErrorPage implements View {
 		builder.append("<body>");
 		builder.append("<div class=\"error-page\"><div class=\"form\">");
 		builder.append("<h1>").append(getTitle()).append("</h1>");
-		if (exception.getPath() != null)
+		if (path != null)
 			builder.append(getRequestPath());
 		builder.append(getDescription());
-		if (exception instanceof HttpException.InternalServerError) {
-			builder.append("<hr/>").append("<pre>");
+
+		{
+			builder.append("<hr/>")
+					.append("<pre>");
+
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			PrintStream stream = new PrintStream(bos);
-			exception.printStackTrace(stream);
+
+			try (PrintStream stream = new PrintStream(bos)) {
+				exception.printStackTrace(stream);
+				stream.flush();
+			}
+
 			builder.append(bos);
 			builder.append("</pre>");
 		}
+
 		builder.append(getStatusBar());
 		builder.append("</div></div>");
 		builder.append("</body>");
@@ -59,7 +70,7 @@ public class ErrorPage implements View {
 
 	@Override
 	public @NotNull String getContentType() {
-		return HttpContentType.TEXT_HTML;
+		return ContentType.TEXT_HTML;
 	}
 
 	@NotNull
@@ -73,15 +84,15 @@ public class ErrorPage implements View {
 	}
 
 	private String getDescription() {
-		return String.format("<h2>Description</h2><p>%s</p>", exception.getMessage() == null ? exception.getStatus().getReason() : exception.getMessage());
+		return String.format("<h2>Description</h2><p>%s</p>", exception.getMessage() == null ? status.getReason() : exception.getMessage());
 	}
 
 	private String getTitle() {
-		return String.format("HTTP Status %d - %s", exception.getStatus().getValue(), exception.getStatus().getReason());
+		return String.format("HTTP Status %d - %s", status.getValue(), status.getReason());
 	}
 
 	private String getRequestPath() {
-		return String.format("<h2>Path %s</h2>", exception.getPath());
+		return String.format("<h2>Path %s</h2>", path);
 	}
 
 	private static String getStyle() {

@@ -1,6 +1,6 @@
 package com._7aske.grain.http.json;
 
-import com._7aske.grain.http.json.nodes.JsonObjectNode;
+import com._7aske.grain.web.http.codec.json.nodes.JsonObjectNode;
 import org.junit.jupiter.api.Test;
 
 class JsonObjectNodeTest {

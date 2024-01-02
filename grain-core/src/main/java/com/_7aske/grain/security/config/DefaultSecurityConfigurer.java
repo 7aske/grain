@@ -1,7 +1,7 @@
 package com._7aske.grain.security.config;
 
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.security.config.builder.SecurityConfigurationBuilder;

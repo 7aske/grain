@@ -27,4 +27,14 @@ public class StringUtils {
 
 		return builder.toString();
 	}
+
+    public static boolean equalsIgnoreCase(String str1, String str2) {
+		if (str1 == null || str2 == null) return false;
+
+		return str1.toLowerCase(Locale.ROOT).equals(str2.toLowerCase(Locale.ROOT));
+    }
+
+    public static boolean isBlank(String queryString) {
+		return queryString == null || queryString.isBlank();
+    }
 }

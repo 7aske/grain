@@ -1,7 +1,7 @@
 package com._7aske.grain.security;
 
-import com._7aske.grain.http.session.Cookie;
-import com._7aske.grain.http.session.SessionConstants;
+import com._7aske.grain.web.http.session.Cookie;
+import com._7aske.grain.web.http.session.SessionConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;

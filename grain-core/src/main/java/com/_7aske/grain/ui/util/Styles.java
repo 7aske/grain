@@ -5,8 +5,13 @@ public class Styles {
 
 	public static String getCommonStyles() {
 		return "@import url(https://fonts.googleapis.com/css?family=Roboto:300);\n" +
-				"html {\n" +
+			    "* {" +
+			    "  box-sizing:border-box;\n" +
+			    "}\n" +
+				"html, body {\n" +
 				"  min-height: 100vh;\n" +
+			    "  margin:0;\n" +
+			    "  padding:0;\n" +
 				"}\n" +
 				"header .header {\n" +
 				"  background-color: #fff;\n" +

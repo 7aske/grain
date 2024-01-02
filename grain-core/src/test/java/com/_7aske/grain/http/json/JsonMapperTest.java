@@ -1,8 +1,9 @@
 package com._7aske.grain.http.json;
 
-import com._7aske.grain.http.json.annotation.JsonAlias;
-import com._7aske.grain.http.json.annotation.JsonIgnore;
-import com._7aske.grain.http.json.nodes.JsonNode;
+import com._7aske.grain.web.http.codec.json.JsonMapper;
+import com._7aske.grain.web.http.codec.json.annotation.JsonAlias;
+import com._7aske.grain.web.http.codec.json.annotation.JsonIgnore;
+import com._7aske.grain.web.http.codec.json.nodes.JsonNode;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

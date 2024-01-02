@@ -2,7 +2,7 @@ package com._7aske.grain.ui.impl;
 
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.http.HttpContentType;
+import com._7aske.grain.web.http.ContentType;
 import com._7aske.grain.ui.LoginPage;
 import com._7aske.grain.ui.util.Styles;
 
@@ -25,7 +25,7 @@ public class DefaultLoginPage implements LoginPage {
 				"        </div>\n" +
 				"      </div>\n" +
 				"      <form method=\"post\" action=\"/login\" class=\"login-form\">\n" +
-				"        <input name=\"username\" type=\"text\" placeholder=\"Username\"/>\n" +
+				"        <input name=\"username\" type=\"text\" placeholder=\"Username\" autoFocus=\"autoFocus\"/>\n" +
 				"        <input name=\"password\" type=\"password\" placeholder=\"Password\"/>\n" +
 				"        <button>Login</button>\n" +
 				"        <div style=\"display: none\" class=\"alert error\">Invalid credentials</div>\n" +
@@ -49,11 +49,11 @@ public class DefaultLoginPage implements LoginPage {
 	@NotNull
 	@Override
 	public String getName() {
-		return "login.html";
+		return "login.gtl";
 	}
 
 	@Override
 	public @NotNull String getContentType() {
-		return HttpContentType.TEXT_HTML;
+		return ContentType.TEXT_HTML;
 	}
 }

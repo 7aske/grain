@@ -2,11 +2,12 @@ package com._7aske.grain.security.authentication;
 
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.session.Cookie;
-import com._7aske.grain.http.session.SessionConstants;
-import com._7aske.grain.http.session.SessionStore;
+import com._7aske.grain.web.http.GrainHttpResponse;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.HttpResponse;
+import com._7aske.grain.web.http.session.Cookie;
+import com._7aske.grain.web.http.session.SessionConstants;
+import com._7aske.grain.web.http.session.SessionStore;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.CookieAuthentication;
 import com._7aske.grain.security.SecurityConstants;
@@ -17,7 +18,7 @@ import com._7aske.grain.security.service.UserService;
 
 import java.util.UUID;
 
-import static com._7aske.grain.http.session.SessionConstants.SESSION_COOKIE_NAME;
+import static com._7aske.grain.web.http.session.SessionConstants.SESSION_COOKIE_NAME;
 
 @Grain
 public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -30,8 +31,8 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 
 	@Override
 	public Authentication authenticate(HttpRequest request, HttpResponse response) throws GrainSecurityException {
-		String username = request.getStringParameter("username");
-		String password = request.getStringParameter("password");
+		String username = request.getParameter("username");
+		String password = request.getParameter("password");
 
 		User user = userService.findByUsername(username);
 
@@ -54,7 +55,10 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 		sessionStore.setToken(gsid.getId(), gsid);
 		sessionStore.put(gsid.getId(), SecurityConstants.AUTHENTICATION_KEY, authentication);
 		// @Incomplete invalidate the session of the incoming request if it had one
-		response.setCookie(gsid);
+		// @Hack
+		if (response instanceof GrainHttpResponse res) {
+			res.setCookie(gsid);
+		}
 
 		return authentication;
 	}

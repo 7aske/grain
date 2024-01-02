@@ -3,7 +3,7 @@ package com._7aske.grain.security.config.builder;
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.crypto.PasswordEncoder;
 import org.junit.jupiter.api.BeforeEach;

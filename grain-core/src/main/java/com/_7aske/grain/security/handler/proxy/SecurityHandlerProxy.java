@@ -2,11 +2,11 @@ package com._7aske.grain.security.handler.proxy;
 
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.HttpResponse;
-import com._7aske.grain.http.HttpStatus;
-import com._7aske.grain.requesthandler.handler.RequestHandler;
-import com._7aske.grain.requesthandler.handler.proxy.AbstractRequestHandlerProxy;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.HttpResponse;
+import com._7aske.grain.web.http.HttpStatus;
+import com._7aske.grain.web.requesthandler.handler.RequestHandler;
+import com._7aske.grain.web.requesthandler.handler.proxy.AbstractRequestHandlerProxy;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.config.rule.RuleUrlPatternMatcher;
 

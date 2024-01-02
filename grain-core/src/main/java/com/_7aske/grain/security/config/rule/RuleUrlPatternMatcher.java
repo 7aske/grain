@@ -1,6 +1,6 @@
 package com._7aske.grain.security.config.rule;
 
-import com._7aske.grain.http.HttpRequest;
+import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.Authority;
 import com._7aske.grain.security.context.SecurityContextHolder;

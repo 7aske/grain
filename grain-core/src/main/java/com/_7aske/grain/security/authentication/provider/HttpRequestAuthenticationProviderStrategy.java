@@ -1,6 +1,6 @@
 package com._7aske.grain.security.authentication.provider;
 
-import com._7aske.grain.http.HttpRequest;
+import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.security.Authentication;
 
 /**

@@ -2,10 +2,10 @@ package com._7aske.grain.security.authentication.provider;
 
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.session.SessionStore;
-import com._7aske.grain.http.session.SessionToken;
-import com._7aske.grain.http.session.tokenprovider.HttpRequestTokenProvider;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.session.SessionStore;
+import com._7aske.grain.web.http.session.SessionToken;
+import com._7aske.grain.web.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.SecurityConstants;
 

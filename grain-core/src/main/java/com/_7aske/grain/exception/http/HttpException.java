@@ -1,10 +1,9 @@
 package com._7aske.grain.exception.http;
 
 import com._7aske.grain.exception.GrainRuntimeException;
-import com._7aske.grain.http.HttpStatus;
-import com._7aske.grain.ui.impl.ErrorPage;
+import com._7aske.grain.web.http.HttpStatus;
 
-import static com._7aske.grain.http.HttpStatus.*;
+import static com._7aske.grain.web.http.HttpStatus.*;
 
 public abstract class HttpException extends GrainRuntimeException {
 	private final HttpStatus status;
@@ -45,10 +44,6 @@ public abstract class HttpException extends GrainRuntimeException {
 
 	public String getPath() {
 		return path;
-	}
-
-	public String getHtmlMessage() {
-		return new ErrorPage(this).getContent();
 	}
 
 	public static final class BadRequest extends HttpException {

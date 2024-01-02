@@ -8,7 +8,7 @@ import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
-import com._7aske.grain.http.HttpMethod;
+import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.web.controller.annotation.*;

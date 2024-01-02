@@ -2,10 +2,12 @@ package com._7aske.grain.testpackage;
 
 import com._7aske.grain.core.component.Controller;
 import com._7aske.grain.web.controller.annotation.RequestMapping;
-import com._7aske.grain.http.HttpMethod;
-import com._7aske.grain.http.HttpRequest;
-import com._7aske.grain.http.json.annotation.JsonBody;
+import com._7aske.grain.web.http.HttpMethod;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.codec.json.annotation.JsonBody;
 import com._7aske.grain.web.view.TemplateView;
+
+import java.io.IOException;
 
 @Controller
 @RequestMapping
@@ -23,7 +25,11 @@ public class TestController {
 
 	@RequestMapping(value = "json", method = HttpMethod.POST)
 	public String postJson(HttpRequest request) {
-		return request.getBody().toString();
+		try {
+			return new String(request.getInputStream().readAllBytes());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	static class User {

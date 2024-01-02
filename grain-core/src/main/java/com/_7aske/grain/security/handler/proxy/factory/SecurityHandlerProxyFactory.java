@@ -4,8 +4,8 @@ import com._7aske.grain.core.component.Condition;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.configuration.ConfigurationKey;
-import com._7aske.grain.requesthandler.handler.RequestHandler;
-import com._7aske.grain.requesthandler.handler.proxy.factory.HandlerProxyFactory;
+import com._7aske.grain.web.requesthandler.handler.RequestHandler;
+import com._7aske.grain.web.requesthandler.handler.proxy.factory.HandlerProxyFactory;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.handler.proxy.SecurityHandlerProxy;
 
