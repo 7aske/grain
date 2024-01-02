@@ -10,10 +10,6 @@
     <name>grain-parent</name>
     <url>https://github.com/7aske/grain</url>
 
-    <modules>
-        <module>grain-core</module>
-    </modules>
-
     <properties>
         <revision>1.0.6-SNAPSHOT</revision>
         <java.version>17</java.version>
@@ -24,6 +20,10 @@
         <slf4j.version>2.0.7</slf4j.version>
         <junit.version>5.9.3</junit.version>
     </properties>
+
+    <modules>
+        <module>grain-core</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
