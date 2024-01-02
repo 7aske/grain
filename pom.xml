@@ -207,7 +207,7 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <id>release-prepare</id>
+                                <id>default</id>
                                 <goals>
                                     <goal>prepare</goal>
                                     <goal>perform</goal>
@@ -222,6 +222,7 @@
                         <version>0.1.6</version>
                         <extensions>true</extensions>
                         <configuration>
+                            <skipPublishing>true</skipPublishing>
                             <publishingServerId>central</publishingServerId>
                             <tokenEnabled>true</tokenEnabled>
                         </configuration>
