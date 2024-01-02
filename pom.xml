@@ -208,7 +208,6 @@
                             <execution>
                                 <id>default</id>
                                 <goals>
-                                    <goal>prepare</goal>
                                     <goal>perform</goal>
                                 </goals>
                                 <phase>deploy</phase>
