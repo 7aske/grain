@@ -211,6 +211,15 @@
                             <publishingServerId>central</publishingServerId>
                             <tokenEnabled>true</tokenEnabled>
                         </configuration>
+                        <executions>
+                            <execution>
+                                <id>publish-central</id>
+                                <goals>
+                                    <goal>publish</goal>
+                                </goals>
+                                <phase>release:perform</phase>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
