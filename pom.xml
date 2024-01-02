@@ -15,6 +15,7 @@
     </modules>
 
     <properties>
+        <revision>1.0.6-SNAPSHOT</revision>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -29,7 +30,7 @@
             <dependency>
                 <groupId>com.7aske.grain</groupId>
                 <artifactId>core</artifactId>
-                <version>${project.version}</version>
+                <version>${revision}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -124,10 +125,21 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.16.0</version>
+                <configuration>
+                    <property>artifact.revision</property>
+                    <newVersion>${project.version}</newVersion>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.1</version>
                 <configuration>
+                    <preparationGoals>clean version-set-property</preparationGoals>
+                    <completionGoals>versions:set-property</completionGoals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
