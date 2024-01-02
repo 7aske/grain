@@ -4,7 +4,7 @@
 
     <groupId>com.7aske.grain</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
     <packaging>pom</packaging>
     <description>Grain web framework</description>
     <name>grain-parent</name>
@@ -157,7 +157,7 @@
         <url>https://github.com/7aske/grain.git</url>
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v1.0.5</tag>
     </scm>
 
     <pluginRepositories>
