@@ -138,7 +138,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.1</version>
                 <configuration>
-                    <preparationGoals>clean version-set-property</preparationGoals>
+                    <preparationGoals>clean versions:set-property</preparationGoals>
                     <completionGoals>versions:set-property</completionGoals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                 </configuration>
