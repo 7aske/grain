@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com._7aske.grain</groupId>
+    <groupId>com.7aske.grain</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
     <description>Grain web framework</description>
     <name>grain-parent</name>
@@ -15,6 +15,7 @@
     </modules>
 
     <properties>
+        <revision>1.0.2-SNAPSHOT</revision>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -23,6 +24,16 @@
         <slf4j.version>2.0.7</slf4j.version>
         <junit.version>5.9.3</junit.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.7aske.grain</groupId>
+                <artifactId>core</artifactId>
+                <version>${revision}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -72,9 +83,9 @@
                 <version>3.0.1</version>
             </plugin>
             <plugin>
-                <groupId>com._7aske.grain</groupId>
+                <groupId>com.7aske.grain</groupId>
                 <artifactId>grain-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.1</version>
                 <executions>
                     <execution>
                         <id>package</id>
@@ -118,8 +129,44 @@
                 <executions>
                     <execution>
                         <id>attach-sources</id>
-                        <phase>deploy</phase>
+                        <phase>compile</phase>
                         <goals><goal>jar-no-fork</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.7.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
                     </execution>
                 </executions>
             </plugin>
@@ -141,13 +188,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <distributionManagement>
-        <repository>
-            <id>7aske-repository-releases</id>
-            <name>7aske repository</name>
-            <url>https://maven.7aske.xyz/releases</url>
-        </repository>
-    </distributionManagement>
 
     <licenses>
         <license>
@@ -156,4 +196,61 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <profiles>
+        <profile>
+            <id>deploy-central</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.1.6</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <tokenEnabled>true</tokenEnabled>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>deploy-local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>7aske-repository-releases</id>
+                    <name>7aske repository</name>
+                    <url>https://maven.7aske.xyz/releases</url>
+                </repository>
+                <snapshotRepository>
+                    <id>7aske-repository-snapshots</id>
+                    <name>7aske repository</name>
+                    <url>https://maven.7aske.xyz/releases</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
+    <developers>
+        <developer>
+            <id>7aske</id>
+            <name>Nikola Tasic</name>
+            <email>ntasic7@gmail.com</email>
+            <url>https://7aske.com</url>
+        </developer>
+    </developers>
 </project>
