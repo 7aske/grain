@@ -6,6 +6,7 @@
         <groupId>com.7aske.grain</groupId>
         <artifactId>parent</artifactId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>core</artifactId>
