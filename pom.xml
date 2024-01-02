@@ -78,11 +78,6 @@
                 <version>3.1.1</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.1</version>
-            </plugin>
-            <plugin>
                 <groupId>com.7aske.grain</groupId>
                 <artifactId>grain-maven-plugin</artifactId>
                 <version>1.0.1</version>
@@ -203,6 +198,20 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>release-prepare</id>
+                                <goals>
+                                    <goal>prepare</goal>
+                                </goals>
+                                <phase>deploy</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <version>0.1.6</version>
@@ -217,7 +226,23 @@
                                 <goals>
                                     <goal>publish</goal>
                                 </goals>
-                                <phase>release:perform</phase>
+                                <phase>deploy</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>default</id>
+                                <goals>
+                                    <goal>perform</goal>
+                                </goals>
+                                <configuration>
+                                    <goals>deploy</goals>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -251,6 +276,31 @@
                     <url>https://maven.7aske.xyz/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-release-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>release-prepare</id>
+                                <goals>
+                                    <goal>prepare</goal>
+                                </goals>
+                                <phase>deploy</phase>
+                            </execution>
+                            <execution>
+                                <id>release-perform</id>
+                                <goals>
+                                    <goal>perform</goal>
+                                </goals>
+                                <phase>deploy</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
