@@ -239,7 +239,7 @@
                 <snapshotRepository>
                     <id>7aske-repository-snapshots</id>
                     <name>7aske repository</name>
-                    <url>https://maven.7aske.xyz/releases</url>
+                    <url>https://maven.7aske.xyz/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
         </profile>
