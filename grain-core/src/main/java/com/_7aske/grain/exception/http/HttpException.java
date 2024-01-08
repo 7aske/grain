@@ -46,7 +46,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		return path;
 	}
 
-	public static final class BadRequest extends HttpException {
+	public static class BadRequest extends HttpException {
 		public BadRequest(String path) {
 			super(BAD_REQUEST, path);
 		}
@@ -68,7 +68,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class Unauthorized extends HttpException {
+	public static class Unauthorized extends HttpException {
 		public Unauthorized(String path) {
 			super(UNAUTHORIZED, path);
 		}
@@ -90,7 +90,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class PaymentRequired extends HttpException {
+	public static class PaymentRequired extends HttpException {
 		public PaymentRequired(String path) {
 			super(PAYMENT_REQUIRED, path);
 		}
@@ -112,7 +112,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class Forbidden extends HttpException {
+	public static class Forbidden extends HttpException {
 		public Forbidden(String path) {
 			super(FORBIDDEN, path);
 		}
@@ -134,7 +134,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class NotFound extends HttpException {
+	public static class NotFound extends HttpException {
 		public NotFound(String path) {
 			super(NOT_FOUND, path);
 		}
@@ -156,7 +156,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class MethodNotAllowed extends HttpException {
+	public static class MethodNotAllowed extends HttpException {
 		public MethodNotAllowed(String path) {
 			super(METHOD_NOT_ALLOWED, path);
 		}
@@ -178,7 +178,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class NotAcceptable extends HttpException {
+	public static class NotAcceptable extends HttpException {
 		public NotAcceptable(String path) {
 			super(NOT_ACCEPTABLE, path);
 		}
@@ -200,7 +200,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class ProxyAuthenticationRequired extends HttpException {
+	public static class ProxyAuthenticationRequired extends HttpException {
 		public ProxyAuthenticationRequired(String path) {
 			super(PROXY_AUTHENTICATION_REQUIRED, path);
 		}
@@ -222,7 +222,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class RequestTimeout extends HttpException {
+	public static class RequestTimeout extends HttpException {
 		public RequestTimeout(String path) {
 			super(REQUEST_TIMEOUT, path);
 		}
@@ -244,7 +244,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class Conflict extends HttpException {
+	public static class Conflict extends HttpException {
 		public Conflict(String path) {
 			super(CONFLICT, path);
 		}
@@ -266,7 +266,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class Gone extends HttpException {
+	public static class Gone extends HttpException {
 		public Gone(String path) {
 			super(GONE, path);
 		}
@@ -288,7 +288,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class LengthRequired extends HttpException {
+	public static class LengthRequired extends HttpException {
 		public LengthRequired(String path) {
 			super(LENGTH_REQUIRED, path);
 		}
@@ -310,7 +310,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class PreconditionFailed extends HttpException {
+	public static class PreconditionFailed extends HttpException {
 		public PreconditionFailed(String path) {
 			super(PRECONDITION_FAILED, path);
 		}
@@ -332,7 +332,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class PayloadTooLarge extends HttpException {
+	public static class PayloadTooLarge extends HttpException {
 		public PayloadTooLarge(String path) {
 			super(PAYLOAD_TOO_LARGE, path);
 		}
@@ -355,7 +355,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class RequestEntityTooLarge extends HttpException {
+	public static class RequestEntityTooLarge extends HttpException {
 		public RequestEntityTooLarge(String path) {
 			super(REQUEST_ENTITY_TOO_LARGE, path);
 		}
@@ -377,7 +377,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class UriTooLong extends HttpException {
+	public static class UriTooLong extends HttpException {
 		public UriTooLong(String path) {
 			super(URI_TOO_LONG, path);
 		}
@@ -400,7 +400,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class RequestUriTooLong extends HttpException {
+	public static class RequestUriTooLong extends HttpException {
 		public RequestUriTooLong(String path) {
 			super(REQUEST_URI_TOO_LONG, path);
 		}
@@ -422,7 +422,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class UnsupportedMediaType extends HttpException {
+	public static class UnsupportedMediaType extends HttpException {
 		public UnsupportedMediaType(String path) {
 			super(UNSUPPORTED_MEDIA_TYPE, path);
 		}
@@ -444,7 +444,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class RequestedRangeNotSatisfiable extends HttpException {
+	public static class RequestedRangeNotSatisfiable extends HttpException {
 		public RequestedRangeNotSatisfiable(String path) {
 			super(REQUESTED_RANGE_NOT_SATISFIABLE, path);
 		}
@@ -466,7 +466,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class ExpectationFailed extends HttpException {
+	public static class ExpectationFailed extends HttpException {
 		public ExpectationFailed(String path) {
 			super(EXPECTATION_FAILED, path);
 		}
@@ -488,7 +488,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class IAmATeapot extends HttpException {
+	public static class IAmATeapot extends HttpException {
 		public IAmATeapot(String path) {
 			super(I_AM_A_TEAPOT, path);
 		}
@@ -511,7 +511,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class InsufficientSpaceOnResource extends HttpException {
+	public static class InsufficientSpaceOnResource extends HttpException {
 		public InsufficientSpaceOnResource(String path) {
 			super(INSUFFICIENT_SPACE_ON_RESOURCE, path);
 		}
@@ -534,7 +534,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class MethodFailure extends HttpException {
+	public static class MethodFailure extends HttpException {
 		public MethodFailure(String path) {
 			super(METHOD_FAILURE, path);
 		}
@@ -557,7 +557,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class DestinationLocked extends HttpException {
+	public static class DestinationLocked extends HttpException {
 		public DestinationLocked(String path) {
 			super(DESTINATION_LOCKED, path);
 		}
@@ -579,7 +579,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class UnprocessableEntity extends HttpException {
+	public static class UnprocessableEntity extends HttpException {
 		public UnprocessableEntity(String path) {
 			super(UNPROCESSABLE_ENTITY, path);
 		}
@@ -601,7 +601,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class Locked extends HttpException {
+	public static class Locked extends HttpException {
 		public Locked(String path) {
 			super(LOCKED, path);
 		}
@@ -623,7 +623,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class FailedDependency extends HttpException {
+	public static class FailedDependency extends HttpException {
 		public FailedDependency(String path) {
 			super(FAILED_DEPENDENCY, path);
 		}
@@ -645,7 +645,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class TooEarly extends HttpException {
+	public static class TooEarly extends HttpException {
 		public TooEarly(String path) {
 			super(TOO_EARLY, path);
 		}
@@ -667,7 +667,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class UpgradeRequired extends HttpException {
+	public static class UpgradeRequired extends HttpException {
 		public UpgradeRequired(String path) {
 			super(UPGRADE_REQUIRED, path);
 		}
@@ -689,7 +689,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class PreconditionRequired extends HttpException {
+	public static class PreconditionRequired extends HttpException {
 		public PreconditionRequired(String path) {
 			super(PRECONDITION_REQUIRED, path);
 		}
@@ -711,7 +711,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class TooManyRequests extends HttpException {
+	public static class TooManyRequests extends HttpException {
 		public TooManyRequests(String path) {
 			super(TOO_MANY_REQUESTS, path);
 		}
@@ -734,7 +734,7 @@ public abstract class HttpException extends GrainRuntimeException {
 	}
 
 	@Deprecated
-	public static final class RequestHeaderFieldsTooLarge extends HttpException {
+	public static class RequestHeaderFieldsTooLarge extends HttpException {
 		public RequestHeaderFieldsTooLarge(String path) {
 			super(REQUEST_ENTITY_TOO_LARGE, path);
 		}
@@ -756,7 +756,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class UnavailableForLegalReasons extends HttpException {
+	public static class UnavailableForLegalReasons extends HttpException {
 		public UnavailableForLegalReasons(String path) {
 			super(UNAVAILABLE_FOR_LEGAL_REASONS, path);
 		}
@@ -778,7 +778,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class InternalServerError extends HttpException {
+	public static class InternalServerError extends HttpException {
 		public InternalServerError(String path) {
 			super(INTERNAL_SERVER_ERROR, path);
 		}
@@ -800,7 +800,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class NotImplemented extends HttpException {
+	public static class NotImplemented extends HttpException {
 		public NotImplemented(String path) {
 			super(NOT_IMPLEMENTED, path);
 		}
@@ -822,7 +822,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class BadGateway extends HttpException {
+	public static class BadGateway extends HttpException {
 		public BadGateway(String path) {
 			super(BAD_GATEWAY, path);
 		}
@@ -844,7 +844,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class ServiceUnavailable extends HttpException {
+	public static class ServiceUnavailable extends HttpException {
 		public ServiceUnavailable(String path) {
 			super(SERVICE_UNAVAILABLE, path);
 		}
@@ -866,7 +866,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class GatewayTimeout extends HttpException {
+	public static class GatewayTimeout extends HttpException {
 		public GatewayTimeout(String path) {
 			super(GATEWAY_TIMEOUT, path);
 		}
@@ -888,7 +888,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class HttpVersionNotSupported extends HttpException {
+	public static class HttpVersionNotSupported extends HttpException {
 		public HttpVersionNotSupported(String path) {
 			super(HTTP_VERSION_NOT_SUPPORTED, path);
 		}
@@ -910,7 +910,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class VariantAlsoNegotiates extends HttpException {
+	public static class VariantAlsoNegotiates extends HttpException {
 		public VariantAlsoNegotiates(String path) {
 			super(VARIANT_ALSO_NEGOTIATES, path);
 		}
@@ -932,7 +932,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class InsufficientStorage extends HttpException {
+	public static class InsufficientStorage extends HttpException {
 		public InsufficientStorage(String path) {
 			super(INSUFFICIENT_STORAGE, path);
 		}
@@ -954,7 +954,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class LoopDetected extends HttpException {
+	public static class LoopDetected extends HttpException {
 		public LoopDetected(String path) {
 			super(LOOP_DETECTED, path);
 		}
@@ -976,7 +976,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class NotExtended extends HttpException {
+	public static class NotExtended extends HttpException {
 		public NotExtended(String path) {
 			super(NOT_EXTENDED, path);
 		}
@@ -998,7 +998,7 @@ public abstract class HttpException extends GrainRuntimeException {
 		}
 	}
 
-	public static final class NetworkAuthenticationRequired extends HttpException {
+	public static class NetworkAuthenticationRequired extends HttpException {
 		public NetworkAuthenticationRequired(String path) {
 			super(NETWORK_AUTHENTICATION_REQUIRED, path);
 		}

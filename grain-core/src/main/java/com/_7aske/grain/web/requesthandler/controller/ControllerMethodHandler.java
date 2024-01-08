@@ -1,6 +1,14 @@
 package com._7aske.grain.web.requesthandler.controller;
 
 import com._7aske.grain.constants.ValueConstants;
+import com._7aske.grain.security.context.SecurityContextHolder;
+import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.util.RequestParams;
+import com._7aske.grain.web.controller.annotation.PathVariable;
+import com._7aske.grain.web.controller.annotation.RequestParam;
+import com._7aske.grain.web.controller.annotation.RequestPart;
+import com._7aske.grain.web.controller.converter.Converter;
+import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.http.*;
 import com._7aske.grain.web.http.codec.form.FormBody;
 import com._7aske.grain.web.http.codec.form.FormDataMapper;
@@ -8,16 +16,11 @@ import com._7aske.grain.web.http.codec.json.JsonMapper;
 import com._7aske.grain.web.http.codec.json.JsonResponse;
 import com._7aske.grain.web.http.codec.json.annotation.JsonBody;
 import com._7aske.grain.web.http.codec.json.nodes.JsonNode;
+import com._7aske.grain.web.http.multipart.Part;
+import com._7aske.grain.web.http.multipart.exception.MultipartRequiredException;
 import com._7aske.grain.web.http.session.Session;
 import com._7aske.grain.web.requesthandler.controller.wrapper.ControllerMethodWrapper;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
-import com._7aske.grain.security.context.SecurityContextHolder;
-import com._7aske.grain.util.HttpPathUtil;
-import com._7aske.grain.util.RequestParams;
-import com._7aske.grain.web.controller.annotation.PathVariable;
-import com._7aske.grain.web.controller.annotation.RequestParam;
-import com._7aske.grain.web.controller.converter.Converter;
-import com._7aske.grain.web.controller.converter.ConverterRegistry;
 import com._7aske.grain.web.view.View;
 import com._7aske.grain.web.view.ViewResolver;
 
@@ -82,6 +85,13 @@ public class ControllerMethodHandler implements RequestHandler {
 				} else {
 					params[i] = new FormDataMapper<>(param.getType()).parse(request.getParameterMap());
 				}
+			} else if (param.isAnnotationPresent(RequestPart.class)) {
+				RequestPart requestPart = param.getAnnotation(RequestPart.class);
+				Part part = request.getPart(requestPart.value());
+				if (requestPart.required() && part == null) {
+					throw new MultipartRequiredException(requestPart, request);
+				}
+				params[i] = part;
 			} else if (param.isAnnotationPresent(RequestParam.class)) {
 				RequestParam requestParam = param.getAnnotation(RequestParam.class);
 				RequestParams requestParams = new RequestParams(request.getParameterMap());
