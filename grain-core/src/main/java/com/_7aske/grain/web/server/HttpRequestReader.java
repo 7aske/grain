@@ -100,15 +100,10 @@ public class HttpRequestReader implements AutoCloseable {
         } else if (contentLength > 0 && Objects.equals(request.getHeader(CONTENT_TYPE), MULTIPART_FORM_DATA)) {
             parseMultipart(request, reader);
         } else if (contentLength > 0) {
-            OutputStream requestOutputStream = request.getOutputStream();
-            int c;
-            do {
-                c = reader.read();
-                if (c == -1) {
-                    break;
-                }
-                requestOutputStream.write(c);
-            } while (true);
+            while (contentLength-- > 0) {
+                OutputStream requestOutputStream = request.getOutputStream();
+                requestOutputStream.write(reader.read());
+            }
         }
 
         return request;

@@ -224,16 +224,23 @@ public class JsonMapper {
     }
 
     private JsonNode getFieldValue(Field field, JsonNode root) {
+        JsonNode value = null;
         if (field.isAnnotationPresent(JsonAlias.class)) {
             JsonAlias alias = field.getAnnotation(JsonAlias.class);
 
             for (String name : alias.value()) {
                 if (root.asObject().containsKey(name)) {
-                    return root.get(name);
+                    value = root.get(name);
+                    break;
                 }
             }
         }
 
-        return root.get(field.getName());
+        if (value == null)
+            value = root.get(field.getName());
+
+        return value == null
+                ? JsonNullNode.INSTANCE
+                : value;
     }
 }

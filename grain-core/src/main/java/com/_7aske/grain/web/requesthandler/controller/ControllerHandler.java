@@ -3,6 +3,8 @@ package com._7aske.grain.web.requesthandler.controller;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.web.controller.converter.ConverterRegistry;
+import com._7aske.grain.web.controller.parameter.ParameterConverterRegistry;
+import com._7aske.grain.web.controller.response.ResponseWriterRegistry;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.http.codec.json.JsonMapper;
@@ -27,12 +29,11 @@ public class ControllerHandler implements RequestHandler {
 	private final ControllerWrapper wrapper;
 
 	public ControllerHandler(ControllerWrapper wrapper,
-							 ConverterRegistry converterRegistry,
-							 ViewResolver viewResolver,
-							 JsonMapper jsonMapper) {
+							 ParameterConverterRegistry parameterConverterRegistry,
+							 ResponseWriterRegistry responseWriterRegistry) {
 		this.wrapper = wrapper;
 		this.methodHandlers = wrapper.getMethods().stream()
-				.map(method -> new ControllerMethodHandler(method, converterRegistry, viewResolver, jsonMapper))
+				.map(method -> new ControllerMethodHandler(method, parameterConverterRegistry, responseWriterRegistry))
 				.toList();
 	}
 

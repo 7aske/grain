@@ -2,6 +2,8 @@ package com._7aske.grain.web.requesthandler.controller;
 
 import com._7aske.grain.core.component.*;
 import com._7aske.grain.exception.GrainRuntimeException;
+import com._7aske.grain.web.controller.parameter.ParameterConverterRegistry;
+import com._7aske.grain.web.controller.response.ResponseWriterRegistry;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.http.codec.json.JsonMapper;
@@ -28,20 +30,16 @@ import java.util.stream.Collectors;
 @Order(256)
 public class ControllerHandlerRegistry implements HandlerRegistry {
 	public List<RequestHandler> handlers = new ArrayList<>();
-	private final ConverterRegistry converterRegistry;
-	private final ViewResolver viewResolver;
 	private final HandlerProxyFactory handlerProxyFactory;
-	private final JsonMapper jsonMapper;
+	private final ParameterConverterRegistry parameterConverterRegistry;
+	private final ResponseWriterRegistry responseWriterRegistry;
 
 	public ControllerHandlerRegistry(HandlerProxyFactory handlerProxyFactory,
-									 ConverterRegistry converterRegistry,
-									 ViewResolverProvider viewResolver,
-									 JsonMapper jsonMapper) {
+                                     ParameterConverterRegistry parameterConverterRegistry, ResponseWriterRegistry responseWriterRegistry) {
 		this.handlerProxyFactory = handlerProxyFactory;
-		this.converterRegistry = converterRegistry;
-		this.viewResolver = viewResolver;
-		this.jsonMapper = jsonMapper;
-	}
+        this.parameterConverterRegistry = parameterConverterRegistry;
+        this.responseWriterRegistry = responseWriterRegistry;
+    }
 
 	@AfterInit
 	private void getHandlersInternal(DependencyContainer container) {
@@ -55,7 +53,7 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 		handlers = container.getGrainsAnnotatedBy(Controller.class)
 				.stream()
 				.map(ControllerWrapper::new)
-				.map(wrapper -> new ControllerHandler(wrapper, converterRegistry, viewResolver, jsonMapper))
+				.map(wrapper -> new ControllerHandler(wrapper, parameterConverterRegistry, responseWriterRegistry))
 				.collect(Collectors.toList());
 	}
 

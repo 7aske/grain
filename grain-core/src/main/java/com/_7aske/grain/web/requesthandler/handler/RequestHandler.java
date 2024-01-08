@@ -1,5 +1,6 @@
 package com._7aske.grain.web.requesthandler.handler;
 
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.controller.ControllerMethodHandler;
@@ -44,5 +45,5 @@ public interface RequestHandler {
 	 *
 	 * @return Path of the handler.
 	 */
-	String getPath();
+	@NotNull String getPath();
 }

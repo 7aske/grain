@@ -1,0 +1,32 @@
+package com._7aske.grain.web.controller.response.impl;
+
+import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.web.controller.response.AbstractResponseWriterSupport;
+import com._7aske.grain.web.http.ContentType;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.HttpResponse;
+import com._7aske.grain.web.requesthandler.handler.RequestHandler;
+
+import java.io.IOException;
+
+import static com._7aske.grain.web.http.HttpHeaders.CONTENT_TYPE;
+
+@Grain
+public class StringResponseWriter extends AbstractResponseWriterSupport<String> {
+    private static final String REDIRECT_PREFIX = "redirect:";
+
+    protected StringResponseWriter() {
+        super(String.class);
+    }
+
+    @Override
+    public void writeInternal(String returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+        if (returnValue.startsWith(REDIRECT_PREFIX)) {
+            response.sendRedirect(returnValue.substring(REDIRECT_PREFIX.length()));
+        } else {
+            response.getOutputStream().write(returnValue.getBytes());
+            if (response.getHeader(CONTENT_TYPE) == null)
+                response.setHeader(CONTENT_TYPE, ContentType.TEXT_PLAIN);
+        }
+    }
+}

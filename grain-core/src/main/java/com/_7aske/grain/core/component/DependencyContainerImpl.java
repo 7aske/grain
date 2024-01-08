@@ -86,17 +86,18 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 							: d.getProvider().getType().getPackageName();
 					return !depPackage.startsWith(basePackage);
 				})
-				.collect(Collectors.toList());
+				.sorted(Injectable.getComparator())
+				.toList();
 
 		if (userDefined.size() > 1) {
 			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
 		}
 
 		if (userDefined.size() == 1)
-			return Optional.of(userDefined.get(0));
+			return userDefined.stream().findFirst();
 
 		// Should be sorted by @Order
-		return list.stream().findFirst();
+		return list.stream().min(Injectable.getComparator());
 	}
 
 	@Override

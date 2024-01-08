@@ -10,7 +10,7 @@ import com._7aske.grain.security.Authentication;
 import java.util.List;
 
 @Grain
-@Order(255)
+@Order(Integer.MIN_VALUE)
 public class ViewResolverProvider implements ViewResolver {
 	private final List<ViewResolver> viewResolvers;
 
