@@ -110,6 +110,22 @@ public class ByteBuffer extends OutputStream {
         buffer.position(size);
     }
 
+    public boolean startsWith(byte[] start) {
+        if (start.length > size) {
+            return false;
+        }
+
+        return equals(0, start.length, start, 0, start.length);
+    }
+
+    public boolean endsWith(byte[] end) {
+        if (end.length > size) {
+            return false;
+        }
+
+        return equals(size - end.length, size, end, 0, end.length);
+    }
+
     private void ensureCapacity(int newSize) {
         if (newSize >= maxSize) {
             maxSize *= 2;
@@ -119,11 +135,10 @@ public class ByteBuffer extends OutputStream {
 
     public void resize(int newSize) {
         if (newSize <= size) {
-            // downsizing will erase data
             return;
         }
-
-        resizeBuffer(buffer, newSize);
+        maxSize = newSize;
+        buffer = resizeBuffer(buffer, maxSize);
     }
 
     private static java.nio.ByteBuffer resizeBuffer(final java.nio.ByteBuffer in, int newSize) {

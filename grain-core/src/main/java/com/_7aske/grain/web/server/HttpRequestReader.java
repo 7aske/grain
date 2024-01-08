@@ -31,6 +31,7 @@ import static com._7aske.grain.web.http.HttpHeaders.*;
 
 public class HttpRequestReader implements AutoCloseable {
     private final BufferedInputStream reader;
+    private final ByteBuffer buffer;
     public static final Pattern QUERY_PARAMS_DELIMITER_REGEX = Pattern.compile("\\?");
     public static final Pattern URL_ENCODED_VALUE_LIST_SEPARATOR_REGEX = Pattern.compile("\\s*,\\s*");
     public static final Pattern URL_ENCODED_VALUE_SEPARATOR = Pattern.compile("=");
@@ -41,34 +42,25 @@ public class HttpRequestReader implements AutoCloseable {
 
     public HttpRequestReader(BufferedInputStream bufferedInputStream) {
         this.reader = bufferedInputStream;
+        this.buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
     }
 
 
     public GrainHttpRequest readHttpRequest() throws IOException {
-        GrainHttpRequest request = new GrainHttpRequest();
-        StringBuilder buffer = new StringBuilder();
+        buffer.resize(reader.available());
 
+        GrainHttpRequest request = new GrainHttpRequest();
         request.setScheme(HTTP);
 
-        int c;
-        do {
-            c = reader.read();
-            if (c == -1) {
-                break;
-            }
-            buffer.appendCodePoint(c);
-        } while (!endsWith(buffer, CRLF + CRLF));
-
-        int crlfIndex = buffer.indexOf(CRLF);
-        if (crlfIndex == -1) {
-            throw new HttpParsingException("Invalid HTTP request line");
-        }
+        // request line
+        buffer.writeUntil(reader, b -> !b.endsWith(CRLF_BYTES));
+        parseRequestLine(buffer.toString(), request);
+        buffer.reset();
 
 
-        parseRequestLine(buffer, crlfIndex, request);
-
-        String headersString = buffer.substring(crlfIndex + CRLF_LEN, buffer.length() - CRLF_LEN);
-        Map<String, HttpHeader> headers = parseHeaders(headersString);
+        buffer.writeUntil(reader, b -> !b.endsWith(CRLFCRLF_BYTES));
+        Map<String, HttpHeader> headers = parseHeaders(buffer.toString());
+        buffer.reset();
 
         for (Map.Entry<String, HttpHeader> entry : headers.entrySet()) {
             if (entry.getKey().equals(COOKIE)) {
@@ -109,6 +101,7 @@ public class HttpRequestReader implements AutoCloseable {
             parseMultipart(request, reader);
         } else if (contentLength > 0) {
             OutputStream requestOutputStream = request.getOutputStream();
+            int c;
             do {
                 c = reader.read();
                 if (c == -1) {
@@ -131,7 +124,7 @@ public class HttpRequestReader implements AutoCloseable {
 
         // Allocate to some sane initial size. Reader.available() returns
         // an estimated (not accurate) amount of bytes available.
-        ByteBuffer buffer = ByteBuffer.allocate(reader.available());
+        buffer.resize(reader.available());
 
         buffer.writeN(reader, boundaryCrlf.length);
         if (!ArrayUtil.equals(buffer, boundaryCrlf)) {
@@ -141,14 +134,14 @@ public class HttpRequestReader implements AutoCloseable {
 
         while (reader.available() > 0) {
             // read headers
-            buffer.writeUntil(reader, b -> !endsWith(b, CRLFCRLF_BYTES));
+            buffer.writeUntil(reader, b -> !b.endsWith(CRLFCRLF_BYTES));
             Map<String, HttpHeader> headers = parseHeaders(buffer.toString());
             buffer.reset();
 
             // read body
-            buffer.writeUntil(reader, b -> !endsWith(b, boundary));
+            buffer.writeUntil(reader, b -> !b.endsWith(boundary));
             buffer.setLength(buffer.length() - boundary.length); // trim back boundary
-            if (endsWith(buffer, CRLF_BYTES)) {
+            if (buffer.endsWith(CRLF_BYTES)) {
                 buffer.setLength(buffer.length() - CRLF_LEN);
             }
 
@@ -171,7 +164,7 @@ public class HttpRequestReader implements AutoCloseable {
 
             // next two bytes if they exists are either -- or \r\n
             buffer.writeN(reader, 2);
-            if (endsWith(buffer, BOUNDARY_SEP_BYTES)) {
+            if (buffer.endsWith(BOUNDARY_SEP_BYTES)) {
                 break;
             }
 
@@ -208,8 +201,7 @@ public class HttpRequestReader implements AutoCloseable {
         return parameters;
     }
 
-    private void parseRequestLine(StringBuilder buffer, int crlfIndex, GrainHttpRequest request) {
-        String requestLineString = buffer.substring(0, crlfIndex);
+    private void parseRequestLine(String requestLineString, GrainHttpRequest request) {
         String[] requestLineParts = REQUEST_LINE_SEPARATOR.split(requestLineString);
 
 
@@ -225,7 +217,7 @@ public class HttpRequestReader implements AutoCloseable {
             request.setQueryString(pathParts[1]);
         }
         request.setPath(pathParts[0]);
-        request.setVersion(requestLineParts[2]);
+        request.setVersion(requestLineParts[2].trim()); // trim \r\n
     }
 
 
@@ -234,32 +226,6 @@ public class HttpRequestReader implements AutoCloseable {
                 .map(HttpHeader::parse)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toMap(HttpHeader::getName, Function.identity()));
-    }
-
-    private boolean endsWith(ByteBuffer buffer, byte[] end) {
-        int bufLen = buffer.length();
-        int endLen = end.length;
-        if (bufLen < endLen) {
-            return false;
-        }
-
-
-        return ArrayUtil.equals(
-                buffer, bufLen - endLen, bufLen,
-                end, 0, endLen);
-    }
-
-    private boolean endsWith(StringBuilder buffer, CharSequence end) {
-        int bufLen = buffer.length();
-        int endLen = end.length();
-        if (bufLen < endLen) {
-            return false;
-        }
-
-        return StreamUtil.equals(
-                buffer.substring(bufLen - endLen).codePoints(),
-                end.codePoints()
-        );
     }
 
     @Override
