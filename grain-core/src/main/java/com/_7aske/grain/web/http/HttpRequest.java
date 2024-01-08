@@ -1,5 +1,6 @@
 package com._7aske.grain.web.http;
 
+import com._7aske.grain.web.http.multipart.Part;
 import com._7aske.grain.web.http.session.Cookie;
 import com._7aske.grain.web.http.session.Session;
 
@@ -174,9 +175,9 @@ public interface HttpRequest {
 
 //	void logout() throws ServletException;
 
-//	Collection<Part> getParts() throws IOException, ServletException;
+	Collection<Part> getParts();
 
-//	Part getPart(String name) throws IOException, ServletException;
+	Part getPart(String name);
 
 //	<T extends HttpUpgradeHandler> T upgrade(Class<T> httpUpgradeHandlerClass)
 //			throws IOException, ServletException;

@@ -2,6 +2,7 @@ package com._7aske.grain.web.http;
 
 import com._7aske.grain.util.ArrayUtil;
 import com._7aske.grain.util.StringUtils;
+import com._7aske.grain.web.http.multipart.Part;
 import com._7aske.grain.web.http.session.Cookie;
 import com._7aske.grain.web.http.session.Session;
 
@@ -10,6 +11,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.*;
+
+import static com._7aske.grain.web.http.HttpConstants.BOUNDARY_SEP;
 
 public class GrainHttpRequest implements HttpRequest {
 	private static final int BUFFER_SIZE = 8 * 1024;
@@ -36,12 +39,15 @@ public class GrainHttpRequest implements HttpRequest {
 	private String localName;
 	private String localAddr;
 	private int localPort;
+	private String boundary;
+	private final List<Part> parts;
 
 	public GrainHttpRequest() {
 		this.headers = new HashMap<>();
 		this.parameters = new HashMap<>();
 		this.cookies = new HashMap<>();
 		this.attributes = new HashMap<>();
+		this.parts = new ArrayList<>(0);
 		this.requestId = UUID.randomUUID().toString();
 	}
 
@@ -379,6 +385,23 @@ public class GrainHttpRequest implements HttpRequest {
 		return session;
 	}
 
+	@Override
+	public List<Part> getParts() {
+		return parts;
+	}
+
+	public void addPart(Part part) {
+		this.parts.add(part);
+	}
+
+	@Override
+	public Part getPart(String name) {
+		return parts.stream()
+				.filter(part -> part.getName().equals(name))
+				.findFirst()
+				.orElse(null);
+	}
+
 	public void setSession(Session session) {
 		this.session = session;
 	}
@@ -401,5 +424,13 @@ public class GrainHttpRequest implements HttpRequest {
 	@Override
 	public Set<String> getAttributeNames() {
 		return attributes.keySet();
+	}
+	
+	public String getBoundary() {
+		return BOUNDARY_SEP + boundary;
+	}
+	
+	public void setBoundary(String paramPart) {
+		boundary = paramPart;
 	}
 }

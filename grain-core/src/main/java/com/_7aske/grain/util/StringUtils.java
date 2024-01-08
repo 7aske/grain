@@ -37,4 +37,9 @@ public class StringUtils {
     public static boolean isBlank(String queryString) {
 		return queryString == null || queryString.isBlank();
     }
+
+    public static String stripQuotes(String paramPart) {
+		return paramPart.replaceAll("^\"", "")
+				.replaceAll("\"$", "");
+    }
 }

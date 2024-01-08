@@ -150,7 +150,7 @@
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
-                        <phase>verify</phase>
+                        <phase>deploy</phase>
                         <goals>
                             <goal>sign</goal>
                         </goals>
@@ -175,7 +175,7 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <phase>package</phase>
+                        <phase>deploy</phase>
                     </execution>
                 </executions>
             </plugin>
