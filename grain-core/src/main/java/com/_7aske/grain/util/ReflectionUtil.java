@@ -1,6 +1,7 @@
 package com._7aske.grain.util;
 
 import com._7aske.grain.GrainApp;
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.core.component.Default;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.component.Primary;
@@ -8,10 +9,8 @@ import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainMultipleImplementationsException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
-import com._7aske.grain.web.http.HttpMethod;
-import com._7aske.grain.logging.Logger;
-import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.web.controller.annotation.*;
+import com._7aske.grain.web.http.HttpMethod;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -20,18 +19,16 @@ import java.lang.annotation.Target;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Collection of utilities related for reflective operations and type inspections.
  */
 public class ReflectionUtil {
-	private static final Logger logger = LoggerFactory.getLogger(ReflectionUtil.class);
 	private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
 	private ReflectionUtil() {
 	}
 
-	public static <T> Constructor<T> getAnyConstructor(Class<T> clazz) throws NoSuchMethodException {
+	public static <T> @NotNull Constructor<T> getAnyConstructor(Class<T> clazz) throws NoSuchMethodException {
 		Constructor<T> constructor = null;
 		NoSuchMethodException cause = new NoSuchMethodException();
 		try {
@@ -68,11 +65,10 @@ public class ReflectionUtil {
 		return interfaces1.stream().anyMatch(interfaces2::contains);
 	}
 
-	public static <T> Constructor<T> getBestConstructor(Class<T> clazz) throws NoSuchMethodException {
+	public static <T> @NotNull Constructor<T> getBestConstructor(Class<T> clazz) throws NoSuchMethodException {
 		try {
 			return getAnyConstructor(clazz);
-		} catch (NoSuchMethodException ignored) {
-		}
+		} catch (NoSuchMethodException ignored) { /* ignored */ }
 		Constructor<T>[] constructors = (Constructor<T>[]) clazz.getConstructors();
 		if (constructors.length == 0)
 			constructors = (Constructor<T>[]) clazz.getDeclaredConstructors();
@@ -286,9 +282,9 @@ public class ReflectionUtil {
 
 	public static <T> List<Class<?>> findClasses(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
 		return classes.stream()
-				.map(extractor::apply)
+				.map(extractor)
 				.filter(d -> d.equals(clazz) || clazz.isAssignableFrom(d))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	/**
@@ -308,7 +304,7 @@ public class ReflectionUtil {
 	public static <T> Optional<T> findClassByClass(Class<?> clazz, Collection<T> classes, Function<T, Class<?>> extractor) {
 		List<T> result = classes.stream()
 				.filter(d -> extractor.apply(d).equals(clazz) || clazz.isAssignableFrom(extractor.apply(d)))
-				.collect(Collectors.toList());
+				.toList();
 
 		if (result.size() > 1) {
 			// User defined dependencies are the ones that do not start
@@ -326,7 +322,7 @@ public class ReflectionUtil {
 						return !(depPackage.startsWith(basePackage) &&
 								depPackage.charAt(basePackage.length()) == '.');
 					})
-					.collect(Collectors.toList());
+					.toList();
 			if (userDefined.size() > 1) {
 				if (userDefined.stream().noneMatch(g -> isAnnotationPresent(g.getClass(), Primary.class))) {
 					throw new GrainMultipleImplementationsException(clazz);

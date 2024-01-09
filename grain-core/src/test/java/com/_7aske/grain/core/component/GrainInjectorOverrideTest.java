@@ -1,9 +1,11 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.util.ReflectionUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
 
@@ -29,11 +31,14 @@ class GrainInjectorOverrideTest {
 
 
     @Test
-    void inject() {
+    void inject() throws NoSuchMethodException {
         Set<Class<?>> toInject = Set.of(TestApp.class);
         grainInjector.inject(toInject);
 
-        for (Injectable<?> aClass : grainInjector.getContainer().getAll()) {
+        Object container = ReflectionUtil.getFieldValue(grainInjector, "container");
+        Method getAll = (container.getClass()).getMethod("getAll");
+        Collection<Injectable<?>> injectables = (Collection<Injectable<?>>) ReflectionUtil.invokeMethod(getAll, container);
+        for (Injectable<?> aClass : injectables) {
             System.out.println(aClass.getType());
         }
 

@@ -88,9 +88,9 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		List<Injectable<?>> userDefined = list.stream()
 				.filter(d -> {
 					String basePackage = GrainAppRunner.class.getPackageName() + ".";
-					String depPackage = d.getProvider() == null
+					String depPackage = d.getParent() == null
 							? d.getType().getPackageName()
-							: d.getProvider().getType().getPackageName();
+							: d.getParent().getType().getPackageName();
 					return !depPackage.startsWith(basePackage);
 				})
 				.sorted(Injectable.getComparator())

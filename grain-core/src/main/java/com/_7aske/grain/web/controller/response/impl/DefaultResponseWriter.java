@@ -13,7 +13,7 @@ import java.io.IOException;
 import static com._7aske.grain.web.http.HttpHeaders.CONTENT_TYPE;
 
 @Grain
-@Order(Integer.MAX_VALUE)
+@Order(Order.LOWEST_PRECEDENCE)
 public class DefaultResponseWriter extends AbstractResponseWriterSupport<Object> {
 
     protected DefaultResponseWriter() {

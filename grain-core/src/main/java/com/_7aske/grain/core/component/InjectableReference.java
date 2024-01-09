@@ -7,28 +7,39 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 
 import static com._7aske.grain.core.component.InjectableReference.ReferenceType.*;
 
-public class InjectableReference<T> {
-	private final Class<T> type;
+public class InjectableReference {
+	private final Class<?> type;
 	private final String name;
 	private final ReferenceType referenceType;
 	private final boolean isCollection;
 	private static final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final Class<?> provider;
 	private final AnnotatedBy annotatedBy;
+	private final boolean required;
 
-	private InjectableReference(Class<T> type, String name, ReferenceType referenceType, boolean isCollection, Class<?> provider, AnnotatedBy annotatedBy) {
-		this.type = type;
+	private InjectableReference(Class<?> type, String name, Class<?> provider, AnnotatedBy annotatedBy, boolean isCollection, boolean isRequired) {
+        this.type = type;
 		this.name = name;
-		this.referenceType = annotatedBy != null ? ANNOTATION : referenceType;
-		this.isCollection = isCollection;
 		this.provider = provider;
         this.annotatedBy = annotatedBy;
+		this.required = isRequired;
+        this.isCollection = isCollection;
+
+        if (annotatedBy != null) {
+            this.referenceType = ANNOTATION;
+        } else if (name != null) {
+            this.referenceType = NAME;
+        } else {
+            this.referenceType = TYPE;
+        }
     }
 
-	public static InjectableReference<?> of(Parameter parameter) {
+	public static InjectableReference of(Parameter parameter) {
 		String name = grainNameResolver.resolveReferenceName(parameter);
 		boolean isCollection = false;
 		Class<?> actualType = parameter.getType();
@@ -36,17 +47,17 @@ public class InjectableReference<T> {
 			actualType = ReflectionUtil.getGenericListTypeArgument(parameter);
 			isCollection = true;
 		}
-		return new InjectableReference<>(
+		return new InjectableReference(
 				actualType,
 				name,
-				name == null ? TYPE : NAME,
-				isCollection,
 				parameter.getDeclaringExecutable().getDeclaringClass(),
-				parameter.getAnnotation(AnnotatedBy.class)
+				parameter.getAnnotation(AnnotatedBy.class),
+                isCollection,
+				true
 		);
 	}
 
-	public static InjectableReference<?> of(Method method) {
+	public static InjectableReference of(Method method) {
 		String name = grainNameResolver.resolveReferenceName(method);
 		boolean isCollection = false;
 		Class<?> actualType = method.getReturnType();
@@ -54,72 +65,64 @@ public class InjectableReference<T> {
 			actualType = ReflectionUtil.getGenericListTypeArgument(method);
 			isCollection = true;
 		}
-		return new InjectableReference<>(
+		return new InjectableReference(
 				actualType,
 				name,
-				name == null ? TYPE : NAME,
-				isCollection,
 				method.getDeclaringClass(),
-				null
+				null,
+                isCollection,
+				true
 		);
 	}
 
-	public static InjectableReference<?> of(Field field) {
+	public static InjectableReference of(Field field) {
 		String name = grainNameResolver.resolveReferenceName(field);
+
 		boolean isCollection = false;
 		Class<?> actualType = field.getType();
 		if (Collection.class.isAssignableFrom(actualType)) {
 			actualType = ReflectionUtil.getGenericListTypeArgument(field);
 			isCollection = true;
 		}
-		return new InjectableReference<>(
+
+		boolean isRequired = true;
+		if (field.isAnnotationPresent(Inject.class)) {
+			isRequired = field.getAnnotation(Inject.class).required();
+		}
+
+		return new InjectableReference(
 				actualType,
 				name,
-				name == null ? TYPE : NAME,
-				isCollection,
 				field.getDeclaringClass(),
-				field.getAnnotation(AnnotatedBy.class)
+				field.getAnnotation(AnnotatedBy.class),
+                isCollection,
+				isRequired
 		);
 	}
 
-	public Collection<Injectable<?>> resolveList(DependencyContainerImpl container) {
-		if (referenceType == TYPE) {
-			return container.getListByClass(type)
+	Collection<Injectable<?>> resolveList(DependencyContainerImpl container) {
+		return switch (referenceType) {
+			case TYPE -> container.getListByClass(type)
 					.stream()
-					.filter(d -> !d.getType().equals(provider))
+					.filter(d -> !Objects.equals(d.getType(), provider))
 					.toList();
-		}
-
-		if (referenceType == NAME) {
-			return container.getListByName(name);
-		}
-
-		if (referenceType == ANNOTATION) {
-			return container.getListAnnotatedByClass(annotatedBy.value());
-		}
-
-		throw new GrainInitializationException("Unknown reference type");
+			case NAME -> container.getListByName(name);
+			case ANNOTATION -> container.getListAnnotatedByClass(annotatedBy.value());
+		};
 	}
 
-	public Injectable<T> resolve(DependencyContainerImpl container) {
-		if (referenceType == TYPE) {
-			return (Injectable<T>) container.getByClass(type)
-					.orElseThrow(() -> new GrainInitializationException("No dependency of type '" + type + "'"));
+	<T> Injectable<T> resolve(DependencyContainerImpl container) {
+		Optional<Injectable<?>> optionalInjectable = switch (referenceType) {
+			case TYPE -> container.getByClass(type);
+			case NAME -> container.getByName(name).or(() -> container.getByClass(type));
+			case ANNOTATION -> container.getByAnnotation(annotatedBy.value());
+		};
+
+		if (optionalInjectable.isEmpty() && required) {
+			throw new GrainInitializationException("Dependency not found: " + this);
 		}
 
-		if (referenceType == NAME) {
-			return (Injectable<T>) container.getByName(name)
-					.or(() -> container.getByClass(type))
-					.orElseThrow(() -> new GrainInitializationException("No dependency with name '" + name + "'"));
-		}
-
-		if (referenceType == ANNOTATION) {
-			return (Injectable<T>) container.getByAnnotation(annotatedBy.value())
-					.or(() -> container.getByClass(type))
-					.orElseThrow(() -> new GrainInitializationException("No dependency annotated with '" + annotatedBy.value() + "'"));
-		}
-
-		throw new GrainInitializationException("Unknown reference type");
+		return (Injectable<T>) optionalInjectable.orElse(null);
 	}
 
 	public Class<?> getType() {
@@ -127,15 +130,10 @@ public class InjectableReference<T> {
 	}
 
 	public String getName() {
-		if (referenceType == NAME) {
-			return name;
-		}
-
-		if (referenceType == TYPE) {
-			return type.getName();
-		}
-
-		return null;
+		return switch (referenceType) {
+			case TYPE, ANNOTATION -> grainNameResolver.resolveReferenceName(type);
+			case NAME -> name;
+        };
 	}
 
 	public boolean isCollection() {

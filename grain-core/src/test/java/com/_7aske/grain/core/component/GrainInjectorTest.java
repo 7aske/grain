@@ -83,4 +83,22 @@ class GrainInjectorTest {
 		assertEquals("Hello 7aske", testAnnotated.get().run("7aske"));
 		assertEquals("Hello 7askeField", testAnnotated.get().runField("7askeField"));
 	}
+
+	public static class ToBeInjected {
+
+	}
+
+	@Grain
+	public static class TestOptionalInject {
+		@Inject(required = false)
+		private ToBeInjected toBeInjected;
+	}
+
+	@Test
+	void test_injectOptional() {
+		grainInjector.inject(TestOptionalInject.class);
+		TestOptionalInject testOptionalInject = grainInjector.getContainer().getGrain(TestOptionalInject.class);
+		assertNotNull(testOptionalInject);
+		assertNull(testOptionalInject.toBeInjected);
+	}
 }

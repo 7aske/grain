@@ -37,7 +37,7 @@ public class GrainInjector {
 		inject(container);
 	}
 
-	public DependencyContainerImpl getContainer() {
+	public DependencyContainer getContainer() {
 		return container;
 	}
 
@@ -265,7 +265,7 @@ public class GrainInjector {
 			if (!checkCondition(field.getAnnotation(Condition.class))) {
 				return;
 			}
-			InjectableReference<?> reference = InjectableReference.of(field);
+			InjectableReference reference = InjectableReference.of(field);
 			// @Note #resolveInstance will attempt to initialize the value if
 			// it is not initialized but that should matter in this because it
 			// already should've been initialized by now.
@@ -311,10 +311,10 @@ public class GrainInjector {
 	 * @return The list objects to be used as constructor parameters.
 	 */
 	private Object[] mapConstructorParametersToDependencies(Injectable<?> injectable) {
-		InjectableReference<?>[] constructorParameters = injectable.getConstructorParameters();
+		InjectableReference[] constructorParameters = injectable.getConstructorParameters();
 		Object[] parameterInstances = new Object[constructorParameters.length];
 		for (int i = 0; i < constructorParameters.length; i++) {
-			InjectableReference<?> injectableReference = constructorParameters[i];
+			InjectableReference injectableReference = constructorParameters[i];
 			parameterInstances[i] = resolveInstance(injectableReference);
 		}
 		return parameterInstances;
@@ -327,32 +327,38 @@ public class GrainInjector {
 	 * @param injectableReference The injectable reference to resolve.
 	 * @return The object instance.
 	 */
-	private <T> Object resolveInstance(InjectableReference<T> injectableReference) {
+	private <T> Object resolveInstance(InjectableReference injectableReference) {
 		// @Todo add the same logic for Optional
 		if (injectableReference.isCollection()) {
 			return injectableReference.resolveList(this.container)
 					.stream()
-					.peek(dep -> {
+					.map(dep -> {
 						// We need to initialize the provider if the dependency has
 						// one, and it is not initialized yet, i.e. we cannot
 						// call a method on an uninitialized dependency.
-						if (dep.isGrainMethodDependency() && !dep.getProvider().isInitialized()) {
-							initialize(dep.getProvider());
+						if (dep.isGrainMethodDependency() && !dep.getParent().isInitialized()) {
+							initialize(dep.getParent());
 						}
 						if (!dep.isInitialized()) {
 							initialize(dep);
 						}
+						return dep;
 					})
 					.map(Injectable::getInstance)
 					.toList();
 		} else {
 			Injectable<T> dependency = injectableReference
 					.resolve(this.container);
+			// Dependency was not required and not found
+			if (dependency == null) {
+				logger.warn("Non required dependency '{}' not found", injectableReference.getName());
+				return null;
+			}
 			// We need to initialize the provider if the dependency has
 			// one, and it is not initialized yet, i.e. we cannot
 			// call a method on an uninitialized dependency.
-			if (dependency.isGrainMethodDependency() && !dependency.getProvider().isInitialized()) {
-				initialize(dependency.getProvider());
+			if (dependency.isGrainMethodDependency() && !dependency.getParent().isInitialized()) {
+				initialize(dependency.getParent());
 			}
 			if (!dependency.isInitialized())
 				initialize(dependency);
@@ -384,8 +390,8 @@ public class GrainInjector {
 	 * @param dependencies The dependencies to check.
 	 * @param steps The steps taken so far.
 	 */
-	private void check(Injectable<?> start, List<InjectableReference<?>> dependencies, List<InjectableReference<?>> steps) {
-		for (InjectableReference<?> dependency : dependencies) {
+	private void check(Injectable<?> start, List<InjectableReference> dependencies, List<InjectableReference> steps) {
+		for (InjectableReference dependency : dependencies) {
 			steps.add(dependency);
 			Collection<Injectable<?>> dependencyDependencies = dependency.resolveList(this.container);
 
