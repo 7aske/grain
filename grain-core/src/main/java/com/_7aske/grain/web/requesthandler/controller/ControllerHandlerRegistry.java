@@ -6,14 +6,10 @@ import com._7aske.grain.web.controller.parameter.ParameterConverterRegistry;
 import com._7aske.grain.web.controller.response.ResponseWriterRegistry;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
-import com._7aske.grain.web.http.codec.json.JsonMapper;
 import com._7aske.grain.web.requesthandler.controller.wrapper.ControllerWrapper;
 import com._7aske.grain.web.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.requesthandler.handler.proxy.factory.HandlerProxyFactory;
-import com._7aske.grain.web.controller.converter.ConverterRegistry;
-import com._7aske.grain.web.view.ViewResolver;
-import com._7aske.grain.web.view.ViewResolverProvider;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +17,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
-import java.util.stream.Collectors;
 
 /**
  * {@link HandlerRegistry} that dispatches requests to {@link ControllerHandler}s.
@@ -29,7 +24,7 @@ import java.util.stream.Collectors;
 @Grain
 @Order(256)
 public class ControllerHandlerRegistry implements HandlerRegistry {
-	public List<RequestHandler> handlers = new ArrayList<>();
+	private List<ControllerHandler> handlers = new ArrayList<>();
 	private final HandlerProxyFactory handlerProxyFactory;
 	private final ParameterConverterRegistry parameterConverterRegistry;
 	private final ResponseWriterRegistry responseWriterRegistry;
@@ -54,20 +49,20 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 				.stream()
 				.map(ControllerWrapper::new)
 				.map(wrapper -> new ControllerHandler(wrapper, parameterConverterRegistry, responseWriterRegistry))
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
 		// @CopyPasta
-		List<RequestHandler> availableHandlers = this.handlers.stream()
+		List<ControllerHandler> availableHandlers = this.handlers.stream()
 				.filter(handler -> handler.canHandle(request))
 				.sorted(Comparator.comparingInt((ToIntFunction<? super RequestHandler>)
 						h -> h.getPath().length()).reversed())
 				.toList();
 
-		Optional<RequestHandler> handler = Optional.empty();
+		Optional<ControllerHandler> handler = Optional.empty();
 		if (availableHandlers.size() == 1) {
 			handler = Optional.of(availableHandlers.get(0));
 		} else if (availableHandlers.size() > 1) {

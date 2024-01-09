@@ -1,5 +1,6 @@
 package com._7aske.grain.web.requesthandler.controller;
 
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.util.HttpPathUtil;
 import com._7aske.grain.web.controller.exception.NoValidConverterException;
@@ -13,19 +14,13 @@ import com._7aske.grain.web.requesthandler.controller.wrapper.ControllerMethodWr
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 
 import java.io.IOException;
-import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This {@link RequestHandler} implementation is a representation of a controller method.
  */
 public class ControllerMethodHandler implements RequestHandler {
-	/**
-	 * Prefix that signalizes that the response is actually a redirect
-	 * rather than a response with string body.
-	 */
 	private final ControllerMethodWrapper method;
 	private final ParameterConverterRegistry parameterConverterRegistry;
 	private final ResponseWriterRegistry responseWriterRegistry;
@@ -40,8 +35,6 @@ public class ControllerMethodHandler implements RequestHandler {
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) throws IOException {
-
-		// Here we handle Controller method parameter parsing
 
 		Object[] params = Arrays.stream(method.getParameters())
 				.map(param -> parameterConverterRegistry.getConverter(param)
@@ -78,7 +71,8 @@ public class ControllerMethodHandler implements RequestHandler {
 		return canHandleMethod && canHandlePath;
 	}
 
-	public String getPath() {
+	@Override
+	public @NotNull String getPath() {
 		return method.getPath();
 	}
 }

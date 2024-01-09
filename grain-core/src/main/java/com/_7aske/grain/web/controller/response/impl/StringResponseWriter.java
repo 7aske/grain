@@ -13,6 +13,10 @@ import static com._7aske.grain.web.http.HttpHeaders.CONTENT_TYPE;
 
 @Grain
 public class StringResponseWriter extends AbstractResponseWriterSupport<String> {
+    /**
+     * Prefix that signalizes that the response is actually a redirect
+     * rather than a response with string body.
+     */
     private static final String REDIRECT_PREFIX = "redirect:";
 
     protected StringResponseWriter() {

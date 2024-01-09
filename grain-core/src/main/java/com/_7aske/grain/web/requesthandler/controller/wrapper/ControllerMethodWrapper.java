@@ -1,14 +1,18 @@
 package com._7aske.grain.web.requesthandler.controller.wrapper;
 
+import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.web.http.HttpMethod;
+import com._7aske.grain.logging.Logger;
+import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -23,36 +27,27 @@ public class ControllerMethodWrapper {
 	private final Method method;
 	private final String path;
 	private final List<HttpMethod> httpMethods;
-	// Pattern matching for path variables.
-	private final List<String> pathVariables = new ArrayList<>();
 	private final Object controllerInstance;
+	private final Logger logger;
 
 	public ControllerMethodWrapper(Method method, Object controllerInstance) {
 		this.method = method;
-		// @Todo If ReflectionUtil#invokeMethod is used to invoke this
-		// is not necessary.
-		this.method.setAccessible(true);
 		this.controllerInstance = controllerInstance;
+		this.logger = LoggerFactory.getLogger(method.getDeclaringClass());
 
 		this.httpMethods = List.of(getAnnotatedHttpMethods(method));
 		this.path = HttpPathUtil.join(getAnnotatedHttpPath(method.getDeclaringClass()), getAnnotatedHttpPath(method));
 
-		Matcher matcher = PATH_VARIABLE_PATTERN.matcher(this.path);
-		while (matcher.find()) {
-			this.pathVariables.add(matcher.group(2));
-		}
+		validatePathVariables();
 	}
 
 	public Object invoke(Object... args) {
-		// @Todo refactor to use ReflectionUtil#invokeMethod
 		try {
-			return method.invoke(controllerInstance, args);
-		} catch (IllegalAccessException | InvocationTargetException | HttpException e) {
+			logger.trace("Invoking method {}", method.getName());
+			return ReflectionUtil.invokeMethod(method, controllerInstance, args);
+		} catch (Exception e) {
 			if (e.getCause() instanceof HttpException) {
 				throw (HttpException) e.getCause();
-			}
-			if (e instanceof InvocationTargetException) {
-				throw (RuntimeException) e.getCause();
 			}
 			throw new HttpException.InternalServerError(e, path);
 		}
@@ -70,4 +65,23 @@ public class ControllerMethodWrapper {
 		return path;
 	}
 
+	private void validatePathVariables() {
+		final List<String> pathVariables = new ArrayList<>();
+		Matcher matcher = PATH_VARIABLE_PATTERN.matcher(this.path);
+		while (matcher.find()) {
+			pathVariables.add(matcher.group(2));
+		}
+
+		long pathVariablesDeclared = Arrays.stream(method.getParameters())
+				.filter(p -> p.isAnnotationPresent(com._7aske.grain.web.controller.annotation.PathVariable.class))
+				.count();
+		int pathVariablesSize = pathVariables.size();
+
+		if (pathVariablesDeclared > pathVariablesSize) {
+			throw new GrainRuntimeException("Declared path variables > path variables in method " + method.getName() + " in controller " + method.getDeclaringClass().getName());
+		}
+		if (pathVariablesDeclared < pathVariablesSize) {
+			logger.warn("Path variables != declared variables in method {}", method.getName());
+		}
+	}
 }
