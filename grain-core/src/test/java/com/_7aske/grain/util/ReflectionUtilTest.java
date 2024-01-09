@@ -3,6 +3,7 @@ package com._7aske.grain.util;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.core.component.Controller;
 import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Inherited;
@@ -39,11 +40,13 @@ class ReflectionUtilTest {
 	}
 
 	@Controller // has @Grain
+	@RequestMapping
 	static class TestClass {
 
 	}
 
 	@CompositeAnnotation
+	@RequestMapping
 	static class TestCompositeClass {
 
 	}

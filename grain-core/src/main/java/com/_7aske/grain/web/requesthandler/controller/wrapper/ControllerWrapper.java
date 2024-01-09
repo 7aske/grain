@@ -21,6 +21,10 @@ public class ControllerWrapper {
 	 *                   annotation.
 	 */
 	public ControllerWrapper(Object controller) {
+		if (!isAnnotationPresent(controller.getClass(), RequestMapping.class)) {
+			throw new IllegalArgumentException("Controller must be annotated with @RequestMapping annotation");
+		}
+
 		// HttpMethod is ignored for controllers
 		this.httpPath = getAnnotatedHttpPath(controller.getClass());
 		this.methods = Arrays.stream(controller.getClass().getMethods())

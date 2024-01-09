@@ -61,7 +61,7 @@ class GrainInjectorTest {
 		private TestAnnotated testAnnotatedField;
 
 		// Injecting by annotation (erase the info about the type by trying to inject
-		// a plain object.
+		// a plain object)
 		public TestAnnotatedRunner(@AnnotatedBy(TestAnnotation.class) Object testAnnotated) {
 			this.testAnnotated = (TestAnnotated) testAnnotated;
 		}
