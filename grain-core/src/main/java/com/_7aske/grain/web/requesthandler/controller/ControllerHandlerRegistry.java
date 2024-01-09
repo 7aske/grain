@@ -24,45 +24,30 @@ import java.util.function.ToIntFunction;
 @Grain
 @Order(256)
 public class ControllerHandlerRegistry implements HandlerRegistry {
-	private List<ControllerHandler> handlers = new ArrayList<>();
+	private final List<RequestHandler> handlers;
 	private final HandlerProxyFactory handlerProxyFactory;
-	private final ParameterConverterRegistry parameterConverterRegistry;
-	private final ResponseWriterRegistry responseWriterRegistry;
 
 	public ControllerHandlerRegistry(HandlerProxyFactory handlerProxyFactory,
-                                     ParameterConverterRegistry parameterConverterRegistry, ResponseWriterRegistry responseWriterRegistry) {
+                                     ParameterConverterRegistry parameterConverterRegistry,
+									 ResponseWriterRegistry responseWriterRegistry,
+									 @AnnotatedBy(Controller.class) List<Object> controllers) {
 		this.handlerProxyFactory = handlerProxyFactory;
-        this.parameterConverterRegistry = parameterConverterRegistry;
-        this.responseWriterRegistry = responseWriterRegistry;
-    }
-
-	@AfterInit
-	private void getHandlersInternal(DependencyContainer container) {
-		// @Refactor this is a temporary solution. If this class is instantiated
-		// during the dependency injection pipeline controllers cannot be fetched from
-		// dependency container because we can not guarantee that they are initialized.
-		// We have to "inject" them manually after the whole initialization process is finished.
-		// We could inject a list of controllers but then we would have to have them
-		// implement an interface or extend a base class. Alternatively, we could
-		// inject them by name and derive the name using the @Controller annotation.
-		handlers = container.getGrainsAnnotatedBy(Controller.class)
-				.stream()
+		this.handlers = controllers.stream()
 				.map(ControllerWrapper::new)
-				.map(wrapper -> new ControllerHandler(wrapper, parameterConverterRegistry, responseWriterRegistry))
+				.<RequestHandler>map(wrapper -> new ControllerHandler(wrapper, parameterConverterRegistry, responseWriterRegistry))
 				.toList();
-	}
-
+    }
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
 		// @CopyPasta
-		List<ControllerHandler> availableHandlers = this.handlers.stream()
+		List<RequestHandler> availableHandlers = this.handlers.stream()
 				.filter(handler -> handler.canHandle(request))
 				.sorted(Comparator.comparingInt((ToIntFunction<? super RequestHandler>)
 						h -> h.getPath().length()).reversed())
 				.toList();
 
-		Optional<ControllerHandler> handler = Optional.empty();
+		Optional<RequestHandler> handler = Optional.empty();
 		if (availableHandlers.size() == 1) {
 			handler = Optional.of(availableHandlers.get(0));
 		} else if (availableHandlers.size() > 1) {

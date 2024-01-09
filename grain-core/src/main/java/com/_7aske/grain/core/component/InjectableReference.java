@@ -8,8 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
 
-import static com._7aske.grain.core.component.InjectableReference.ReferenceType.NAME;
-import static com._7aske.grain.core.component.InjectableReference.ReferenceType.TYPE;
+import static com._7aske.grain.core.component.InjectableReference.ReferenceType.*;
 
 public class InjectableReference<T> {
 	private final Class<T> type;
@@ -18,14 +17,16 @@ public class InjectableReference<T> {
 	private final boolean isCollection;
 	private static final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final Class<?> provider;
+	private final AnnotatedBy annotatedBy;
 
-	public InjectableReference(Class<T> type, String name, ReferenceType referenceType, boolean isCollection, Class<?> provider) {
+	private InjectableReference(Class<T> type, String name, ReferenceType referenceType, boolean isCollection, Class<?> provider, AnnotatedBy annotatedBy) {
 		this.type = type;
 		this.name = name;
-		this.referenceType = referenceType;
+		this.referenceType = annotatedBy != null ? ANNOTATION : referenceType;
 		this.isCollection = isCollection;
 		this.provider = provider;
-	}
+        this.annotatedBy = annotatedBy;
+    }
 
 	public static InjectableReference<?> of(Parameter parameter) {
 		String name = grainNameResolver.resolveReferenceName(parameter);
@@ -35,7 +36,14 @@ public class InjectableReference<T> {
 			actualType = ReflectionUtil.getGenericListTypeArgument(parameter);
 			isCollection = true;
 		}
-		return new InjectableReference<>(actualType, name, name == null ? TYPE : NAME, isCollection, parameter.getDeclaringExecutable().getDeclaringClass());
+		return new InjectableReference<>(
+				actualType,
+				name,
+				name == null ? TYPE : NAME,
+				isCollection,
+				parameter.getDeclaringExecutable().getDeclaringClass(),
+				parameter.getAnnotation(AnnotatedBy.class)
+		);
 	}
 
 	public static InjectableReference<?> of(Method method) {
@@ -46,7 +54,14 @@ public class InjectableReference<T> {
 			actualType = ReflectionUtil.getGenericListTypeArgument(method);
 			isCollection = true;
 		}
-		return new InjectableReference<>(actualType, name, name == null ? TYPE : NAME, isCollection, method.getDeclaringClass());
+		return new InjectableReference<>(
+				actualType,
+				name,
+				name == null ? TYPE : NAME,
+				isCollection,
+				method.getDeclaringClass(),
+				null
+		);
 	}
 
 	public static InjectableReference<?> of(Field field) {
@@ -57,7 +72,14 @@ public class InjectableReference<T> {
 			actualType = ReflectionUtil.getGenericListTypeArgument(field);
 			isCollection = true;
 		}
-		return new InjectableReference<>(actualType, name, name == null ? TYPE : NAME, isCollection, field.getDeclaringClass());
+		return new InjectableReference<>(
+				actualType,
+				name,
+				name == null ? TYPE : NAME,
+				isCollection,
+				field.getDeclaringClass(),
+				field.getAnnotation(AnnotatedBy.class)
+		);
 	}
 
 	public Collection<Injectable<?>> resolveList(DependencyContainerImpl container) {
@@ -70,6 +92,10 @@ public class InjectableReference<T> {
 
 		if (referenceType == NAME) {
 			return container.getListByName(name);
+		}
+
+		if (referenceType == ANNOTATION) {
+			return container.getListAnnotatedByClass(annotatedBy.value());
 		}
 
 		throw new GrainInitializationException("Unknown reference type");
@@ -85,6 +111,12 @@ public class InjectableReference<T> {
 			return (Injectable<T>) container.getByName(name)
 					.or(() -> container.getByClass(type))
 					.orElseThrow(() -> new GrainInitializationException("No dependency with name '" + name + "'"));
+		}
+
+		if (referenceType == ANNOTATION) {
+			return (Injectable<T>) container.getByAnnotation(annotatedBy.value())
+					.or(() -> container.getByClass(type))
+					.orElseThrow(() -> new GrainInitializationException("No dependency annotated with '" + annotatedBy.value() + "'"));
 		}
 
 		throw new GrainInitializationException("Unknown reference type");
@@ -112,6 +144,7 @@ public class InjectableReference<T> {
 
 	public enum ReferenceType {
 		TYPE,
-		NAME
+		NAME,
+		ANNOTATION
 	}
 }

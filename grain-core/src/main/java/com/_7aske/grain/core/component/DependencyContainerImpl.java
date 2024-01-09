@@ -1,6 +1,7 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.GrainAppRunner;
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
@@ -27,7 +28,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return dependencies.stream()
 				.filter(d -> Objects.equals(d.getName().orElse(null), name))
 				.sorted(Injectable.getComparator())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	Optional<Injectable<?>> getByName(String name) {
@@ -48,14 +49,14 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return dependencies.stream()
 				.filter(d -> clazz.isAssignableFrom(d.getType()))
 				.sorted(Injectable.getComparator())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
-	List<Injectable<?>> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
+	 List<Injectable<?>> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
 		return dependencies.stream()
 				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
 				.sorted(Injectable.getComparator())
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	<T> Optional<Injectable<?>> getByClass(Class<T> clazz) {
@@ -72,8 +73,14 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return Optional.of(list.get(0));
 	}
 
+	public Optional<Injectable<?>> getByAnnotation(Class<? extends Annotation> clazz) {
+		return getListAnnotatedByClass(clazz)
+				.stream()
+				.findFirst();
+	}
+
 	@Override
-	public Iterator<Injectable<?>> iterator() {
+	public @NotNull Iterator<Injectable<?>> iterator() {
 		return dependencies.iterator();
 	}
 
@@ -118,7 +125,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 				.stream()
 				.map(Injectable::getInstance)
 				.map(clazz::cast)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
