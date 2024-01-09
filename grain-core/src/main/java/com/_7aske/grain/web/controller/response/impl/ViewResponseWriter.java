@@ -22,7 +22,7 @@ public class ViewResponseWriter extends AbstractResponseWriterSupport<View> {
     }
 
     @Override
-    public void writeInternal(View returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(View returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         viewResolver.resolve(returnValue, request, response, request.getSession(), SecurityContextHolder.getContext().getAuthentication());
     }
 }

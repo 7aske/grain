@@ -25,7 +25,7 @@ public class NullResponseWriter extends AbstractResponseWriterSupport<Void> {
     }
 
     @Override
-    public void writeInternal(Void returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(Void returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         String requestContentType = request.getHeader(CONTENT_TYPE);
         response.setHeader(CONTENT_TYPE, requestContentType == null ? ContentType.TEXT_PLAIN : requestContentType);
         response.setStatus(HttpStatus.NO_CONTENT);

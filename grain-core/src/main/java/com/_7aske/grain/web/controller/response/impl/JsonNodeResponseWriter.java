@@ -24,7 +24,7 @@ public class JsonNodeResponseWriter extends AbstractResponseWriterSupport<JsonNo
     }
 
     @Override
-    public void writeInternal(JsonNode returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(JsonNode returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         try (OutputStream outputStream = response.getOutputStream()) {
             jsonMapper.writeValue(returnValue, outputStream);
         }

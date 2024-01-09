@@ -3,6 +3,7 @@ package com._7aske.grain.web.requesthandler.controller;
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.web.controller.ResponseStatusResolver;
 import com._7aske.grain.web.controller.exception.NoValidConverterException;
 import com._7aske.grain.web.controller.parameter.ParameterConverterRegistry;
 import com._7aske.grain.web.controller.response.ResponseWriterRegistry;
@@ -34,7 +35,7 @@ public class ControllerMethodHandler implements RequestHandler {
     }
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws IOException {
+	public void handle(HttpRequest request, HttpResponse response) throws Exception {
 
 		Object[] params = Arrays.stream(method.getParameters())
 				.map(param -> parameterConverterRegistry.getConverter(param)
@@ -42,12 +43,14 @@ public class ControllerMethodHandler implements RequestHandler {
 						.orElseThrow(() -> new NoValidConverterException(param.getType())))
 				.toArray(Object[]::new);
 
+		response.setStatus(ResponseStatusResolver.resolveStatus(method.getResponseStatus()));
+
 		final Object result = method.invoke(params);
 
 		responseWriterRegistry.getWriter(result)
 				.ifPresent(writer -> {
 					try {
-						writer.write(result, response, request, this);
+						writer.write(result, request, response, this);
 					} catch (IOException e) {
 						throw new GrainRuntimeException(e);
 					}

@@ -61,7 +61,7 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 			RequestHandler proxy = handlerProxyFactory.createProxy(h);
 			try {
 				proxy.handle(request, response);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				throw new GrainRuntimeException(e);
 			}
 		});

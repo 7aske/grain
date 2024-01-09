@@ -38,12 +38,13 @@ public class ControllerHandler implements RequestHandler {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws HttpException {
+	public void handle(HttpRequest request, HttpResponse response) throws Exception {
 		List<ControllerMethodHandler> handlers = this.methodHandlers.stream()
 				.filter(methodHandler -> methodHandler.canHandle(request))
 				.sorted(Comparator.comparingInt((ToIntFunction<? super ControllerMethodHandler>)
 						h -> h.getPath().length()).reversed())
 				.toList();
+
 		Optional<ControllerMethodHandler> handler = Optional.empty();
 		if (handlers.size() == 1) {
 			handler = Optional.of(handlers.get(0));
@@ -54,13 +55,11 @@ public class ControllerHandler implements RequestHandler {
 					.orElse(handlers.get(0)));
 		}
 
-		handler.ifPresent(methodHandler -> {
-			try {
-				methodHandler.handle(request, response);
-			} catch (IOException e) {
-				throw new GrainRuntimeException(e);
-			}
-		});
+		if (handler.isEmpty()) {
+			return;
+		}
+
+		handler.get().handle(request, response);
 	}
 
 	@Override

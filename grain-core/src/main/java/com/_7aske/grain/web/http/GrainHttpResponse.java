@@ -259,4 +259,12 @@ public class GrainHttpResponse implements HttpResponse {
 		this.outputStream.writeTo(outputStream);
 		outputStream.flush();
 	}
+
+	@Override
+	public String toString() {
+		return "GrainHttpResponse{" +
+			   "version='" + version + '\'' +
+			   ", status=" + status +
+			   '}';
+	}
 }

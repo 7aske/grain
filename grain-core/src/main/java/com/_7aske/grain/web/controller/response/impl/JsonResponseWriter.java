@@ -22,7 +22,7 @@ public class JsonResponseWriter extends AbstractResponseWriterSupport<JsonRespon
     }
 
     @Override
-    public void writeInternal(JsonResponse returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(JsonResponse returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         response.setStatus(((JsonResponse<?>) returnValue).getStatus().getValue());
         for (Map.Entry<String, String> entry : ((JsonResponse<?>) returnValue).getHeaders().entrySet()) {
             response.addHeader(entry.getKey(), entry.getValue());

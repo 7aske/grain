@@ -35,7 +35,7 @@ public class StaticHandlerRegistry implements HandlerRegistry {
 					RequestHandler proxy = proxyFactory.createProxy(handler);
 					try {
 						proxy.handle(request, response);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						throw new GrainRuntimeException(e);
 					}
 				});

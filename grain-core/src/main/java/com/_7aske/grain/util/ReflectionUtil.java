@@ -498,7 +498,7 @@ public class ReflectionUtil {
 			method.setAccessible(true);
 			return method.invoke(target, args);
 		} catch (IllegalAccessException | InvocationTargetException e) {
-			throw new GrainReflectionException(String.format("Unable to invoke method '%s'", method.getName()), e);
+			throw new GrainReflectionException(String.format("Unable to invoke method '%s'", method.getName()), e.getCause());
 		}
 	}
 
@@ -514,13 +514,19 @@ public class ReflectionUtil {
 		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, new ProxyInvocationHandler());
 	}
 
+	// @Todo fix order to make it consistent across all components
+	public static int sortByOrder(Order o1, Order o2) {
+		int o1Value = o1 != null ? o1.value() : Order.DEFAULT;
+		int o2Value = o2 != null ? o2.value() : Order.DEFAULT;
+		return -Integer.compare(o1Value, o2Value);
+	}
+
 	public static int sortByOrder(Class<?> c1, Class<?> c2) {
-		if (c1.isAnnotationPresent(Order.class) && c2.isAnnotationPresent(Order.class)) {
-			Order p1 = c1.getAnnotation(Order.class);
-			Order p2 = c2.getAnnotation(Order.class);
-			return -Integer.compare(p1.value(), p2.value());
-		}
-		return 0;
+		return sortByOrder(c1.getAnnotation(Order.class), c2.getAnnotation(Order.class));
+	}
+
+	public static int sortByOrder(Method m1, Method m2) {
+		return sortByOrder(m1.getAnnotation(Order.class), m2.getAnnotation(Order.class));
 	}
 
 	public static int sortByOrder(Object o1, Object o2) {

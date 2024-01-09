@@ -26,7 +26,7 @@ public class DefaultResponseWriter extends AbstractResponseWriterSupport<Object>
     }
 
     @Override
-    public void writeInternal(Object returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(Object returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         response.getOutputStream().write(returnValue.toString().getBytes());
         if (response.getHeader(CONTENT_TYPE) == null) {
             response.setHeader(CONTENT_TYPE, ContentType.TEXT_PLAIN);

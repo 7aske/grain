@@ -140,6 +140,11 @@ public class InjectableReference {
 		return isCollection;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("%s[%s]", type.getName(), name);
+	}
+
 	public enum ReferenceType {
 		TYPE,
 		NAME,

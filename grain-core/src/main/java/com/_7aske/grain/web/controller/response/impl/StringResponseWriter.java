@@ -24,7 +24,7 @@ public class StringResponseWriter extends AbstractResponseWriterSupport<String> 
     }
 
     @Override
-    public void writeInternal(String returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
+    public void writeInternal(String returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         if (returnValue.startsWith(REDIRECT_PREFIX)) {
             response.sendRedirect(returnValue.substring(REDIRECT_PREFIX.length()));
         } else {

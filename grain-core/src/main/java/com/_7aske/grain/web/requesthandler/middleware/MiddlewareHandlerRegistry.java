@@ -56,8 +56,8 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
 					try {
 						proxy.handle(request, response);
-					} catch (IOException e) {
-						throw new GrainRuntimeException();
+					} catch (Exception e) {
+						throw new GrainRuntimeException(e);
 					}
 				});
 	}

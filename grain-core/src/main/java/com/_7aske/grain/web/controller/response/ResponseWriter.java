@@ -10,5 +10,5 @@ public interface ResponseWriter<T> {
     // @Todo add support for accept header or produces annotation value
     boolean supports(Object returnValue);
 
-    void write(Object returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException;
+    void write(Object returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException;
 }

@@ -2,6 +2,7 @@ package com._7aske.grain.testpackage;
 
 import com._7aske.grain.core.component.Controller;
 import com._7aske.grain.web.controller.annotation.RequestMapping;
+import com._7aske.grain.web.controller.annotation.ResponseStatus;
 import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.codec.json.annotation.JsonBody;
@@ -14,6 +15,7 @@ import java.io.IOException;
 public class TestController {
 
 	@RequestMapping("test")
+	@ResponseStatus(code = 200)
 	public TemplateView get() {
 		String firstName = "John";
 		String lastName = "Smith";

@@ -1,16 +1,13 @@
 package com._7aske.grain.security.handler.proxy;
 
-import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.security.config.SecurityConfiguration;
+import com._7aske.grain.security.config.rule.RuleUrlPatternMatcher;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.http.HttpStatus;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.requesthandler.handler.proxy.AbstractRequestHandlerProxy;
-import com._7aske.grain.security.config.SecurityConfiguration;
-import com._7aske.grain.security.config.rule.RuleUrlPatternMatcher;
-
-import java.io.IOException;
 
 public class SecurityHandlerProxy extends AbstractRequestHandlerProxy {
 	private final SecurityConfiguration securityConfiguration;
@@ -21,17 +18,12 @@ public class SecurityHandlerProxy extends AbstractRequestHandlerProxy {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) {
+	public void handle(HttpRequest request, HttpResponse response ) throws Exception {
 
 		boolean result = new RuleUrlPatternMatcher(securityConfiguration.getRules()).matches(request);
 		if (result) {
-			try {
-				target.handle(request, response);
-			} catch (IOException e) {
-				throw new GrainRuntimeException(e);
-			}
-		}
-		else {
+			target.handle(request, response);
+		} else {
 			throw new HttpException.Forbidden(HttpStatus.FORBIDDEN.getReason());
 		}
 	}

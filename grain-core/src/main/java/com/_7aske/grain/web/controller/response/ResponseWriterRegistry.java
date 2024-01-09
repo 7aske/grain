@@ -17,8 +17,9 @@ public class ResponseWriterRegistry {
 
     public Optional<ResponseWriter<?>> getWriter(Object object) {
         return responseWriters.stream()
-                .filter(converter -> converter.supports(object))
-                .min(ReflectionUtil::sortByOrder);
+                .filter(writer -> writer.supports(object))
+                // @Todo fix order to make it consistent across all components
+                .max(ReflectionUtil::sortByOrder);
     }
 
     public List<ResponseWriter<?>> getResponseWriters() {

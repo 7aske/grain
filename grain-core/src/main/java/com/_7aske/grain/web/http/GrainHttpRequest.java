@@ -433,4 +433,13 @@ public class GrainHttpRequest implements HttpRequest {
 	public void setBoundary(String paramPart) {
 		boundary = paramPart;
 	}
+
+	@Override
+	public String toString() {
+		return "GrainHttpRequest{" +
+			   "version='" + version + '\'' +
+			   ", path='" + path + '\'' +
+			   ", method=" + method +
+			   '}';
+	}
 }

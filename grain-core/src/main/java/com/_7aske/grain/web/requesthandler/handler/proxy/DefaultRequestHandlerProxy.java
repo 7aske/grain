@@ -24,7 +24,7 @@ public final class DefaultRequestHandlerProxy extends AbstractRequestHandlerProx
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws IOException {
+	public void handle(HttpRequest request, HttpResponse response) throws Exception {
 		logger.trace("Proxying request for {}", target.getClass());
 		target.handle(request, response);
 	}

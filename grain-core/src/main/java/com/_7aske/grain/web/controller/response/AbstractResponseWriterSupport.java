@@ -18,9 +18,9 @@ public abstract class AbstractResponseWriterSupport<T> implements ResponseWriter
         return type.isInstance(returnValue);
     }
 
-    protected abstract void writeInternal(T returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException;
+    protected abstract void writeInternal(T returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException;
 
-    public void write(Object returnValue, HttpResponse response, HttpRequest request, RequestHandler handler) throws IOException {
-        writeInternal(type.cast(returnValue), response, request, handler);
+    public void write(Object returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
+        writeInternal(type.cast(returnValue), request, response, handler);
     }
 }

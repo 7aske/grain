@@ -27,7 +27,7 @@ public interface RequestHandler {
 	 * @param request  the {@link HttpRequest} to be handled.
 	 * @param response the {@link HttpResponse} to be handled.
 	 */
-	void handle(HttpRequest request, HttpResponse response) throws IOException;
+	void handle(HttpRequest request, HttpResponse response) throws Exception;
 
 	/**
 	 * Defines whether this particular RequestHandler is eligible for handling
