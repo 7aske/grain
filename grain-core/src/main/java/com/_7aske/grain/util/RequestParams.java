@@ -21,7 +21,7 @@ public class RequestParams {
 	}
 
 	public @NotNull String[] getArrayParameter(@NotNull String key) {
-		if (this.parameters.get(key) == null) return new String[]{""};
+		if (this.parameters.get(key) == null) return new String[]{};
 		return this.parameters.get(key);
 	}
 

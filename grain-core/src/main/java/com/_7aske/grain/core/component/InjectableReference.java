@@ -100,7 +100,7 @@ public class InjectableReference {
 		);
 	}
 
-	Collection<Injectable<?>> resolveList(DependencyContainerImpl container) {
+	Collection<Injectable> resolveList(DependencyContainerImpl container) {
 		return switch (referenceType) {
 			case TYPE -> container.getListByClass(type)
 					.stream()
@@ -111,8 +111,8 @@ public class InjectableReference {
 		};
 	}
 
-	<T> Injectable<T> resolve(DependencyContainerImpl container) {
-		Optional<Injectable<?>> optionalInjectable = switch (referenceType) {
+	Injectable resolve(DependencyContainerImpl container) {
+		Optional<Injectable> optionalInjectable = switch (referenceType) {
 			case TYPE -> container.getByClass(type);
 			case NAME -> container.getByName(name).or(() -> container.getByClass(type));
 			case ANNOTATION -> container.getByAnnotation(annotatedBy.value());
@@ -122,7 +122,7 @@ public class InjectableReference {
 			throw new GrainInitializationException("Dependency not found: " + this);
 		}
 
-		return (Injectable<T>) optionalInjectable.orElse(null);
+		return optionalInjectable.orElse(null);
 	}
 
 	public Class<?> getType() {

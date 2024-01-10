@@ -2,6 +2,7 @@ package com._7aske.grain.web.requesthandler.controller.wrapper;
 
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.web.controller.annotation.Mappings;
 import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 
@@ -12,8 +13,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 
 import static com._7aske.grain.util.HttpPathUtil.PATH_VARIABLE_PATTERN;
-import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpMethods;
-import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpPath;
 
 /**
  * Wrapper around a controller Grain component method responsible for handling {@link HttpRequest}s.
@@ -24,8 +23,8 @@ public class ControllerMethodWrapper extends AbstractControllerMethodWrapper {
 
 	public ControllerMethodWrapper(Method method, Object controllerInstance) {
         super(method, controllerInstance);
-		this.httpMethods = List.of(getAnnotatedHttpMethods(method));
-		this.path = HttpPathUtil.join(getAnnotatedHttpPath(method.getDeclaringClass()), getAnnotatedHttpPath(method));
+		this.httpMethods = List.of(Mappings.getAnnotatedHttpMethods(method));
+		this.path = HttpPathUtil.join(Mappings.getAnnotatedHttpPath(method.getDeclaringClass()), Mappings.getAnnotatedHttpPath(method));
 		validatePathVariables();
 	}
 

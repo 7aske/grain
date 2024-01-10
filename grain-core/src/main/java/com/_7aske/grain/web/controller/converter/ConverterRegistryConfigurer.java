@@ -21,5 +21,7 @@ public class ConverterRegistryConfigurer {
 		registry.registerConverter(Boolean.class, Boolean::parseBoolean);
 		registry.registerConverter(Short.class, Short::parseShort);
 		registry.registerConverter(Byte.class, Byte::parseByte);
+		registry.registerConverter(Double.class, Double::parseDouble);
+		registry.registerConverter(String.class, String::valueOf);
 	}
 }

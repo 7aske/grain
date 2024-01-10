@@ -1,8 +1,8 @@
 package com._7aske.grain.web.requesthandler.handler.runner;
 
+import com._7aske.grain.util.By;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.util.ReflectionUtil;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.handler.HandlerRegistry;
@@ -31,7 +31,7 @@ public class HandlerRunner {
 		// We must take into the account the ordering of the registries if
 		// we decide to add a new one at runtime
 		this.handlerRegistries
-				.sort((o1, o2) -> ReflectionUtil.sortByOrder(o1.getClass(), o2.getClass()));
+				.sort(By::objectOrder);
 		return this;
 	}
 

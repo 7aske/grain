@@ -1,6 +1,7 @@
 package com._7aske.grain.web.requesthandler.controller.wrapper;
 
 import com._7aske.grain.core.component.Order;
+import com._7aske.grain.core.component.Ordered;
 import com._7aske.grain.web.controller.exceptionhandler.ExceptionHandler;
 import com._7aske.grain.web.http.HttpRequest;
 
@@ -14,7 +15,7 @@ import java.util.Optional;
 /**
  * Wrapper around a controller Grain component method responsible for handling {@link HttpRequest}s.
  */
-public class ExceptionControllerMethodWrapper extends AbstractControllerMethodWrapper {
+public class ExceptionControllerMethodWrapper extends AbstractControllerMethodWrapper implements Ordered {
 	private final ExceptionHandler exceptionHandler;
 
 	public ExceptionControllerMethodWrapper(Method method, Object controllerInstance) {
@@ -44,6 +45,7 @@ public class ExceptionControllerMethodWrapper extends AbstractControllerMethodWr
 		return method.getReturnType().equals(Void.TYPE);
 	}
 
+	@Override
 	public int getOrder() {
 		return Optional.ofNullable(method.getAnnotation(Order.class))
 				.map(Order::value)

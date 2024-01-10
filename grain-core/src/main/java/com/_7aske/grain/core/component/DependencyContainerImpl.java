@@ -2,109 +2,17 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.GrainAppRunner;
 import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.util.By;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.stream.Collectors;
 
-class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable<?>> {
-	private final Collection<Injectable<?>> dependencies;
+class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
+	private final Collection<Injectable> dependencies;
 
 	public DependencyContainerImpl() {
-		// Using TreeSet to allow for dependency ordering by their own dependency
-		// numbers. This will allow resolving more efficiently.
-		this.dependencies = new PriorityQueue<>(Comparator.comparing(
-				Injectable::getDependencies,
-				Comparator.comparing(Collection::size))
-		);
-	}
-
-	void add(Injectable<?> dependency) {
-		dependencies.add(dependency);
-	}
-
-	List<Injectable<?>> getListByName(String name) {
-		return dependencies.stream()
-				.filter(d -> Objects.equals(d.getName().orElse(null), name))
-				.sorted(Injectable.getComparator())
-				.toList();
-	}
-
-	Optional<Injectable<?>> getByName(String name) {
-		List<Injectable<?>> list = getListByName(name);
-
-		if (list.isEmpty()) {
-			return Optional.empty();
-		}
-
-		if (list.size() > 1) {
-			return resolveSingleDependency(name, list);
-		}
-
-		return Optional.of(list.get(0));
-	}
-
-	<T> List<Injectable<?>> getListByClass(Class<T> clazz) {
-		return dependencies.stream()
-				.filter(d -> clazz.isAssignableFrom(d.getType()))
-				.sorted(Injectable.getComparator())
-				.toList();
-	}
-
-	 List<Injectable<?>> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
-		return dependencies.stream()
-				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
-				.sorted(Injectable.getComparator())
-				.toList();
-	}
-
-	<T> Optional<Injectable<?>> getByClass(Class<T> clazz) {
-		List<Injectable<?>> list = getListByClass(clazz);
-
-		if (list.isEmpty()) {
-			return Optional.empty();
-		}
-
-		if (list.size() > 1) {
-			return resolveSingleDependency(clazz.getName(), list);
-		}
-
-		return Optional.of(list.get(0));
-	}
-
-	public Optional<Injectable<?>> getByAnnotation(Class<? extends Annotation> clazz) {
-		return getListAnnotatedByClass(clazz)
-				.stream()
-				.findFirst();
-	}
-
-	@Override
-	public @NotNull Iterator<Injectable<?>> iterator() {
-		return dependencies.iterator();
-	}
-
-	private Optional<Injectable<?>> resolveSingleDependency(String name, List<Injectable<?>> list) {
-		List<Injectable<?>> userDefined = list.stream()
-				.filter(d -> {
-					String basePackage = GrainAppRunner.class.getPackageName() + ".";
-					String depPackage = d.getParent() == null
-							? d.getType().getPackageName()
-							: d.getParent().getType().getPackageName();
-					return !depPackage.startsWith(basePackage);
-				})
-				.sorted(Injectable.getComparator())
-				.toList();
-
-		if (userDefined.size() > 1) {
-			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
-		}
-
-		if (userDefined.size() == 1)
-			return userDefined.stream().findFirst();
-
-		// Should be sorted by @Order
-		return list.stream().min(Injectable.getComparator());
+		this.dependencies = new PriorityQueue<>(By.order());
 	}
 
 	@Override
@@ -133,7 +41,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return getListAnnotatedByClass(clazz)
 				.stream()
 				.map(Injectable::getInstance)
-				.collect(Collectors.toList());
+				.toList();
 	}
 
 	@Override
@@ -143,7 +51,95 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 				.map(clazz::cast);
 	}
 
-	public Collection<Injectable<?>> getAll() {
-		return dependencies;
+	@Override
+	public @NotNull Iterator<Injectable> iterator() {
+		return getAll().iterator();
+	}
+
+	void add(Injectable dependency) {
+		dependencies.add(dependency);
+	}
+
+	List<Injectable> getListByName(String name) {
+		return getAll().stream()
+				.filter(d -> Objects.equals(d.getName().orElse(null), name))
+				.toList();
+	}
+
+	Optional<Injectable> getByName(String name) {
+		List<Injectable> list = getListByName(name);
+
+		if (list.isEmpty()) {
+			return Optional.empty();
+		}
+
+		if (list.size() > 1) {
+			return resolveSingleDependency(name, list);
+		}
+
+		return Optional.of(list.get(0));
+	}
+
+	<T> List<Injectable> getListByClass(Class<T> clazz) {
+		return getAll().stream()
+				.filter(d -> clazz.isAssignableFrom(d.getType()))
+				.toList();
+	}
+
+	 List<Injectable> getListAnnotatedByClass(Class<? extends Annotation> clazz) {
+		return getAll().stream()
+				.filter(d -> ReflectionUtil.isAnnotationPresent(d.getType(), clazz))
+				.toList();
+	}
+
+	<T> Optional<Injectable> getByClass(Class<T> clazz) {
+		List<Injectable> list = getListByClass(clazz);
+
+		if (list.isEmpty()) {
+			return Optional.empty();
+		}
+
+		if (list.size() > 1) {
+			return resolveSingleDependency(clazz.getName(), list);
+		}
+
+		return Optional.of(list.get(0));
+	}
+
+	public Optional<Injectable> getByAnnotation(Class<? extends Annotation> clazz) {
+		return getListAnnotatedByClass(clazz)
+				.stream()
+				.findFirst();
+	}
+
+	private Optional<Injectable> resolveSingleDependency(String name, List<Injectable> list) {
+		List<Injectable> userDefined = list.stream()
+				.filter(d -> {
+					String basePackage = GrainAppRunner.class.getPackageName() + ".";
+					String depPackage = d.getParent() == null
+							? d.getType().getPackageName()
+							: d.getParent().getType().getPackageName();
+					return !depPackage.startsWith(basePackage);
+				})
+				.sorted(Injectable::compareTo)
+				.toList();
+
+		if (userDefined.size() > 1) {
+			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
+		}
+
+		if (userDefined.size() == 1)
+			return userDefined.stream().findFirst();
+
+		return list.stream()
+				.min(Injectable::compareTo);
+	}
+
+	public Collection<Injectable> getAll() {
+		return dependencies
+				.stream()
+				.sorted(By.<Injectable>order().thenComparing(Injectable::getType, By::packages))
+				.toList();
+
 	}
 }

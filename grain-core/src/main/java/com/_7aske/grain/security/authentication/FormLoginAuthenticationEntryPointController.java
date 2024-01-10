@@ -2,8 +2,13 @@ package com._7aske.grain.security.authentication;
 
 import com._7aske.grain.core.component.Controller;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.security.Authentication;
+import com._7aske.grain.security.config.SecurityConfiguration;
+import com._7aske.grain.security.context.SecurityContextHolder;
+import com._7aske.grain.security.exception.GrainSecurityException;
+import com._7aske.grain.ui.LoginPage;
+import com._7aske.grain.web.controller.annotation.RequestMapping;
 import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
@@ -11,11 +16,6 @@ import com._7aske.grain.web.http.session.SessionStore;
 import com._7aske.grain.web.http.session.SessionToken;
 import com._7aske.grain.web.http.session.tokenprovider.HttpRequestTokenProvider;
 import com._7aske.grain.web.view.View;
-import com._7aske.grain.security.Authentication;
-import com._7aske.grain.security.config.SecurityConfiguration;
-import com._7aske.grain.security.context.SecurityContextHolder;
-import com._7aske.grain.security.exception.GrainSecurityException;
-import com._7aske.grain.ui.LoginPage;
 
 /**
  * Default authentication entry point handling form POST requests to /login

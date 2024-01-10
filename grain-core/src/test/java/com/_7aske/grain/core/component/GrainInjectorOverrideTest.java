@@ -37,8 +37,8 @@ class GrainInjectorOverrideTest {
 
         Object container = ReflectionUtil.getFieldValue(grainInjector, "container");
         Method getAll = (container.getClass()).getMethod("getAll");
-        Collection<Injectable<?>> injectables = (Collection<Injectable<?>>) ReflectionUtil.invokeMethod(getAll, container);
-        for (Injectable<?> aClass : injectables) {
+        Collection<Injectable> injectables = (Collection<Injectable>) ReflectionUtil.invokeMethod(getAll, container);
+        for (Injectable aClass : injectables) {
             System.out.println(aClass.getType());
         }
 

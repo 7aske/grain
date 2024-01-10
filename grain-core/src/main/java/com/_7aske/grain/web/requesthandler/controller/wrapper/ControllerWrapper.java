@@ -1,12 +1,12 @@
 package com._7aske.grain.web.requesthandler.controller.wrapper;
 
+import com._7aske.grain.web.controller.annotation.Mappings;
 import com._7aske.grain.web.controller.annotation.RequestMapping;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import static com._7aske.grain.util.ReflectionUtil.getAnnotatedHttpPath;
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
 /**
@@ -26,7 +26,7 @@ public class ControllerWrapper {
 		}
 
 		// HttpMethod is ignored for controllers
-		this.httpPath = getAnnotatedHttpPath(controller.getClass());
+		this.httpPath = Mappings.getAnnotatedHttpPath(controller.getClass());
 		this.methods = Arrays.stream(controller.getClass().getMethods())
 				// Must call ReflectionUtil#isAnnotationPresent as it checks
 				// for the presence of annotations in the provided parameter

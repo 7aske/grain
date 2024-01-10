@@ -27,7 +27,7 @@ class ReflectionUtilTest {
 				"xyz.todooc4.backend.controller.UserController",
 				"com._7aske.grain.util.whatever"
 		));
-		pkgs.sort(ReflectionUtil::compareLibraryAndUserPackage);
+		pkgs.sort(By::packages);
 		assertFalse(pkgs.getFirst().startsWith(GrainApp.class.getPackageName() + "."));
 		assertTrue(pkgs.getLast().startsWith(GrainApp.class.getPackageName() + "."));
 	}

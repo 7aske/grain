@@ -60,7 +60,7 @@ public class GrainInjector {
 		if (!isAnnotationPresent(clazz, Grain.class)) {
 			logger.warn("Registered Grain {} without @Grain annotation", object.getClass());
 		}
-		Injectable<?> injectable = new Injectable<>(
+		Injectable injectable = new Injectable(
 				clazz,
 				grainNameResolver.resolveDeclarationName(object.getClass()));
 		injectable.setObjectInstance(object);
@@ -77,7 +77,7 @@ public class GrainInjector {
 			logger.warn("Registered Grain {} without @Grain annotation", clazz);
 		}
 
-		Injectable<?> injectable = new Injectable<>(
+		Injectable injectable = new Injectable(
 				clazz,
 				grainNameResolver.resolveDeclarationName(clazz));
 		initialize(injectable);
@@ -96,7 +96,7 @@ public class GrainInjector {
 				continue;
 			}
 
-			Injectable<?> dependency = new Injectable<>(
+			Injectable dependency = new Injectable(
 					clazz,
 					grainNameResolver.resolveDeclarationName(clazz)
 			);
@@ -108,7 +108,7 @@ public class GrainInjector {
 				// Because of that we set the "provider" field as a reference if
 				// we happen to come across grain method dependencies before their
 				// providers in the injection pipeline.
-				Injectable<?> methodDependency = Injectable.ofMethod(
+				Injectable methodDependency = Injectable.ofMethod(
 						method,
 						grainNameResolver.resolveReferenceName(method),
 						dependency);
@@ -124,7 +124,7 @@ public class GrainInjector {
 				//     config.setSomething("something");
 				//     return config;
 				// }
-				Optional<Injectable<?>> grain = this.container.getByClass(method.getReturnType());
+				Optional<Injectable> grain = this.container.getByClass(method.getReturnType());
 				if (grain.isPresent()) {
 					boolean isSelfReferencing = Arrays.stream(method.getParameterTypes())
 							.anyMatch(p -> method.getReturnType().isAssignableFrom(p));
@@ -150,7 +150,7 @@ public class GrainInjector {
 
 		// Third, we initialize all dependencies and set their instances.
 		logger.debug("Initializing dependencies");
-		for (Injectable<?> dependency : this.container) {
+		for (Injectable dependency : this.container) {
 			// These should be skipped as they are added to the dependency
 			// container but are not actual classes that we should initialize
 			// in the DI process. Rather we let grain methods do that.
@@ -165,20 +165,20 @@ public class GrainInjector {
 		// Before running code segments in @Value annotations we need to load
 		// the interpreter with initialized Grains.
 		HashMap<String, Object> tmp = new HashMap<>();
-		for (Injectable<?> dependency : this.container) {
+		for (Injectable dependency : this.container) {
 			tmp.put(grainNameResolver.resolveReferenceName(dependency.getType()), dependency.getInstance());
 		}
 		interpreter.putSymbols(tmp);
 
 		// Fourth, we evaluate @Value annotations on all dependencies.
 		logger.debug("Evaluating @Value annotations");
-		for (Injectable<?> dependency : this.container) {
+		for (Injectable dependency : this.container) {
 			evaluateValueAnnotations(dependency);
 		}
 
 		// Finally, we call lifecycle methods on all dependencies.
 		logger.debug("Calling lifecycle methods");
-		for (Injectable<?> dependency : this.container) {
+		for (Injectable dependency : this.container) {
 			for (Method method : dependency.getAfterInitMethods()) {
 				ReflectionUtil.invokeMethod(method, dependency.getInstance(), mapMethodParametersToDependencies(method));
 			}
@@ -208,7 +208,7 @@ public class GrainInjector {
 	 *
 	 * @param dependency The dependency to evaluate @Value annotations on.
 	 */
-	private <T> void evaluateValueAnnotations(Injectable<T> dependency) {
+	private void evaluateValueAnnotations(Injectable dependency) {
 		for (InjectableField field : dependency.getValueFields()) {
 			try {
 				// We don't allow both annotations because @Value will overwrite
@@ -236,12 +236,12 @@ public class GrainInjector {
 	 *
 	 * @param dependency The dependency to initialize.
 	 */
-	private <T> void initialize(Injectable<T> dependency) {
+	private void initialize(Injectable dependency) {
 		// If the dependency is initialized already we do nothing.
 		if (dependency.isInitialized()) return;
 
 		// We initialize the injectable
-		T instance = ReflectionUtil.newInstance(
+		Object instance = ReflectionUtil.newInstance(
 				dependency.getConstructor(),
 				mapConstructorParametersToDependencies(dependency));
 		dependency.setInstance(instance);
@@ -251,7 +251,7 @@ public class GrainInjector {
 		// injectable with the result
 		dependency.getGrainMethods().forEach(method -> {
 			try {
-				Injectable<?> methodDependency = InjectableReference.of(method)
+				Injectable methodDependency = InjectableReference.of(method)
 						.resolve(container);
 				Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
 				methodDependency.setObjectInstance(result);
@@ -310,7 +310,7 @@ public class GrainInjector {
 	 * @param injectable The injectable to map parameters for.
 	 * @return The list objects to be used as constructor parameters.
 	 */
-	private Object[] mapConstructorParametersToDependencies(Injectable<?> injectable) {
+	private Object[] mapConstructorParametersToDependencies(Injectable injectable) {
 		InjectableReference[] constructorParameters = injectable.getConstructorParameters();
 		Object[] parameterInstances = new Object[constructorParameters.length];
 		for (int i = 0; i < constructorParameters.length; i++) {
@@ -347,7 +347,7 @@ public class GrainInjector {
 					.map(Injectable::getInstance)
 					.toList();
 		} else {
-			Injectable<T> dependency = injectableReference
+			Injectable dependency = injectableReference
 					.resolve(this.container);
 			// Dependency was not required and not found
 			if (dependency == null) {
@@ -372,7 +372,7 @@ public class GrainInjector {
 	 * prevent the dependency circle from being created.
 	 */
 	private void checkCircularDependencies() {
-		for (Injectable<?> dependency : container.getAll()) {
+		for (Injectable dependency : container) {
 			// We don't want to resolve dependencies defined by @Grain methods
 			// because classes they define are not supposed to be a part
 			// of dependency injection.
@@ -390,10 +390,10 @@ public class GrainInjector {
 	 * @param dependencies The dependencies to check.
 	 * @param steps The steps taken so far.
 	 */
-	private void check(Injectable<?> start, List<InjectableReference> dependencies, List<InjectableReference> steps) {
+	private void check(Injectable start, List<InjectableReference> dependencies, List<InjectableReference> steps) {
 		for (InjectableReference dependency : dependencies) {
 			steps.add(dependency);
-			Collection<Injectable<?>> dependencyDependencies = dependency.resolveList(this.container);
+			Collection<Injectable> dependencyDependencies = dependency.resolveList(this.container);
 
 			if (dependencyDependencies.stream().anyMatch(d -> d == start)) {
 				throw new GrainInitializationException("Circular dependency detected:\n\n" + start.getType().getName() + "\n\t|\n\tv\n" + steps.stream().map(InjectableReference::getName).collect(Collectors.joining("\n\t|\n\tv\n")));

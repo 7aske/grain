@@ -1,7 +1,7 @@
 package com._7aske.grain.web.controller.response;
 
+import com._7aske.grain.util.By;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.util.ReflectionUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +18,7 @@ public class ResponseWriterRegistry {
     public Optional<ResponseWriter<?>> getWriter(Object object) {
         return responseWriters.stream()
                 .filter(writer -> writer.supports(object))
-                // @Todo fix order to make it consistent across all components
-                .max(ReflectionUtil::sortByOrder);
+                .min(By::objectOrder);
     }
 
     public List<ResponseWriter<?>> getResponseWriters() {

@@ -38,7 +38,9 @@ public abstract class AbstractControllerMethodWrapper {
 			logger.trace("Invoking method {}", method.getName());
 			return ReflectionUtil.invokeMethod(method, controllerInstance, args);
 		} catch (Exception e) {
-			throw (Exception) e.getCause();
+			Exception cause = (Exception) e.getCause();
+			if (cause == null) throw e;
+			throw cause;
 		}
 	}
 

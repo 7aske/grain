@@ -22,7 +22,7 @@ public final class ConverterRegistry {
 		converters.put(clazz, converter);
 	}
 
-	public <T> Converter<T>  getConverter(Class<T> clazz) {
+	public <T> Converter<T> getConverter(Class<T> clazz) {
 		Converter<T> converter = (Converter<T>) converters.get(clazz);
 		if (converter == null)
 			throw new NoValidConverterException(clazz);

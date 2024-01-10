@@ -39,8 +39,8 @@ public class ControllerMethodHandler implements RequestHandler {
 
 		Object[] params = Arrays.stream(method.getParameters())
 				.map(param -> parameterConverterRegistry.getConverter(param)
-						.map(converter -> converter.convert(param, request, response, this))
-						.orElseThrow(() -> new NoValidConverterException(param.getType())))
+						.orElseThrow(() -> new NoValidConverterException(param.getType()))
+						.convert(param, request, response, this))
 				.toArray(Object[]::new);
 
 		response.setStatus(ResponseStatusResolver.resolveStatus(method.getResponseStatus()));

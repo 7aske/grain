@@ -6,6 +6,7 @@ import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.GrainApplication;
+import com._7aske.grain.util.By;
 import com._7aske.grain.util.classloader.GrainJarClassLoader;
 
 import java.lang.annotation.Annotation;

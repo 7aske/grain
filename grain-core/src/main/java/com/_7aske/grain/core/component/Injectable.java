@@ -3,20 +3,20 @@ package com._7aske.grain.core.component;
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
 import com._7aske.grain.exception.GrainInitializationException;
+import com._7aske.grain.util.By;
 import com._7aske.grain.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.ToIntFunction;
 
 import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
 
-class Injectable<T> implements Comparable<Injectable<T>> {
+class Injectable implements Ordered, Comparable<Injectable> {
 	private final String name;
-	private final Class<T> type;
-	private final Constructor<T> constructor;
+	private final Class<?> type;
+	private final Constructor<?> constructor;
 	private final InjectableReference[] constructorParameters;
 	private final List<Method> grainMethods;
 	private final List<Field> injectableFields;
@@ -28,10 +28,10 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
 	 */
-	private Injectable<?> parent;
-	private T instance;
+	private Injectable parent;
+	private Object instance;
 
-	private Injectable(Class<T> type, String name, Constructor<T> constructor, int order) {
+	private Injectable(Class<?> type, String name, Constructor<?> constructor, int order) {
 		this.name = name;
 		this.type = type;
 		this.constructor = constructor;
@@ -44,20 +44,20 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 		this.order = order;
 	}
 
-	public static <T> Injectable<T> ofMethod(@NotNull Method method, @Nullable String name, Injectable<?> provider) {
+	public static Injectable ofMethod(@NotNull Method method, @Nullable String name, Injectable provider) {
 		int order = Optional.ofNullable(method.getAnnotation(Order.class))
 				.map(Order::value)
 				.orElse(Order.DEFAULT);
-		Injectable<T> injectable = new Injectable<>((Class<T>) method.getReturnType(), name, null, order);
+		Injectable injectable = new Injectable(method.getReturnType(), name, null, order);
 		injectable.setParent(provider);
 		return injectable;
 	}
 
-	public static <T> Injectable<T> ofInitialized(T grain) {
-		return new Injectable<>((Class<T>) grain.getClass(), null, null, 0);
+	public static  Injectable ofInitialized(Object grain) {
+		return new Injectable(grain.getClass(), null, null, Order.HIGHEST_PRECEDENCE);
 	}
 
-	public Injectable(@NotNull Class<T> clazz, @Nullable String name) {
+	public Injectable(@NotNull Class<?> clazz, @Nullable String name) {
 		this.name = name;
 		if (clazz.isInterface()) {
 			this.constructor = null;
@@ -84,6 +84,7 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 
 		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
+				.sorted(By::order)
 				.toList();
 
 		this.injectableFields = Arrays.stream(clazz.getDeclaredFields())
@@ -107,14 +108,15 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 				.toList();
 		this.afterInitMethods = Arrays.stream(clazz.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, AfterInit.class))
+				.sorted(By::order)
 				.toList();
 	}
 
-	public T getInstance() {
-		return instance;
+	public <T> T getInstance() {
+		return (T) instance;
 	}
 
-	public void setInstance(T instance) {
+	public <T> void setInstance(T instance) {
 		this.instance = instance;
 	}
 
@@ -122,7 +124,7 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 		this.instance = type.cast(instance);
 	}
 
-	public Constructor<T> getConstructor() {
+	public Constructor<?> getConstructor() {
 		return constructor;
 	}
 
@@ -158,11 +160,11 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 		return parent != null;
 	}
 
-	public Injectable<?> getParent() {
+	public Injectable getParent() {
 		return parent;
 	}
 
-	public void setParent(Injectable<?> parent) {
+	public void setParent(Injectable parent) {
 		this.parent = parent;
 	}
 
@@ -179,18 +181,28 @@ class Injectable<T> implements Comparable<Injectable<T>> {
 		return afterInitMethods;
 	}
 
+	@Override
 	public int getOrder() {
 		return order;
 	}
 
 	@Override
-	public int compareTo(Injectable<T> o) {
-		return getComparator()
-				.compare(this, o);
+	public boolean equals(Object object) {
+		if (this == object) return true;
+		if (object == null || getClass() != object.getClass()) return false;
+		Injectable that = (Injectable) object;
+		return Objects.equals(name, that.name) && Objects.equals(type, that.type);
 	}
 
-	public static Comparator<Injectable<?>> getComparator() {
-		return Comparator.comparingInt((ToIntFunction<Injectable<?>>) Injectable::getOrder)
-				.thenComparing(Injectable::getType, ReflectionUtil::compareLibraryAndUserPackage);
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, type);
+	}
+
+	@Override
+	public int compareTo(Injectable o) {
+		return By.<Injectable>order()
+				.thenComparing(By.packages(Injectable::getType))
+				.compare(this, o);
 	}
 }

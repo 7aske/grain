@@ -1,13 +1,13 @@
 package com._7aske.grain.web.requesthandler.middleware;
 
 import com._7aske.grain.exception.GrainRuntimeException;
+import com._7aske.grain.util.HttpPathUtil;
+import com._7aske.grain.web.controller.annotation.Mappings;
 import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
-import com._7aske.grain.util.HttpPathUtil;
-import com._7aske.grain.util.ReflectionUtil;
 import com._7aske.grain.web.requesthandler.staticlocation.StaticHandlerRegistry;
 
 import java.util.Arrays;
@@ -34,7 +34,7 @@ public class MiddlewareHandler implements RequestHandler {
 		this.middleware = middleware;
 		HttpMethod[] httpMethods = new HttpMethod[0];
 		try {
-			httpMethods = ReflectionUtil.getAnnotatedHttpMethods(middleware.getClass());
+			httpMethods = Mappings.getAnnotatedHttpMethods(middleware.getClass());
 		} catch (GrainRuntimeException ex) {
 			// Throw happens if the middleware was not annotated with @RequestMapping.
 			// Middleware doesn't have to be annotated with this annotation but
@@ -43,7 +43,7 @@ public class MiddlewareHandler implements RequestHandler {
 			// the future.
 		}
 		this.methods = Arrays.asList(httpMethods);
-		this.path = ReflectionUtil.getAnnotatedHttpPath(middleware.getClass());
+		this.path = Mappings.getAnnotatedHttpPath(middleware.getClass());
 	}
 
 	@Override

@@ -101,4 +101,66 @@ class GrainInjectorTest {
 		assertNotNull(testOptionalInject);
 		assertNull(testOptionalInject.toBeInjected);
 	}
+
+	@Grain
+	public static class Writer {
+		private final StringBuilder builder = new StringBuilder();
+
+		public void write(String string) {
+			builder.append(string);
+		}
+	}
+
+	@Grain
+	@Order(3)
+	public static class TestOrder1 {
+		private final Writer writer;
+		TestOrder1(Writer writer) {
+			this.writer = writer;
+			writer.write("TestOrder1 ");
+		}
+
+		@AfterInit
+		public void test() {
+			writer.write("TestOrder1AfterInit ");
+		}
+
+		@AfterInit
+		@Order(Order.HIGHEST_PRECEDENCE)
+		public void test1() {
+			writer.write("TestOrder1AfterInit1 ");
+		}
+	}
+
+	@Grain
+	@Order(2)
+	public static class TestOrder2 {
+		TestOrder2(Writer writer) {
+			writer.write("TestOrder2 ");
+		}
+	}
+
+	@Grain
+	@Order(1)
+	public static class TestOrder3 {
+		TestOrder3(Writer writer) {
+			writer.write("TestOrder3 ");
+		}
+	}
+
+	@Grain
+	@Order(Order.HIGHEST_PRECEDENCE)
+	public static class TestOrder4 {
+		TestOrder4(Writer writer) {
+			writer.write("TestOrder4 ");
+		}
+	}
+
+	@Test
+	void test_order() {
+		grainInjector.inject(Set.of(TestOrder1.class, TestOrder2.class, TestOrder3.class, TestOrder4.class, Writer.class));
+		DependencyContainerImpl container = (DependencyContainerImpl) grainInjector.getContainer();
+		Writer writer = container.getGrain(Writer.class);
+		assertEquals("TestOrder4 TestOrder3 TestOrder2 TestOrder1 TestOrder1AfterInit1 TestOrder1AfterInit ", writer.builder.toString());
+	}
 }

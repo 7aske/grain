@@ -1,18 +1,14 @@
 package com._7aske.grain.web.requesthandler.middleware;
 
-import com._7aske.grain.core.component.AfterInit;
-import com._7aske.grain.core.component.DependencyContainer;
-import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.core.component.Order;
+import com._7aske.grain.core.component.*;
 import com._7aske.grain.exception.GrainRuntimeException;
+import com._7aske.grain.util.By;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.handler.HandlerRegistry;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.requesthandler.handler.proxy.factory.HandlerProxyFactory;
-import com._7aske.grain.util.ReflectionUtil;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -51,7 +47,7 @@ public class MiddlewareHandlerRegistry implements HandlerRegistry {
 		handlers.stream()
 				.filter(handler -> handler.canHandle(request))
 				// As middleware handlers are pass-through we need to order them
-				.sorted((o1, o2) -> ReflectionUtil.sortByOrder(o1.getClass(), o2.getClass()))
+				.sorted(By::objectOrder)
 				.forEach(handler -> {
 					RequestHandler proxy = handlerProxyFactory.createProxy(handler);
 					try {

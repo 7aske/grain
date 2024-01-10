@@ -1,11 +1,12 @@
 package com._7aske.grain.web.controller.parameter;
 
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.util.By;
 
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Optional;
+
 
 @Grain
 public class ParameterConverterRegistry {
@@ -18,7 +19,8 @@ public class ParameterConverterRegistry {
     public Optional<ParameterConverter> getConverter(Parameter parameter) {
         return parameterConverters.stream()
                 .filter(converter -> converter.supports(parameter))
-                .min(ReflectionUtil::sortByOrder);
+                .min(By::objectOrder);
+
     }
 
     public List<ParameterConverter> getParameterConverters() {
