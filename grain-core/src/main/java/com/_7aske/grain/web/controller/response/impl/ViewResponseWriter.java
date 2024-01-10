@@ -7,7 +7,6 @@ import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.view.View;
-import com._7aske.grain.web.view.ViewResolver;
 import com._7aske.grain.web.view.ViewResolverProvider;
 
 import java.io.IOException;

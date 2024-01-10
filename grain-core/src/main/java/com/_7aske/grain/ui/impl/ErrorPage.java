@@ -1,6 +1,7 @@
 package com._7aske.grain.ui.impl;
 
 import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.ui.util.Styles;
 import com._7aske.grain.web.http.ContentType;
 import com._7aske.grain.web.http.HttpStatus;
@@ -19,6 +20,16 @@ public class ErrorPage implements View {
 		this.exception = exception;
 		this.status = status;
 		this.path = path;
+	}
+
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	public static Builder forException(HttpException ex) {
+		return builder()
+				.exception(ex)
+				.status(ex.getStatus());
 	}
 
 	public static String getDefault(Throwable exception, HttpStatus status, String path) {
@@ -97,5 +108,39 @@ public class ErrorPage implements View {
 
 	private static String getStyle() {
 		return "<style type=\"text/css\">" + Styles.getCommonStyles() + "</style>";
+	}
+
+	public static final class Builder {
+		private Throwable exception;
+		private String path;
+		private HttpStatus status;
+
+		private Builder() {
+		}
+
+		public Builder exception(Throwable exception) {
+			this.exception = exception;
+			return this;
+		}
+
+		public Builder exception(HttpException exception) {
+			this.exception = exception;
+			this.status = exception.getStatus();
+			return this;
+		}
+
+		public Builder path(String path) {
+			this.path = path;
+			return this;
+		}
+
+		public Builder status(HttpStatus status) {
+			this.status = status;
+			return this;
+		}
+
+		public ErrorPage build() {
+			return new ErrorPage(exception, status, path);
+		}
 	}
 }

@@ -23,7 +23,7 @@ public class RequestPartParameterConverter implements ParameterConverter {
         RequestPart requestPart = parameter.getAnnotation(RequestPart.class);
         Part part = request.getPart(requestPart.value());
         if (requestPart.required() && part == null) {
-            throw new MultipartRequiredException(requestPart, request);
+            throw new MultipartRequiredException(requestPart);
         }
 
         return part;

@@ -1,5 +1,8 @@
 package com._7aske.grain.web.http;
 
+import java.util.Arrays;
+import java.util.List;
+
 public enum HttpStatus {
 	CONTINUE(100, "Continue"),
 	SWITCHING_PROTOCOLS(101, "Switching Protocols"),
@@ -79,6 +82,26 @@ public enum HttpStatus {
 	private final int value;
 	private final String reason;
 
+	public boolean is1xxInformational() {
+		return INFORMATIONAL.contains(this);
+	}
+
+	public boolean is2xxSuccessful() {
+	 	return SUCCESSFUL.contains(this);
+	}
+
+	public boolean is3xxRedirection() {
+		return REDIRECTION.contains(this);
+	}
+
+	public boolean is4xxClientError() {
+		return CLIENT_ERROR.contains(this);
+	}
+
+	public boolean is5xxServerError() {
+		return SERVER_ERROR.contains(this);
+	}
+
 	HttpStatus(int value, String reason) {
 		this.value = value;
 		this.reason = reason;
@@ -100,4 +123,28 @@ public enum HttpStatus {
 	public String getReason() {
 		return reason;
 	}
+
+
+	private static final List<HttpStatus> INFORMATIONAL = Arrays.stream(values())
+			.takeWhile(status -> status.value < 200)
+			.toList();
+
+	private static final List<HttpStatus> SUCCESSFUL = Arrays.stream(values())
+			.dropWhile(status -> status.value < 200)
+			.takeWhile(status -> status.value < 300)
+			.toList();
+
+	private static final List<HttpStatus> REDIRECTION = Arrays.stream(values())
+			.dropWhile(status -> status.value < 300)
+			.takeWhile(status -> status.value < 400)
+			.toList();
+
+	private static final List<HttpStatus> CLIENT_ERROR = Arrays.stream(values())
+			.dropWhile(status -> status.value < 400)
+			.takeWhile(status -> status.value < 500)
+			.toList();
+
+	private static final List<HttpStatus> SERVER_ERROR = Arrays.stream(values())
+			.dropWhile(status -> status.value < 500)
+			.toList();
 }

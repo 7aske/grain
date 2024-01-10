@@ -40,17 +40,17 @@ public final class ExceptionControllerHandler {
         this.responseWriterRegistry = responseWriterRegistry;
     }
 
-    public void handle(Throwable exception, HttpRequest request, HttpResponse response) {
-        exception.printStackTrace();
+    public void handle(Throwable ex, HttpRequest request, HttpResponse response) {
+        ex.printStackTrace();
 
         // Default status for exceptions
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 
         // Lowest priority - check if exception is annotated with ResponseStatus
-        setResponseStatus(exception.getClass().getAnnotation(ResponseStatus.class), response);
+        setResponseStatus(ex.getClass().getAnnotation(ResponseStatus.class), response);
 
         exceptionHandlers.stream()
-                .filter(handler -> handler.canHandle(exception))
+                .filter(handler -> handler.canHandle(ex))
                 .findFirst()
                 .ifPresent(handler -> {
 
@@ -59,7 +59,7 @@ public final class ExceptionControllerHandler {
 
                     try {
                         // Highest priority - can be set within the handler itself
-                        Object result = handler.invoke(exception, request, response);
+                        Object result = handler.invoke(ex, request, response);
                         if (handler.isVoidReturnType()) {
                             return;
                         }
