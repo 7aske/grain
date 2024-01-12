@@ -4,14 +4,14 @@
 
     <groupId>com.7aske.grain</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.7</version>
+    <version>1.0.8-SNAPSHOT</version>
     <packaging>pom</packaging>
     <description>Grain web framework</description>
     <name>grain-parent</name>
     <url>https://github.com/7aske/grain</url>
 
     <properties>
-        <revision>1.0.7</revision>
+        <revision>1.0.8-SNAPSHOT</revision>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -197,7 +197,7 @@
         <url>https://github.com/7aske/grain.git</url>
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
-        <tag>v1.0.7</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <pluginRepositories>

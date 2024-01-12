@@ -5,10 +5,10 @@
     <parent>
         <groupId>com.7aske.grain</groupId>
         <artifactId>parent</artifactId>
-        <version>1.0.7</version>
+        <version>1.0.8-SNAPSHOT</version>
     </parent>
 
-    <version>1.0.7</version>
+    <version>1.0.8-SNAPSHOT</version>
     <artifactId>core</artifactId>
     <packaging>jar</packaging>
     <name>grain-core</name>
