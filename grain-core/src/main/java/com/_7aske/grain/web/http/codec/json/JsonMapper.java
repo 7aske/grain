@@ -2,7 +2,7 @@ package com._7aske.grain.web.http.codec.json;
 
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.exception.GrainRuntimeException;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.web.http.codec.json.annotation.JsonAlias;
 import com._7aske.grain.web.http.codec.json.annotation.JsonIgnore;
 import com._7aske.grain.web.http.codec.json.annotation.JsonProperty;

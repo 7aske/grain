@@ -2,8 +2,8 @@ package com._7aske.grain.web.controller.parameter.impl;
 
 import com._7aske.grain.constants.ValueConstants;
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.util.ReflectionUtil;
-import com._7aske.grain.util.RequestParams;
+import com._7aske.grain.core.reflect.ReflectionUtil;
+import com._7aske.grain.web.http.RequestParams;
 import com._7aske.grain.web.controller.annotation.RequestParam;
 import com._7aske.grain.web.controller.converter.Converter;
 import com._7aske.grain.web.controller.converter.ConverterRegistry;

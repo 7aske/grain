@@ -1,4 +1,4 @@
-package com._7aske.grain.util.classloader;
+package com._7aske.grain.core.reflect.classloader;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com._7aske.grain.util.ReflectionUtil.loadClass;
+import static com._7aske.grain.core.reflect.ReflectionUtil.loadClass;
 
 public class GrainBasicClassLoader implements GrainClassLoader {
 	private final String basePackage;

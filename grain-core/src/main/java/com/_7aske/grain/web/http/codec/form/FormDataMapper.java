@@ -1,7 +1,7 @@
 package com._7aske.grain.web.http.codec.form;
 
 import com._7aske.grain.exception.http.HttpException;
-import com._7aske.grain.util.RequestParams;
+import com._7aske.grain.web.http.RequestParams;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import static com._7aske.grain.util.ReflectionUtil.getAnyConstructor;
+import static com._7aske.grain.core.reflect.ReflectionUtil.getAnyConstructor;
 
 public class FormDataMapper<T> {
 	private final Class<T> clazz;

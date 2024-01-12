@@ -2,6 +2,7 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
+import com._7aske.grain.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -11,7 +12,7 @@ public interface GrainNameResolver {
 
 	default @Nullable String resolveDeclarationName(Class<?> clazz) {
 		Grain grain = clazz.getAnnotation(Grain.class);
-		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
+		if (grain != null && !StringUtils.isBlank(grain.name())) {
 			return grain.name();
 		}
 
@@ -22,7 +23,7 @@ public interface GrainNameResolver {
 
 	default @NotNull String resolveReferenceName(Class<?> clazz) {
 		Grain grain = clazz.getAnnotation(Grain.class);
-		if (grain != null && grain.name() != null && !grain.name().isEmpty()) {
+		if (grain != null && !StringUtils.isBlank(grain.name())) {
 			return grain.name();
 		}
 		String className = clazz.getSimpleName();
@@ -34,7 +35,7 @@ public interface GrainNameResolver {
 
 	default @Nullable String resolveReferenceName(Field field) {
 		Inject inject = field.getAnnotation(Inject.class);
-		if (inject != null && inject.name() != null && !inject.name().isEmpty()) {
+		if (inject != null && !StringUtils.isBlank(inject.name())) {
 			return inject.name();
 		}
 
@@ -45,7 +46,7 @@ public interface GrainNameResolver {
 
 	default @Nullable String resolveReferenceName(Parameter parameter) {
 		Inject inject = parameter.getAnnotation(Inject.class);
-		if (inject != null && inject.name() != null && !inject.name().isEmpty()) {
+		if (inject != null && !StringUtils.isBlank(inject.name())) {
 			return inject.name();
 		}
 
@@ -57,7 +58,7 @@ public interface GrainNameResolver {
 
 	default @Nullable String resolveReferenceName(Method m) {
 		Grain grain = m.getAnnotation(Grain.class);
-		if (grain.name() != null && !grain.name().isEmpty()) {
+		if (!StringUtils.isBlank(grain.name())) {
 			return grain.name();
 		}
 

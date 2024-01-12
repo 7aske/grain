@@ -6,7 +6,7 @@ import com._7aske.grain.core.context.ApplicationContextImpl;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.web.server.Silo;
 
 /**
@@ -16,7 +16,6 @@ import com._7aske.grain.web.server.Silo;
 public final class GrainAppRunner {
     private static final Logger logger = LoggerFactory.getLogger(GrainAppRunner.class);
     private static final Configuration configuration = Configuration.createDefault();
-    private static boolean running = true;
     private static ApplicationContext context;
 
     private GrainAppRunner() {

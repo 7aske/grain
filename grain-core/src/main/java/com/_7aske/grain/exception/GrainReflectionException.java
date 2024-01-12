@@ -1,6 +1,6 @@
 package com._7aske.grain.exception;
 
-public class GrainReflectionException extends RuntimeException {
+public class GrainReflectionException extends GrainRuntimeException {
 	public GrainReflectionException() {
 	}
 

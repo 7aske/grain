@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com._7aske.grain.util.QueryBuilderUtil.*;
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 /**
  * Class used to aggregate raw data fetched from the database

@@ -2,14 +2,17 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.GrainAppRunner;
 import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.exception.GrainDependencyNotFoundException;
+import com._7aske.grain.exception.GrainMultipleDependenciesException;
 import com._7aske.grain.util.By;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
 
 class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
 	private final Collection<Injectable> dependencies;
+	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 
 	public DependencyContainerImpl() {
 		this.dependencies = new PriorityQueue<>(By.order());
@@ -24,13 +27,13 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	public <T> T getGrain(Class<T> clazz) {
 		return clazz.cast(getByClass(clazz)
 				.map(Injectable::getInstance)
-				.orElseThrow(() -> new IllegalStateException("No dependency of type '" + clazz.getName() + "' found.")));
+				.orElseThrow(() -> new GrainDependencyNotFoundException(clazz)));
 	}
 
 	@Override
 	public <T> T getGrain(String name) {
 		return this.<T>getOptionalGrain(name)
-				.orElseThrow(() -> new IllegalStateException("No dependency of name '" + name + "' found."));
+				.orElseThrow(() -> new GrainDependencyNotFoundException(name));
 	}
 
 	@Override
@@ -74,7 +77,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 
 	List<Injectable> getListByName(String name) {
 		return getAll().stream()
-				.filter(d -> Objects.equals(d.getName().orElse(null), name))
+				.filter(d -> Objects.equals(d.getName().orElse(grainNameResolver.resolveReferenceName(d.getType())), name))
 				.toList();
 	}
 
@@ -137,7 +140,7 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 				.toList();
 
 		if (userDefined.size() > 1) {
-			throw new IllegalStateException("More than one dependency of type/name '" + name + "' found.");
+			throw new GrainMultipleDependenciesException(name);
 		}
 
 		if (userDefined.size() == 1)

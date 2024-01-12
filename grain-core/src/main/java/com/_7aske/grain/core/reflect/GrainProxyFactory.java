@@ -1,4 +1,4 @@
-package com._7aske.grain.util;
+package com._7aske.grain.core.reflect;
 
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
@@ -13,6 +13,7 @@ import net.bytebuddy.implementation.MethodDelegation;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 public class GrainProxyFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
@@ -36,7 +37,7 @@ public class GrainProxyFactory {
                     .getConstructor()
                     .newInstance();
         } catch (Exception e) {
-            throw new GrainReflectionException(e);
+            throw new GrainReflectionException("Failed to create proxy for interfaces " + Arrays.toString(interfaces), e);
         }
     }
 

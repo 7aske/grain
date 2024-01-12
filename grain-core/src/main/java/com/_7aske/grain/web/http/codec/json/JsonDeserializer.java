@@ -1,7 +1,7 @@
 package com._7aske.grain.web.http.codec.json;
 
 import com._7aske.grain.web.http.codec.json.annotation.JsonIgnore;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

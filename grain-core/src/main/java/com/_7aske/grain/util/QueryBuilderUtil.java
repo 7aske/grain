@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.getGenericListTypeArgument;
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 public class QueryBuilderUtil {
 	private static final Logger logger = LoggerFactory.getLogger(QueryBuilderUtil.class);

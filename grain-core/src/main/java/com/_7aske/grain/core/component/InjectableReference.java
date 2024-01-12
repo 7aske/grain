@@ -1,14 +1,14 @@
 package com._7aske.grain.core.component;
 
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainInitializationException;
-import com._7aske.grain.util.ReflectionUtil;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Stream;
 
 import static com._7aske.grain.core.component.InjectableReference.ReferenceType.*;
 
@@ -19,10 +19,10 @@ public class InjectableReference {
 	private final boolean isCollection;
 	private static final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final Class<?> provider;
-	private final AnnotatedBy annotatedBy;
+	private final Class<? extends Annotation>[] annotatedBy;
 	private final boolean required;
 
-	private InjectableReference(Class<?> type, String name, Class<?> provider, AnnotatedBy annotatedBy, boolean isCollection, boolean isRequired) {
+	private InjectableReference(Class<?> type, String name, Class<?> provider, Class<? extends Annotation>[] annotatedBy, boolean isCollection, boolean isRequired) {
         this.type = type;
 		this.name = name;
 		this.provider = provider;
@@ -30,13 +30,17 @@ public class InjectableReference {
 		this.required = isRequired;
         this.isCollection = isCollection;
 
-        if (annotatedBy != null) {
+        if (annotatedBy != null && annotatedBy.length > 0) {
             this.referenceType = ANNOTATION;
         } else if (name != null) {
             this.referenceType = NAME;
         } else {
             this.referenceType = TYPE;
         }
+
+		if (referenceType == TYPE && type.equals(Object.class)) {
+			throw new GrainInitializationException("Ambigious dependency definition for " + this + " in " + provider);
+		}
     }
 
 	public static InjectableReference of(Parameter parameter) {
@@ -47,13 +51,16 @@ public class InjectableReference {
 			actualType = ReflectionUtil.getGenericListTypeArgument(parameter);
 			isCollection = true;
 		}
+		Optional<Inject> inject = Optional.ofNullable(parameter.getAnnotation(Inject.class));
 		return new InjectableReference(
 				actualType,
 				name,
 				parameter.getDeclaringExecutable().getDeclaringClass(),
-				parameter.getAnnotation(AnnotatedBy.class),
+				inject.map(Inject::annotatedBy)
+						.orElse(null),
                 isCollection,
-				true
+				inject.map(Inject::required)
+						.orElse(true)
 		);
 	}
 
@@ -94,7 +101,9 @@ public class InjectableReference {
 				actualType,
 				name,
 				field.getDeclaringClass(),
-				field.getAnnotation(AnnotatedBy.class),
+				Optional.ofNullable(field.getAnnotation(Inject.class))
+						.map(Inject::annotatedBy)
+						.orElse(null),
                 isCollection,
 				isRequired
 		);
@@ -107,15 +116,26 @@ public class InjectableReference {
 					.filter(d -> !Objects.equals(d.getType(), provider))
 					.toList();
 			case NAME -> container.getListByName(name);
-			case ANNOTATION -> container.getListAnnotatedByClass(annotatedBy.value());
+			case ANNOTATION -> Stream.of(annotatedBy)
+					.flatMap(a -> container.getListAnnotatedByClass(a).stream())
+					.toList();
 		};
 	}
 
 	Injectable resolve(DependencyContainerImpl container) {
 		Optional<Injectable> optionalInjectable = switch (referenceType) {
 			case TYPE -> container.getByClass(type);
-			case NAME -> container.getByName(name).or(() -> container.getByClass(type));
-			case ANNOTATION -> container.getByAnnotation(annotatedBy.value());
+			case NAME -> container.getByName(name);
+			case ANNOTATION -> {
+				List<Optional<Injectable>> optional = Arrays.stream(annotatedBy)
+						.map(container::getByAnnotation)
+						.toList();
+				if (optional.size() > 1) {
+					throw new GrainInitializationException("Multiple dependencies found for " + this);
+				}
+
+				yield optional.get(0);
+			}
 		};
 
 		if (optionalInjectable.isEmpty() && required) {
@@ -141,8 +161,45 @@ public class InjectableReference {
 	}
 
 	@Override
+	public boolean equals(Object object) {
+		if (this == object) return true;
+		if (object == null || getClass() != object.getClass()) return false;
+		InjectableReference that = (InjectableReference) object;
+		return Objects.equals(type, that.type) && Objects.equals(name, that.name) && referenceType == that.referenceType && Objects.equals(provider, that.provider);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hash(type, name, referenceType, isCollection, provider, required);
+		result = 31 * result + Arrays.hashCode(annotatedBy);
+		return result;
+	}
+
+	@Override
 	public String toString() {
-		return String.format("%s[%s]", type.getName(), name);
+		StringBuilder builder = new StringBuilder();
+
+		if (isCollection) {
+			builder.append("List<");
+		}
+
+		builder.append(type.getSimpleName());
+
+		String grainName = Optional.ofNullable(name)
+				.map("\"%s\""::formatted)
+				.orElse("");
+		builder.append("(").append(grainName).append(")");
+
+//		if (provider != null) {
+//			builder.append(" provided by ").append(provider.getSimpleName());
+//			builder.append("(\"").append(grainNameResolver.resolveReferenceName(provider)).append("\")");
+//		}
+
+		if (isCollection) {
+			builder.append(">");
+		}
+
+		return builder.toString();
 	}
 
 	public enum ReferenceType {

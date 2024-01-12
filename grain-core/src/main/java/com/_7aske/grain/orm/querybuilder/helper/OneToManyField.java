@@ -1,6 +1,6 @@
 package com._7aske.grain.orm.querybuilder.helper;
 
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Field;
 

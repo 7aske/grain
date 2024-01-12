@@ -1,6 +1,9 @@
 package com._7aske.grain.util.classloader;
 
 import com._7aske.grain.GrainApp;
+import com._7aske.grain.core.reflect.classloader.GrainBasicClassLoader;
+import com._7aske.grain.core.reflect.classloader.GrainClassLoader;
+import com._7aske.grain.core.reflect.classloader.GrainJarClassLoader;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

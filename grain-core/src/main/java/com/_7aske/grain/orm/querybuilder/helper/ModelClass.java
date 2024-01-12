@@ -5,7 +5,7 @@ import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
 import com._7aske.grain.orm.model.Model;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 public class ModelClass implements HasDialect {
 	private final Logger logger = LoggerFactory.getLogger(ModelClass.class);

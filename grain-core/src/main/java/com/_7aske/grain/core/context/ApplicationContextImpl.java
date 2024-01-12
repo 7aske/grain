@@ -6,13 +6,13 @@ import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.GrainApplication;
-import com._7aske.grain.util.classloader.GrainJarClassLoader;
+import com._7aske.grain.core.reflect.classloader.GrainJarClassLoader;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnyAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnyAnnotationPresent;
 
 public class ApplicationContextImpl implements DependencyContainer, ApplicationContext {
 	private final String basePackage;

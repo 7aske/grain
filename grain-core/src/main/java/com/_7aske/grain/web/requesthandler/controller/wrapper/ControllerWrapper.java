@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 /**
  * Wrapper around a controller Grain component instance.

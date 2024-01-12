@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HttpPathUtil {
-	public final static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("(\\{([\\w_]*(?=[\\w]+)[\\w\\d_]+)})", Pattern.MULTILINE);
+	public static final Pattern PATH_VARIABLE_PATTERN = Pattern.compile("(\\{([\\w_]*(?=[\\w]+)[\\w\\d_]+)})", Pattern.MULTILINE);
 	public static final char PATH_SEP = '/';
 	public static final String SEGMENT_WILDCARD = "*";
 	public static final String MULTIPLE_SEGMENT_WILDCARD = "**";

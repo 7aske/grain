@@ -10,11 +10,11 @@ import com._7aske.grain.orm.querybuilder.QueryBuilder;
 import com._7aske.grain.orm.querybuilder.SqlQueryBuilder;
 import com._7aske.grain.orm.querybuilder.helper.ModelClass;
 import com._7aske.grain.orm.querybuilder.helper.ModelField;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.util.*;
 
-import static com._7aske.grain.util.ReflectionUtil.newInstance;
+import static com._7aske.grain.core.reflect.ReflectionUtil.newInstance;
 
 /**
  * Model class representing a database entity/entry. Also contains all the required logic to generate

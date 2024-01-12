@@ -1,9 +1,9 @@
 package com._7aske.grain.web.controller.exceptionhandler;
 
 
-import com._7aske.grain.core.component.AnnotatedBy;
 import com._7aske.grain.core.component.ExceptionController;
 import com._7aske.grain.core.component.Grain;
+import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.util.Pair;
 import com._7aske.grain.web.controller.ResponseStatusResolver;
@@ -25,9 +25,10 @@ public final class ExceptionControllerHandler {
     private final List<ExceptionControllerMethodWrapper> exceptionHandlers;
     private final ResponseWriterRegistry responseWriterRegistry;
 
-    public ExceptionControllerHandler(@AnnotatedBy(ExceptionController.class) List<Object> exceptionHandlers,
-                                      ResponseWriterRegistry responseWriterRegistry) {
-        this.exceptionHandlers = exceptionHandlers.stream()
+    public ExceptionControllerHandler(
+            @Inject(annotatedBy = ExceptionController.class) List<Object> exceptionControllers,
+            ResponseWriterRegistry responseWriterRegistry) {
+        this.exceptionHandlers = exceptionControllers.stream()
                 .map(controller -> Pair.of(
                         controller,
                         Arrays.stream(controller.getClass().getDeclaredMethods())
@@ -64,7 +65,7 @@ public final class ExceptionControllerHandler {
                             return;
                         }
                         Optional<ResponseWriter<?>> optionalWriter = responseWriterRegistry.getWriter(result);
-                        if (optionalWriter.isEmpty()){
+                        if (optionalWriter.isEmpty()) {
                             return;
                         }
                         optionalWriter.get().write(result, request, response, null);

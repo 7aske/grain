@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com._7aske.grain.orm.querybuilder.AbstractQueryBuilder.*;
-import static com._7aske.grain.util.ReflectionUtil.newInstance;
+import static com._7aske.grain.core.reflect.ReflectionUtil.newInstance;
 
 public class ModelMapper<T extends Model> {
 	private final ModelClass modelClazz;

@@ -1,4 +1,4 @@
-package com._7aske.grain.util;
+package com._7aske.grain.core.reflect;
 
 import com._7aske.grain.exception.GrainReflectionException;
 

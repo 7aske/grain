@@ -1,7 +1,7 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +18,7 @@ class GrainInjectorOverrideTest {
 
         @Grain
         public Configuration configuration(Configuration configuration) {
+            System.out.println("test: test");
             configuration.set("test", "test");
             return configuration;
         }

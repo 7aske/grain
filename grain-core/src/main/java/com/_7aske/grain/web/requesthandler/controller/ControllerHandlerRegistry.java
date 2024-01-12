@@ -30,7 +30,7 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 	public ControllerHandlerRegistry(HandlerProxyFactory handlerProxyFactory,
                                      ParameterConverterRegistry parameterConverterRegistry,
 									 ResponseWriterRegistry responseWriterRegistry,
-									 @AnnotatedBy(Controller.class) List<Object> controllers) {
+									 @Inject(annotatedBy = Controller.class) List<Object> controllers) {
 		this.handlerProxyFactory = handlerProxyFactory;
 		this.handlers = controllers.stream()
 				.map(ControllerWrapper::new)

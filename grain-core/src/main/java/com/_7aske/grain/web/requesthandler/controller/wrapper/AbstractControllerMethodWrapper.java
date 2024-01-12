@@ -2,7 +2,7 @@ package com._7aske.grain.web.requesthandler.controller.wrapper;
 
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.web.controller.annotation.ResponseStatus;
 import com._7aske.grain.web.http.HttpRequest;
 

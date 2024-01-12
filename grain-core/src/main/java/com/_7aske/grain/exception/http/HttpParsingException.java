@@ -1,6 +1,8 @@
 package com._7aske.grain.exception.http;
 
-public class HttpParsingException extends RuntimeException {
+import com._7aske.grain.exception.GrainRuntimeException;
+
+public class HttpParsingException extends GrainRuntimeException {
     public HttpParsingException() {
         super();
     }
@@ -15,9 +17,5 @@ public class HttpParsingException extends RuntimeException {
 
     public HttpParsingException(Throwable cause) {
         super(cause);
-    }
-
-    protected HttpParsingException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

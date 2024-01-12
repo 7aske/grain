@@ -1,6 +1,7 @@
-package com._7aske.grain.util;
+package com._7aske.grain.core.reflect;
 
 import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.core.reflect.ProxyInvocationHandler;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.exception.GrainRuntimeException;
@@ -13,6 +14,7 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Collection of utilities related for reflective operations and type inspections.
@@ -168,12 +170,16 @@ public class ReflectionUtil {
 	}
 
 	public static <T> T newInstance(Constructor<T> constructor, Object... params) {
+		if (constructor == null) {
+			throw new GrainReflectionException("Constructor cannot be null");
+		}
+
 		try {
 			return constructor.newInstance(params);
 		} catch (InstantiationException
 				 | IllegalAccessException
 				 | InvocationTargetException e) {
-			throw new GrainInitializationException("Could not instantiate '" + constructor.getDeclaringClass().getName() + "'", e);
+			throw new GrainReflectionException("Could not instantiate '" + constructor.getDeclaringClass().getName() + "'", e);
 		}
 	}
 
@@ -199,7 +205,7 @@ public class ReflectionUtil {
 			return (Class<T>) ((ParameterizedType) result).getRawType();
 		}
 
-		throw new GrainRuntimeException("Could not get generic type argument for field " + f.getName());
+		throw new GrainReflectionException("Could not get generic type argument for field " + f.getName());
 	}
 
 	/**
@@ -236,7 +242,7 @@ public class ReflectionUtil {
 			return (Class<T>) parameterizedType.getRawType();
 		}
 
-		throw new GrainRuntimeException("Could not get generic type argument for parameter " + p.getName());
+		throw new GrainReflectionException("Could not get generic type argument for parameter " + p.getName());
 	}
 
 

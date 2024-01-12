@@ -1,7 +1,7 @@
 package com._7aske.grain.web.controller.parameter.impl;
 
 import com._7aske.grain.core.component.Grain;
-import com._7aske.grain.util.RequestParams;
+import com._7aske.grain.web.http.RequestParams;
 import com._7aske.grain.web.controller.parameter.ParameterConverter;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;

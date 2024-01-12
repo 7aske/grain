@@ -57,13 +57,12 @@ class GrainInjectorTest {
 	public static class TestAnnotatedRunner {
 		private final TestAnnotated testAnnotated;
 
-		@Inject
-		@AnnotatedBy(TestAnnotation.class)
+		@Inject(annotatedBy = TestAnnotation.class)
 		private TestAnnotated testAnnotatedField;
 
 		// Injecting by annotation (erase the info about the type by trying to inject
 		// a plain object)
-		public TestAnnotatedRunner(@AnnotatedBy(TestAnnotation.class) Object testAnnotated) {
+		public TestAnnotatedRunner(@Inject(annotatedBy = TestAnnotation.class) Object testAnnotated) {
 			this.testAnnotated = (TestAnnotated) testAnnotated;
 		}
 

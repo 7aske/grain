@@ -4,14 +4,14 @@ import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.util.By;
-import com._7aske.grain.util.ReflectionUtil;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import static com._7aske.grain.util.ReflectionUtil.isAnnotationPresent;
+import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 class Injectable implements Ordered, Comparable<Injectable> {
 	private final String name;
@@ -23,17 +23,21 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	private final List<InjectableReference> dependencies;
 	private final List<InjectableField> valueFields;
 	private final List<Method> afterInitMethods;
+	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final int order;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
 	 */
 	private Injectable parent;
+	private Method parentMethod;
 	private Object instance;
 
 	private Injectable(Class<?> type, String name, Constructor<?> constructor, int order) {
 		this.name = name;
 		this.type = type;
+		this.parent = null;
+		this.parentMethod = null;
 		this.constructor = constructor;
 		this.constructorParameters = new InjectableReference[0];
 		this.dependencies = new ArrayList<>();
@@ -49,7 +53,13 @@ class Injectable implements Ordered, Comparable<Injectable> {
 				.map(Order::value)
 				.orElse(Order.DEFAULT);
 		Injectable injectable = new Injectable(method.getReturnType(), name, null, order);
-		injectable.setParent(provider);
+		injectable.parent = provider;
+		injectable.parentMethod = method;
+		Collection<InjectableReference> dependencies = Arrays.stream(method.getParameters())
+				.map(InjectableReference::of)
+				.toList();
+		injectable.dependencies.addAll(dependencies);
+
 		return injectable;
 	}
 
@@ -58,55 +68,50 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	}
 
 	public Injectable(@NotNull Class<?> clazz, @Nullable String name) {
+		this.type = clazz;
 		this.name = name;
-		if (clazz.isInterface()) {
+		this.parent = null;
+		this.parentMethod = null;
+		if (this.type.isInterface()) {
 			this.constructor = null;
 			this.constructorParameters = new InjectableReference[0];
-			this.instance = ReflectionUtil.createProxy(clazz);
+			this.instance = ReflectionUtil.createProxy(this.type);
 		} else {
 			try {
-				this.constructor = ReflectionUtil.getBestConstructor(clazz);
-//				if (this.constructor == null) {
-//					throw new GrainInitializationException("No constructor found for class " + clazz.getName());
-//				}
+				this.constructor = ReflectionUtil.getBestConstructor(this.type);
 				this.constructorParameters = Arrays.stream(this.constructor.getParameters())
 						.map(InjectableReference::of)
 						.toArray(InjectableReference[]::new);
 			} catch (NoSuchMethodException e) {
-				throw new GrainInitializationException("No constructor found for class " + clazz.getName());
+				throw new GrainInitializationException("No constructor found for class " + this.type.getName());
 			}
 		}
 
-		this.order = Optional.ofNullable(clazz.getAnnotation(Order.class))
+		this.order = Optional.ofNullable(this.type.getAnnotation(Order.class))
 				.map(Order::value)
 				.orElse(Order.DEFAULT);
 
-
-		this.grainMethods = Arrays.stream(clazz.getDeclaredMethods())
+		this.grainMethods = Arrays.stream(this.type.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
 				.sorted(By::order)
 				.toList();
 
-		this.injectableFields = Arrays.stream(clazz.getDeclaredFields())
+		this.injectableFields = Arrays.stream(this.type.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Inject.class))
 				.toList();
 
-		List<InjectableReference> constructorDependencies = Arrays.asList(this.constructorParameters);
-
 		this.dependencies = new ArrayList<>();
 		// Filter added to prevent the Injectable to depend on itself
-		List<InjectableReference> references = constructorDependencies.stream()
-				.filter(d -> !d.getType().isAssignableFrom(clazz))
+		List<InjectableReference> references = Arrays.stream(this.constructorParameters)
+				.filter(d -> !d.getType().isAssignableFrom(this.type))
 				.toList();
 		this.dependencies.addAll(references);
 
-		this.type = clazz;
-		this.parent = null;
-		this.valueFields = Arrays.stream(clazz.getDeclaredFields())
+		this.valueFields = Arrays.stream(this.type.getDeclaredFields())
 				.filter(f -> isAnnotationPresent(f, Value.class))
 				.map(InjectableField::new)
 				.toList();
-		this.afterInitMethods = Arrays.stream(clazz.getDeclaredMethods())
+		this.afterInitMethods = Arrays.stream(this.type.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, AfterInit.class))
 				.sorted(By::order)
 				.toList();
@@ -148,11 +153,6 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		return grainMethods;
 	}
 
-	public void setGrainMethods(List<Method> grainMethods) {
-		this.grainMethods = grainMethods;
-		this.grainMethods.forEach(m -> m.setAccessible(true));
-	}
-
 	public List<Field> getInjectableFields() {
 		return injectableFields;
 	}
@@ -175,7 +175,25 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	@Override
 	public String toString() {
-		return String.format("%s[%s]", type.getName(), name);
+		StringBuilder builder = new StringBuilder();
+		builder.append(type.getSimpleName());
+
+		String grainName = Optional.ofNullable(name)
+				.map("\"%s\""::formatted)
+				.orElse("");
+		builder.append("(").append(grainName).append(")");
+
+		if (isGrainMethodDependency()) {
+			builder.append(" provided by ").append(parent.getType().getSimpleName());
+			String parentName = parent.getName()
+					.or(() -> Optional.of(grainNameResolver.resolveReferenceName(parent.getType())))
+					.map("\"%s\""::formatted)
+					.orElse("");
+			builder.append("(").append(parentName).append(")");
+		}
+
+
+		return builder.toString();
 	}
 
 	public List<InjectableField> getValueFields() {
@@ -213,5 +231,9 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	public boolean hasGrainMethodDependencies() {
 		return !grainMethods.isEmpty();
+	}
+
+	public Method getParentMethod() {
+		return parentMethod;
 	}
 }
