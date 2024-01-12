@@ -18,7 +18,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	private final Class<?> type;
 	private final Constructor<?> constructor;
 	private final InjectableReference[] constructorParameters;
-	private final List<Method> grainMethods;
+	private List<Method> grainMethods;
 	private final List<Field> injectableFields;
 	private final List<InjectableReference> dependencies;
 	private final List<InjectableField> valueFields;
@@ -148,6 +148,11 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		return grainMethods;
 	}
 
+	public void setGrainMethods(List<Method> grainMethods) {
+		this.grainMethods = grainMethods;
+		this.grainMethods.forEach(m -> m.setAccessible(true));
+	}
+
 	public List<Field> getInjectableFields() {
 		return injectableFields;
 	}
@@ -204,5 +209,9 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		return By.<Injectable>order()
 				.thenComparing(By.packages(Injectable::getType))
 				.compare(this, o);
+	}
+
+	public boolean hasGrainMethodDependencies() {
+		return !grainMethods.isEmpty();
 	}
 }

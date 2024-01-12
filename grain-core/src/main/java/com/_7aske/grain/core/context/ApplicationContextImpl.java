@@ -6,7 +6,6 @@ import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.GrainApplication;
-import com._7aske.grain.util.By;
 import com._7aske.grain.util.classloader.GrainJarClassLoader;
 
 import java.lang.annotation.Annotation;
@@ -60,6 +59,11 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 	}
 
 	@Override
+	public <T> T getGrain(String name) {
+		return dependencyContainer.getGrain(name);
+	}
+
+	@Override
 	public void registerGrain(Object grain) {
 		dependencyContainer.registerGrain(grain);
 	}
@@ -67,6 +71,11 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 	@Override
 	public <T> Optional<T> getOptionalGrain(Class<T> clazz) {
 		return dependencyContainer.getOptionalGrain(clazz);
+	}
+
+	@Override
+	public <T> Optional<T> getOptionalGrain(String name) {
+		return dependencyContainer.getOptionalGrain(name);
 	}
 
 	@Override

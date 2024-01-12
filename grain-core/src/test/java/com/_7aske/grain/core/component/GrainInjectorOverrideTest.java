@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class GrainInjectorOverrideTest {
     GrainInjector grainInjector;
 
-    public static final class TestApp {
+    public static class TestApp {
 
         @Grain
         public Configuration configuration(Configuration configuration) {

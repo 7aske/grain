@@ -8,8 +8,10 @@ import com._7aske.grain.exception.GrainInvalidInjectException;
 import com._7aske.grain.exception.GrainReflectionException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.util.GrainProxyFactory;
 import com._7aske.grain.util.ReflectionUtil;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -25,11 +27,13 @@ public class GrainInjector {
 	private final DependencyContainerImpl container;
 	private final Interpreter interpreter;
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
+	private final GrainProxyFactory grainProxyFactory;
 	private final Logger logger = LoggerFactory.getLogger(GrainInjector.class);
 
 	public GrainInjector(Configuration configuration) {
 		this.container = new DependencyContainerImpl();
 		this.interpreter = new Interpreter();
+		this.grainProxyFactory = new GrainProxyFactory(container, grainNameResolver);
 		interpreter.putProperties(configuration.getProperties());
 		interpreter.putSymbol("configuration", configuration);
 		inject(this);
@@ -240,39 +244,56 @@ public class GrainInjector {
 		// If the dependency is initialized already we do nothing.
 		if (dependency.isInitialized()) return;
 
+
 		// We initialize the injectable
-		Object instance = ReflectionUtil.newInstance(
-				dependency.getConstructor(),
-				mapConstructorParametersToDependencies(dependency));
+		Object instance;
+		if (dependency.hasGrainMethodDependencies()) {
+			// If the dependency has grain method dependencies we need to
+			// create a proxy for it and delegate all method calls to the
+			// GrainResolvingProxyInterceptor in order to prevent creation
+			// of multiple instances of the same method dependency.
+			// E.g. if we have a Grain method that returns a Configuration,
+			// and we call it in multiple places we will have multiple instances
+			// of the Configuration class.
+			instance = grainProxyFactory.create(
+					dependency.getType(),
+					dependency.getConstructor().getParameterTypes(),
+					mapConstructorParametersToDependencies(dependency));
+		} else {
+			instance = ReflectionUtil.newInstance(
+					dependency.getConstructor(),
+					mapConstructorParametersToDependencies(dependency));
+		}
+
 		dependency.setInstance(instance);
 		logger.debug("Initialized '{}'", dependency.getType().getName());
 
 		// After initialization, we call @Grain methods and update the appropriate
 		// injectable with the result
-		dependency.getGrainMethods().forEach(method -> {
-			try {
-				Injectable methodDependency = InjectableReference.of(method)
-						.resolve(container);
-				Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
-				methodDependency.setObjectInstance(result);
-			} catch (Exception e) {
-				throw new GrainInitializationException("Failed to initialize grain " + dependency, e);
-			}
-		});
+        for (Method method : dependency.getGrainMethods()) {
+            try {
+                Injectable methodDependency = InjectableReference.of(method)
+                        .resolve(container);
+                Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
+                methodDependency.setInstance(result);
+            } catch (Exception e) {
+                throw new GrainInitializationException("Failed to initialize grain " + dependency, e);
+            }
+        }
 
-		// Finally, we set values to all @Inject annotated fields.
-		dependency.getInjectableFields().forEach(field -> {
-			if (!checkCondition(field.getAnnotation(Condition.class))) {
-				return;
-			}
-			InjectableReference reference = InjectableReference.of(field);
-			// @Note #resolveInstance will attempt to initialize the value if
-			// it is not initialized but that should matter in this because it
-			// already should've been initialized by now.
-			Object value = resolveInstance(reference);
-			ReflectionUtil.setFieldValue(field, instance, value);
-		});
-	}
+        // Finally, we set values to all @Inject annotated fields.
+        for (Field field : dependency.getInjectableFields()) {
+            if (!checkCondition(field.getAnnotation(Condition.class))) {
+                continue;
+            }
+            InjectableReference reference = InjectableReference.of(field);
+            // @Note #resolveInstance will attempt to initialize the value if
+            // it is not initialized but that should matter in this because it
+            // already should've been initialized by now.
+            Object value = resolveInstance(reference);
+            ReflectionUtil.setFieldValue(field, instance, value);
+        }
+    }
 
 	/**
 	 * Maps the method parameters to instances of corresponding dependencies.

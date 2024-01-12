@@ -1,7 +1,6 @@
 package com._7aske.grain.util;
 
-import com._7aske.grain.logging.Logger;
-import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.exception.GrainReflectionException;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -16,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ProxyInvocationHandler implements InvocationHandler {
 	private final Map<Method, MethodHandle> cache = new ConcurrentHashMap<>();
-	private static final Logger logger = LoggerFactory.getLogger(ProxyInvocationHandler.class);
 
 	public synchronized MethodHandle getInstance(Method method) throws Exception {
 		if (cache.containsKey(method)) {
@@ -36,7 +34,7 @@ public class ProxyInvocationHandler implements InvocationHandler {
 					.bindTo(proxy)
 					.invokeWithArguments(args);
 		}
-		logger.warn("Proxy call on a non-default method '{}'", method);
-		return null;
+
+		throw new GrainReflectionException("Proxy call on a non-default method");
 	}
 }

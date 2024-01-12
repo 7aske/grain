@@ -9,9 +9,13 @@ public interface DependencyContainer {
 
 	<T> T getGrain(Class<T> clazz);
 
+	<T> T getGrain(String name);
+
 	Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz);
 
 	<T> Optional<T> getOptionalGrain(Class<T> clazz);
+
+	<T> Optional<T> getOptionalGrain(String name);
 
 	<T> Collection<T> getGrains(Class<T> clazz);
 }

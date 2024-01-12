@@ -28,6 +28,12 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 	}
 
 	@Override
+	public <T> T getGrain(String name) {
+		return this.<T>getOptionalGrain(name)
+				.orElseThrow(() -> new IllegalStateException("No dependency of name '" + name + "' found."));
+	}
+
+	@Override
 	public <T> Collection<T> getGrains(Class<T> clazz) {
 		return getListByClass(clazz)
 				.stream()
@@ -49,6 +55,12 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 		return getByClass(clazz)
 				.map(Injectable::getInstance)
 				.map(clazz::cast);
+	}
+
+	@Override
+	public <T> Optional<T> getOptionalGrain(String name) {
+		return getByName(name)
+				.map(Injectable::getInstance);
 	}
 
 	@Override

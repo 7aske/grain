@@ -1,6 +1,7 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.exception.GrainReflectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,8 +37,8 @@ class GrainInjectorTest {
 		Optional<TestDefault> testDefault = grainInjector.getContainer().getOptionalGrain(TestDefault.class);
 		assertTrue(testDefault.isPresent());
 		assertEquals("Hello 7aske", testDefault.get().sayHello("7aske"));
-		// Non-default method invocations should silently fail and return null.
-		assertNull(testDefault.get().sayGoodbye("7aske"));
+		// Non-default method invocations should
+		assertThrows(GrainReflectionException.class, () -> testDefault.get().sayGoodbye("7aske"));
 	}
 
 	@Retention(RUNTIME)
