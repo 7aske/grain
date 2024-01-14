@@ -3,7 +3,7 @@ package com._7aske.grain.http;
 
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpHeaders;
-import com._7aske.grain.web.server.HttpRequestReader;
+import com._7aske.grain.web.server.silo.HttpRequestReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedInputStream;

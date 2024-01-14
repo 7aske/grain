@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com._7aske.grain.web.http.RequestParams.URL_ENCODED_VALUE_SEPARATOR;
-import static com._7aske.grain.web.server.HttpRequestReader.*;
+import static com._7aske.grain.web.server.silo.HttpRequestReader.*;
 
 public class HttpHeader {
     private String name;

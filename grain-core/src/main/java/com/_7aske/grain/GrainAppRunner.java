@@ -3,11 +3,11 @@ package com._7aske.grain;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.core.reflect.ReflectionUtil;
-import com._7aske.grain.web.server.Silo;
+import com._7aske.grain.web.server.Server;
 
 /**
  * Grain application runner responsible for handling initialization of the
@@ -41,8 +41,6 @@ public final class GrainAppRunner {
     // required parameters and allow proper injection of configuration object
     static void initialize(Class<?> clazz) {
         if (GrainApp.class.isAssignableFrom(clazz)) {
-            // @Temporary until I figure out have to implement @Grain methods
-            //   that can be used to re-configure grains.
             GrainApp instance = (GrainApp) ReflectionUtil.newInstance(clazz);
             instance.configure(configuration);
         }
@@ -57,7 +55,7 @@ public final class GrainAppRunner {
 
     // Main run loop
     static void doRun() {
-        Silo silo = new Silo(configuration, context);
-        silo.run();
+        Server server = context.getGrain(Server.class);
+        server.run();
     }
 }

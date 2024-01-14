@@ -82,8 +82,7 @@ public class GrainJarClassLoader implements GrainClassLoader {
 
 	@Override
 	public Set<Class<?>> loadClasses(Predicate<Class<?>> predicate) {
-		final URLClassLoader urlClassLoader = new URLClassLoader(jars.toArray(new URL[0]));
-		try {
+		try (final URLClassLoader urlClassLoader = new URLClassLoader(jars.toArray(new URL[0]))) {
 			return doLoadClasses(basePackage)
 					.stream()
 					.filter(url -> !url.startsWith("META-INF"))
@@ -99,8 +98,9 @@ public class GrainJarClassLoader implements GrainClassLoader {
 					})
 					.filter(Objects::nonNull)
 					.filter(predicate)
-					.peek(c -> {
+					.map(c -> {
 						logger.debug("Loading {}", c);
+						return c;
 					})
 					.collect(Collectors.toSet());
 		} catch (IOException e) {

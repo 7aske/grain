@@ -2,9 +2,10 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
+import com._7aske.grain.core.configuration.GrainFertilizer;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.util.By;
-import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -25,6 +26,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	private final List<Method> afterInitMethods;
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final int order;
+	private boolean primary;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
@@ -46,6 +48,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		this.valueFields = new ArrayList<>();
 		this.afterInitMethods = new ArrayList<>();
 		this.order = order;
+		this.primary = isAnnotationPresent(type, Primary.class);
 	}
 
 	public static Injectable ofMethod(@NotNull Method method, @Nullable String name, Injectable provider) {
@@ -55,6 +58,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		Injectable injectable = new Injectable(method.getReturnType(), name, null, order);
 		injectable.parent = provider;
 		injectable.parentMethod = method;
+		injectable.primary = isAnnotationPresent(method.getReturnType(), Primary.class);
 		Collection<InjectableReference> dependencies = Arrays.stream(method.getParameters())
 				.map(InjectableReference::of)
 				.toList();
@@ -63,7 +67,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		return injectable;
 	}
 
-	public static  Injectable ofInitialized(Object grain) {
+	public static Injectable ofInitialized(Object grain) {
 		return new Injectable(grain.getClass(), null, null, Order.HIGHEST_PRECEDENCE);
 	}
 
@@ -87,9 +91,14 @@ class Injectable implements Ordered, Comparable<Injectable> {
 			}
 		}
 
-		this.order = Optional.ofNullable(this.type.getAnnotation(Order.class))
-				.map(Order::value)
-				.orElse(Order.DEFAULT);
+		if (isAnnotationPresent(this.type, GrainFertilizer.class)) {
+			this.order = Order.HIGHEST_PRECEDENCE;
+		} else {
+			this.order = Optional.ofNullable(this.type.getAnnotation(Order.class))
+					.map(Order::value)
+					.orElse(Order.DEFAULT);
+		}
+		this.primary = isAnnotationPresent(this.type, Primary.class);
 
 		this.grainMethods = Arrays.stream(this.type.getDeclaredMethods())
 				.filter(m -> isAnnotationPresent(m, Grain.class))
@@ -224,6 +233,9 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	@Override
 	public int compareTo(Injectable o) {
+		if (primary && !o.primary) return -1;
+		if (!primary && o.primary) return 1;
+
 		return By.<Injectable>order()
 				.thenComparing(By.packages(Injectable::getType))
 				.compare(this, o);

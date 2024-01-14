@@ -5,7 +5,7 @@ import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 
 /**
- * Optional base class used to overrider and provide programmatic access to
+ * Optional base class used to override and provide programmatic access to
  * application configuration.
  */
 public class GrainApp {

@@ -1,4 +1,4 @@
-package com._7aske.grain.web.server;
+package com._7aske.grain.web.server.silo;
 
 import com._7aske.grain.web.http.GrainHttpResponse;
 import com._7aske.grain.web.http.HttpHeaders;

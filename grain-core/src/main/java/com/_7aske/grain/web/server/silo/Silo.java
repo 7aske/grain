@@ -1,11 +1,10 @@
-package com._7aske.grain.web.server;
+package com._7aske.grain.web.server.silo;
 
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.exception.AppInitializationException;
-import com._7aske.grain.logging.Logger;
-import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.web.server.Server;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -18,16 +17,12 @@ import java.util.concurrent.Executors;
 /**
  * Silo is an attempt at an application/web server for Grain. Handles only HTTP requests - barely.
  */
-public class Silo {
-    private final Logger logger = LoggerFactory.getLogger(Silo.class);
-    private final Configuration configuration;
-    private final ApplicationContext context;
-
+public class Silo extends Server {
     public Silo(Configuration configuration, ApplicationContext context) {
-        this.configuration = configuration;
-        this.context = context;
+        super(configuration, context);
     }
 
+    @Override
     public void run() {
         logger.info("Started Grain application on {}:{}", configuration.get(ConfigurationKey.SERVER_HOST), configuration.get(ConfigurationKey.SERVER_PORT));
 

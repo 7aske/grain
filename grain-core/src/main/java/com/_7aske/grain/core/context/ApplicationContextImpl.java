@@ -6,6 +6,7 @@ import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.GrainApplication;
+import com._7aske.grain.core.configuration.GrainFertilizer;
 import com._7aske.grain.core.reflect.classloader.GrainJarClassLoader;
 
 import java.lang.annotation.Annotation;
@@ -23,12 +24,14 @@ public class ApplicationContextImpl implements ApplicationContext {
 		this.basePackage = basePackage;
 		this.configuration = configuration;
 		GrainInjector grainInitializer = new GrainInjector(configuration);
+		grainInitializer.inject(this);
 
 		Set<Class<?>> classes = Arrays.stream(new String[]{GrainAppRunner.class.getPackageName(), basePackage})
 				.flatMap(pkg -> new GrainJarClassLoader(pkg)
-						.loadClasses(cl -> !cl.isAnnotation() && isAnyAnnotationPresent(cl, Grain.class, GrainApplication.class))
+						.loadClasses(cl -> !cl.isAnnotation() && isAnyAnnotationPresent(cl, Grain.class, GrainFertilizer.class, GrainApplication.class))
 						.stream())
 				.collect(Collectors.toCollection(LinkedHashSet::new));
+
 		grainInitializer.inject(classes);
 
 		this.dependencyContainer = grainInitializer.getContainer();
