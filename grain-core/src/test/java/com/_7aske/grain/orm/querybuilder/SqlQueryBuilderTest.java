@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import static com._7aske.grain.util.QueryBuilderUtil.getJoins;
+import static com._7aske.grain.orm.querybuilder.QueryBuilderUtil.getJoins;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SqlQueryBuilderTest {

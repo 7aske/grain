@@ -49,8 +49,17 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 		if (user.isCredentialsExpired())
 			throw new CredentialsExpiredException("Credentials expired");
 
-		Cookie gsid = new Cookie(SESSION_COOKIE_NAME, UUID.randomUUID().toString());
-		gsid.setMaxAge(System.currentTimeMillis() / 1000 + SessionConstants.SESSION_DEFAULT_MAX_AGE);
+		Cookie gsid = null;
+		for (Cookie cookie : request.getCookies()) {
+			if (cookie.getName().equals(SESSION_COOKIE_NAME)) {
+				gsid = cookie;
+			}
+		}
+		if (gsid == null) {
+			gsid = new Cookie(SESSION_COOKIE_NAME, UUID.randomUUID().toString());
+			gsid.setMaxAge((int) (System.currentTimeMillis() / 1000 + SessionConstants.SESSION_DEFAULT_MAX_AGE));
+		}
+
 		Authentication authentication = new CookieAuthentication(username, gsid, user.getAuthorities());
 		sessionStore.setToken(gsid.getId(), gsid);
 		sessionStore.put(gsid.getId(), SecurityConstants.AUTHENTICATION_KEY, authentication);
@@ -58,6 +67,8 @@ public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoi
 		// @Hack
 		if (response instanceof GrainHttpResponse res) {
 			res.setCookie(gsid);
+		} else {
+			response.addCookie(gsid);
 		}
 
 		return authentication;

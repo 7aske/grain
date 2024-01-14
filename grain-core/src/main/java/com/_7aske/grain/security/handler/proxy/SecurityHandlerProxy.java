@@ -17,7 +17,7 @@ public class SecurityHandlerProxy extends AbstractRequestHandlerProxy {
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws Exception {
+	public void handle(HttpRequest request, HttpResponse response) {
 
 		boolean result = new RuleUrlPatternMatcher(securityConfiguration.getRules()).matches(request);
 		if (result) {

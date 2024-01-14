@@ -50,7 +50,8 @@ public class HandlerRunner {
 			}
 		}
 
-		if (!response.isCommitted())
+		if (!response.isCommitted()) {
 			throw new HttpException.NotFound(request.getPath());
+		}
 	}
 }

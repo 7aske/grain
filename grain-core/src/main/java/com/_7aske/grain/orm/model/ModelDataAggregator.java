@@ -9,7 +9,7 @@ import com._7aske.grain.orm.querybuilder.helper.OneToManyField;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.QueryBuilderUtil.*;
+import static com._7aske.grain.orm.querybuilder.QueryBuilderUtil.*;
 import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
 /**

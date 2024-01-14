@@ -8,7 +8,6 @@ import com._7aske.grain.orm.exception.GrainDbUpdateIdMissingException;
 import com._7aske.grain.orm.model.Model;
 import com._7aske.grain.orm.page.Pageable;
 import com._7aske.grain.orm.querybuilder.helper.ModelField;
-import com._7aske.grain.util.QueryBuilderUtil;
 
 import java.util.HashMap;
 import java.util.List;

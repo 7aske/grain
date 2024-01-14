@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class CookieAuthentication implements Authentication {
-	private String username;
-	private Cookie credentials;
-	private Collection<? super Authority> authorities;
+	private final String username;
+	private final Cookie credentials;
+	private final Collection<? super Authority> authorities;
 
 	public CookieAuthentication(String username, Cookie credentials, Collection<? super Authority> authorities) {
 		this.username = username;
@@ -17,9 +17,7 @@ public class CookieAuthentication implements Authentication {
 		this.authorities = authorities;
 	}
 	public CookieAuthentication(Cookie credentials) {
-		this.username = null;
-		this.credentials = credentials;
-		this.authorities = new ArrayList<>();
+		this(null, credentials, new ArrayList<>());
 	}
 
 	@Override
@@ -39,7 +37,7 @@ public class CookieAuthentication implements Authentication {
 
 	@Override
 	public void setAuthenticated(boolean authenticated) {
-		credentials.setMaxAge(System.currentTimeMillis() / 1000 + SessionConstants.SESSION_DEFAULT_MAX_AGE);
+		credentials.setMaxAge((int) (System.currentTimeMillis() / 1000 + SessionConstants.SESSION_DEFAULT_MAX_AGE));
 	}
 
 	@Override
@@ -49,6 +47,11 @@ public class CookieAuthentication implements Authentication {
 
 	@Override
 	public void setAuthorities(Collection<? super Authority> authorities) {
-		this.authorities = authorities;
+		this.authorities.clear();
+		for (Object authority : authorities) {
+			if (authority instanceof Authority a) {
+				this.authorities.add(a);
+			}
+		}
 	}
 }

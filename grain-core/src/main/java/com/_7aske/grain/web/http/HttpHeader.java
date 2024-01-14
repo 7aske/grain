@@ -7,15 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com._7aske.grain.web.http.RequestParams.URL_ENCODED_VALUE_SEPARATOR;
 import static com._7aske.grain.web.server.HttpRequestReader.*;
 
 public class HttpHeader {
     private String name;
     private String value = "";
-    private Map<String, String> parameters = new HashMap<>();
-
-    public HttpHeader() {
-    }
+    private final Map<String, String> parameters = new HashMap<>();
 
     public static HttpHeader parse(String header) {
         HttpHeader requestHeader = new HttpHeader();

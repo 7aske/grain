@@ -1,6 +1,8 @@
 package com._7aske.grain.util;
 
 public class NumberUtil {
+	private NumberUtil() {}
+
 	public static Number getNumberOrFloat(String value) {
 		try {
 			float parsed = Float.parseFloat(value);

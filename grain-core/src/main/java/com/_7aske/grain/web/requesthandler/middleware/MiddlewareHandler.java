@@ -1,6 +1,7 @@
 package com._7aske.grain.web.requesthandler.middleware;
 
-import com._7aske.grain.exception.GrainRuntimeException;
+import com._7aske.grain.core.component.Order;
+import com._7aske.grain.core.component.Ordered;
 import com._7aske.grain.util.HttpPathUtil;
 import com._7aske.grain.web.controller.annotation.Mappings;
 import com._7aske.grain.web.http.HttpMethod;
@@ -11,7 +12,9 @@ import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 import com._7aske.grain.web.requesthandler.staticlocation.StaticHandlerRegistry;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * {@link RequestHandler} implementation responsible for integrating {@link Middleware} instances.
@@ -21,10 +24,11 @@ import java.util.List;
  * it. Middleware classes must be defined as Grains in order to be loaded by the
  * framework.
  */
-public class MiddlewareHandler implements RequestHandler {
+public class MiddlewareHandler implements RequestHandler, Ordered {
 	private final Middleware middleware;
 	private final List<HttpMethod> methods;
 	private final String path;
+	private final int order;
 
 	/**
 	 * Constructs a new {@link MiddlewareHandler} instance.
@@ -32,18 +36,11 @@ public class MiddlewareHandler implements RequestHandler {
 	 */
 	public MiddlewareHandler(Middleware middleware) {
 		this.middleware = middleware;
-		HttpMethod[] httpMethods = new HttpMethod[0];
-		try {
-			httpMethods = Mappings.getAnnotatedHttpMethods(middleware.getClass());
-		} catch (GrainRuntimeException ex) {
-			// Throw happens if the middleware was not annotated with @RequestMapping.
-			// Middleware doesn't have to be annotated with this annotation but
-			// the method used for resolving RequestMapping annotations is used for
-			// controllers mainly where it is required. This should be changed in
-			// the future.
-		}
-		this.methods = Arrays.asList(httpMethods);
-		this.path = Mappings.getAnnotatedHttpPath(middleware.getClass());
+		this.order = Optional.ofNullable(middleware.getClass().getAnnotation(Order.class))
+				.map(Order::value)
+				.orElse(Order.DEFAULT);
+		this.methods = Arrays.asList(Mappings.getAnnotatedHttpMethods(middleware.getClass(), HttpMethod.values()));
+		this.path= Mappings.getAnnotatedHttpPath(middleware.getClass(), "/");
 	}
 
 	@Override
@@ -62,5 +59,15 @@ public class MiddlewareHandler implements RequestHandler {
 	@Override
 	public String getPath() {
 		return path;
+	}
+
+	@Override
+	public Collection<HttpMethod> getMethods() {
+		return methods;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
 	}
 }

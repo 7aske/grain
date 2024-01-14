@@ -9,6 +9,7 @@ public final class ConfigurationKey {
 	public static final String SECURITY_ENABLED             = "grain.security.enabled";
 	public static final String SESSION_ENABLED              = "grain.session.enabled";
 	public static final String SESSION_MAX_AGE              = "grain.session.max-age";
+	public static final String SERVER_CONTEXT_PATH          = "grain.server.context-path";
 	public static final String SERVER_PORT                  = "grain.server.port";
 	public static final String SERVER_HOST                  = "grain.server.host";
 	public static final String SERVER_THREADS               = "grain.server.threads";

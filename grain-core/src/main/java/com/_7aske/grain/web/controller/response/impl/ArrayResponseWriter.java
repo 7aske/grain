@@ -26,7 +26,7 @@ public class ArrayResponseWriter extends AbstractResponseWriterSupport<Object[]>
     protected void writeInternal(Object[] returnValue, HttpRequest request, HttpResponse response, RequestHandler handler) throws IOException {
         try (OutputStream outputStream = response.getOutputStream()) {
             jsonMapper.writeValue(jsonMapper.mapValue(returnValue), outputStream);
+            response.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON);
         }
-        response.setHeader(CONTENT_TYPE, ContentType.APPLICATION_JSON);
     }
 }

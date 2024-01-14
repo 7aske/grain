@@ -34,20 +34,20 @@ public class CookieSessionInitializer implements SessionInitializer {
 				.orElseGet(() -> {
 					// If the token doesn't exist we create a new one
 					Cookie cookie = new Cookie(SESSION_COOKIE_NAME, UUID.randomUUID().toString());
-					cookie.setMaxAge(maxAge);
+					cookie.setMaxAge((int) maxAge);
 					return cookie;
 				});
 
 		if (!sessionStore.hasSession(gsid.getId())) {
 			sessionStore.setToken(gsid.getId(), gsid);
-			gsid.setMaxAge(maxAge);
+			gsid.setMaxAge((int) maxAge);
 			gsid.setPath("/");
 		} else {
 			SessionToken existing = sessionStore.getToken(gsid.getValue());
 			if (existing.isExpired()) {
 				sessionStore.invalidateSession(existing.getId());
 				gsid = new Cookie(SESSION_COOKIE_NAME, UUID.randomUUID().toString());
-				gsid.setMaxAge(maxAge);
+				gsid.setMaxAge((int) maxAge);
 				sessionStore.setToken(gsid.getId(), gsid);
 			}
 		}

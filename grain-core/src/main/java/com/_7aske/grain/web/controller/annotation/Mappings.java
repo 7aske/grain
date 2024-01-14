@@ -8,6 +8,14 @@ import java.lang.reflect.AnnotatedElement;
 public class Mappings {
     private Mappings() {}
 
+    public static <T extends AnnotatedElement> String getAnnotatedHttpPath(T element, String defaultPath) {
+        try {
+            return getAnnotatedHttpPath(element);
+        } catch (GrainRuntimeException e) {
+            return defaultPath;
+        }
+    }
+
     /**
      * Extracts handler path from any of the valid @RequestMapping annotations.
      *
@@ -35,6 +43,13 @@ public class Mappings {
         throw new GrainRuntimeException("Method not annotated with a valid @RequestMapping annotation");
     }
 
+    public static <T extends AnnotatedElement> HttpMethod[] getAnnotatedHttpMethods(T element, HttpMethod[] defaultMethods) {
+        try {
+            return getAnnotatedHttpMethods(element);
+        } catch (GrainRuntimeException e) {
+            return defaultMethods;
+        }
+    }
 
     /**
      * Extracts http handler method from any of the valid @RequestMapping annotations.

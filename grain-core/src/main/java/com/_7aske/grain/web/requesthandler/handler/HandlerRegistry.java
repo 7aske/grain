@@ -6,6 +6,8 @@ import com._7aske.grain.web.requesthandler.controller.ControllerHandlerRegistry;
 import com._7aske.grain.web.requesthandler.middleware.MiddlewareHandlerRegistry;
 import com._7aske.grain.web.requesthandler.staticlocation.StaticHandlerRegistry;
 
+import java.util.List;
+
 /**
  * HandlerRegistry is a component in charge of configuring and registering {@link RequestHandler}s.
  * HandlerRegistry should be able to receive the {@link HttpRequest} and {@link HttpResponse} and forward them
@@ -24,4 +26,11 @@ public interface HandlerRegistry {
 	 * @param response the {@link HttpResponse} to be handled.
 	 */
 	void handle(HttpRequest request, HttpResponse response);
+
+	/**
+	 * Method used for retrieving all registered {@link RequestHandler}s.
+	 *
+	 * @return a list of all registered {@link RequestHandler}s.
+	 */
+	List<RequestHandler> getHandlers();
 }

@@ -36,7 +36,7 @@ public class FormDataMapper<T> {
 							field.set(instance, null);
 						} else if (Byte.class.isAssignableFrom(field.getType())) {
 							field.set(instance, Byte.parseByte(val));
-						} else if (Byte.class.isAssignableFrom(field.getType())) {
+						} else if (Short.class.isAssignableFrom(field.getType())) {
 							field.set(instance, Short.parseShort(val));
 						} else if (Integer.class.isAssignableFrom(field.getType())) {
 							field.set(instance, Integer.parseInt(val));

@@ -1,6 +1,8 @@
 package com._7aske.grain.web.requesthandler.staticlocation;
 
+import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.exception.http.HttpException;
+import com._7aske.grain.logging.Logger;
 import com._7aske.grain.web.http.*;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 
@@ -11,7 +13,10 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.List;
 
+import static com._7aske.grain.logging.LoggerFactory.*;
 import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 import static com._7aske.grain.util.HttpPathUtil.join;
 
@@ -20,6 +25,7 @@ public class StaticLocationHandler implements RequestHandler {
 	private final String location;
 	private final boolean isResource;
 	private static final String INDEX_PAGE = "index.html";
+	private final Logger logger;
 
 	public StaticLocationHandler(String location) {
 		this.isResource = location.startsWith(StaticLocationsRegistry.RESOURCES_PREFIX);
@@ -29,11 +35,13 @@ public class StaticLocationHandler implements RequestHandler {
 		} else {
 			this.location = location;
 		}
+		this.logger = getLogger(getClass());
 	}
 
 
 	@Override
 	public void handle(HttpRequest request, HttpResponse response) {
+		logger.debug("Handling {} {}", request.getMethod(), request.getPath());
 		Path path = Paths.get(location, request.getPath());
 		try (InputStream inputStream = getInputStream(path)) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, probeContentTypeNoThrow(path, "text/html"));
@@ -64,9 +72,14 @@ public class StaticLocationHandler implements RequestHandler {
 				joined = join(joined, INDEX_PAGE);
 				url = classLoader.getResource(joined);
 			}
-			return url != null;
+
+			if (url == null) {
+				return false;
+			}
+
+			return Paths.get(url.getPath()).toFile().isFile();
 		} else {
-			return new File(Paths.get(location, path).toAbsolutePath().toString()).exists();
+			return Paths.get(location, path).toAbsolutePath().toFile().exists();
 		}
 	}
 
@@ -93,8 +106,14 @@ public class StaticLocationHandler implements RequestHandler {
 	}
 
 	@Override
-	public String getPath() {
+	public @NotNull String getPath() {
 		return location;
 	}
+
+	@Override
+	public Collection<HttpMethod> getMethods() {
+		return List.of(HttpMethod.GET);
+	}
+
 }
 

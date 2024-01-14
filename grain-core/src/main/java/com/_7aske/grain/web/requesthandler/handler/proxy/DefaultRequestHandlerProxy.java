@@ -1,12 +1,10 @@
 package com._7aske.grain.web.requesthandler.handler.proxy;
 
-import com._7aske.grain.web.http.HttpRequest;
-import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
-
-import java.io.IOException;
 
 /**
  * This implementation of {@link AbstractRequestHandlerProxy} is basically a logging
@@ -24,7 +22,7 @@ public final class DefaultRequestHandlerProxy extends AbstractRequestHandlerProx
 	}
 
 	@Override
-	public void handle(HttpRequest request, HttpResponse response) throws Exception {
+	public void handle(HttpRequest request, HttpResponse response) {
 		logger.trace("Proxying request for {}", target.getClass());
 		target.handle(request, response);
 	}

@@ -3,11 +3,13 @@ package com._7aske.grain.web.server;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.core.context.ApplicationContext;
+import com._7aske.grain.exception.http.HttpException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.authentication.provider.HttpRequestAuthenticationProviderStrategy;
 import com._7aske.grain.security.context.SecurityContextHolder;
+import com._7aske.grain.util.HttpPathUtil;
 import com._7aske.grain.web.controller.exceptionhandler.ExceptionControllerHandler;
 import com._7aske.grain.web.http.GrainHttpRequest;
 import com._7aske.grain.web.http.GrainHttpResponse;
@@ -24,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 
 import static com._7aske.grain.core.configuration.ConfigurationKey.REQUEST_HANDLER_ACCESS_LOG;
+import static com._7aske.grain.core.configuration.ConfigurationKey.SERVER_CONTEXT_PATH;
 
 public class RequestHandlerRunnable implements Runnable {
 	private final Logger logger = LoggerFactory.getLogger(RequestHandlerRunnable.class);
@@ -37,6 +40,7 @@ public class RequestHandlerRunnable implements Runnable {
 	private final boolean sessionEnabled;
 	private final SimpleDateFormat DATE_HEADER_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 	private final String SERVER_NAME = "Silo";
+	private final String contextPath;
 	private final ExceptionControllerHandler errorHandler;
 
 	public RequestHandlerRunnable(ApplicationContext context, Socket socket) {
@@ -48,6 +52,7 @@ public class RequestHandlerRunnable implements Runnable {
 		this.logEnabled = configuration.getBoolean(REQUEST_HANDLER_ACCESS_LOG, true);
 		this.sessionEnabled = configuration.getBoolean(ConfigurationKey.SESSION_ENABLED, true);
 		this.errorHandler = context.getGrain(ExceptionControllerHandler.class);
+		this.contextPath = this.configuration.get(SERVER_CONTEXT_PATH, "/") + "/**";
 	}
 
 	@Override
@@ -74,6 +79,10 @@ public class RequestHandlerRunnable implements Runnable {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
 			try {
+				if (!HttpPathUtil.antMatching(contextPath, request.getPath())){
+					throw new HttpException.NotFound(request.getPath());
+				}
+
 				handlerRunner.handle(request, response);
 			} catch (Exception ex) {
 				Throwable actual = ex.getCause() != null ? ex.getCause() : ex;

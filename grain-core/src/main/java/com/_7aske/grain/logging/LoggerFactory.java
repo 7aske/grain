@@ -39,11 +39,21 @@ public class LoggerFactory {
 	/**
 	 * Creates a new configured {@link Logger} instance.
 	 *
-	 * @param clazz Class that will be the name of the new logger.
+	 * @param clazz Class to create a logger for.
 	 * @return A new configured {@link Logger} instance.
 	 */
 	public static Logger getLogger(Class<?> clazz) {
-		java.util.logging.Logger logger = java.util.logging.Logger.getLogger(clazz.getName());
+		return getLogger(clazz.getName());
+	}
+
+	/**
+	 * Creates a new configured {@link Logger} instance.
+	 *
+	 * @param name Name of the new logger.
+	 * @return A new configured {@link Logger} instance.
+	 */
+	public static Logger getLogger(String name) {
+		java.util.logging.Logger logger = java.util.logging.Logger.getLogger(name);
 		LogManager logManager = LogManager.getLogManager();
 
 		// We have to set the level manually as LogManager will not do that for us.

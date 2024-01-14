@@ -29,5 +29,6 @@ public class NullResponseWriter extends AbstractResponseWriterSupport<Void> {
         String requestContentType = request.getHeader(CONTENT_TYPE);
         response.setHeader(CONTENT_TYPE, requestContentType == null ? ContentType.TEXT_PLAIN : requestContentType);
         response.setStatus(HttpStatus.NO_CONTENT);
+        response.getOutputStream().close();
     }
 }

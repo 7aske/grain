@@ -4,11 +4,11 @@ import com._7aske.grain.exception.GrainRuntimeException;
 import com._7aske.grain.exception.http.HttpParsingException;
 import com._7aske.grain.util.ArrayUtil;
 import com._7aske.grain.util.ByteBuffer;
-import com._7aske.grain.util.StreamUtil;
 import com._7aske.grain.util.StringUtils;
 import com._7aske.grain.web.http.GrainHttpRequest;
 import com._7aske.grain.web.http.HttpHeader;
 import com._7aske.grain.web.http.HttpMethod;
+import com._7aske.grain.web.http.RequestParams;
 import com._7aske.grain.web.http.multipart.PartImpl;
 import com._7aske.grain.web.http.session.Cookie;
 
@@ -33,9 +33,6 @@ public class HttpRequestReader implements AutoCloseable {
     private final BufferedInputStream reader;
     private final ByteBuffer buffer;
     public static final Pattern QUERY_PARAMS_DELIMITER_REGEX = Pattern.compile("\\?");
-    public static final Pattern URL_ENCODED_VALUE_LIST_SEPARATOR_REGEX = Pattern.compile("\\s*,\\s*");
-    public static final Pattern URL_ENCODED_VALUE_SEPARATOR = Pattern.compile("=");
-    public static final Pattern URL_ENCODED_KEY_SEPARATOR = Pattern.compile("&");
     public static final Pattern HEADER_PARAMETER_SEPARATOR_REGEX = Pattern.compile("\\s*;\\s*");
     public static final Pattern HEADER_SEPARATOR_REGEX = Pattern.compile(":\\s*");
     public static final Pattern REQUEST_LINE_SEPARATOR = Pattern.compile(" ");
@@ -91,12 +88,12 @@ public class HttpRequestReader implements AutoCloseable {
                 .orElse(Charset.defaultCharset());
 
         // Now that we have encoding information we can put parameters
-        request.putParameters(parseParameters(request.getQueryString(), request.getCharacterEncoding()));
+        request.putParameters(RequestParams.parse(request.getQueryString(), request.getCharacterEncoding()).getParameters());
 
         long contentLength = request.getContentLength();
         if (contentLength > 0 && (Objects.equals(request.getHeader(CONTENT_TYPE), APPLICATION_X_WWW_FORM_URLENCODED))) {
             String body = new String(reader.readNBytes((int) contentLength), encoding);
-            request.putParameters(parseParameters(body, request.getCharacterEncoding()));
+            request.putParameters(RequestParams.parse(body, request.getCharacterEncoding()).getParameters());
         } else if (contentLength > 0 && Objects.equals(request.getHeader(CONTENT_TYPE), MULTIPART_FORM_DATA)) {
             parseMultipart(request, reader);
         } else if (contentLength > 0) {
@@ -168,32 +165,6 @@ public class HttpRequestReader implements AutoCloseable {
 
         }
 
-    }
-
-    public Map<String, String[]> parseParameters(String queryString, String characterEncoding) {
-        Map<String, String[]> parameters = new HashMap<>();
-        if (StringUtils.isBlank(queryString)) {
-            return new HashMap<>();
-        }
-
-        Arrays.stream(URL_ENCODED_KEY_SEPARATOR.split(queryString))
-                .map(URL_ENCODED_VALUE_SEPARATOR::split)
-                .forEach(kv -> {
-                    if (kv.length == 2) {
-                        String[] values = URL_ENCODED_VALUE_LIST_SEPARATOR_REGEX
-                                .split(URLDecoder.decode(kv[1], Charset.forName(characterEncoding)));
-                        if (parameters.containsKey(kv[0])) {
-                            String[] existing = parameters.get(kv[0]);
-                            String[] updated = ArrayUtil.join(existing, values);
-                            parameters.put(kv[0], updated);
-                        } else {
-                            parameters.put(kv[0], values);
-                        }
-                    } else {
-                        parameters.put(kv[0], new String[]{""});
-                    }
-                });
-        return parameters;
     }
 
     private void parseRequestLine(String requestLineString, GrainHttpRequest request) {

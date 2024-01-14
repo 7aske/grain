@@ -5,7 +5,7 @@ import com._7aske.grain.orm.model.Model;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com._7aske.grain.util.QueryBuilderUtil.getAlias;
+import static com._7aske.grain.orm.querybuilder.QueryBuilderUtil.getAlias;
 
 public class Join<S extends Model, T extends Model> {
 	private String sourceAlias;

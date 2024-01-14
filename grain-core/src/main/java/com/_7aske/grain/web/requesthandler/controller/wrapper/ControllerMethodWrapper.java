@@ -55,4 +55,8 @@ public class ControllerMethodWrapper extends AbstractControllerMethodWrapper {
 			logger.warn("Path variables != declared variables in method {}", method.getName());
 		}
 	}
+
+	public String getName() {
+		return this.method.getDeclaringClass().getName() + "#" + this.method.getName();
+	}
 }

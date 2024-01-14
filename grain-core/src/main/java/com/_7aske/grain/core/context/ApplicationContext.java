@@ -3,14 +3,8 @@ package com._7aske.grain.core.context;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.configuration.Configuration;
 
-public interface ApplicationContext {
-	DependencyContainer getDependencyContainer();
-
+public interface ApplicationContext extends DependencyContainer {
 	Configuration getConfiguration();
 
 	String getPackage();
-
-	<T> T getGrain(Class<T> clazz);
-
-	void registerGrain(Object grain);
 }

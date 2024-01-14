@@ -1,47 +1,34 @@
 package com._7aske.grain.web.http.session;
 
+import com._7aske.grain.exception.http.CookieParsingException;
 import com._7aske.grain.util.formatter.StringFormat;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * CLass representation of RFC6265 cookie
  */
 public class Cookie implements SessionToken {
-	// @formatter:off
+	public static final String DOMAIN = "Domain";
+	public static final String MAX_AGE = "Max-Age";
+	public static final String PATH = "Path";
+	public static final String SECURE = "Secure";
+	public static final String HTTP_ONLY = "HttpOnly";
+
 	private String  name     = null;
 	private String  value    = null;
-	@Deprecated // only version 0 uses expires
-	private long    expires  = -1;
-	private long    maxAge   = -1;
-	private String  domain   = null;
-	private String  path     = "/";
-	private boolean secure   = false;
-	private boolean httpOnly = false;
-	// @formatter:on
+	private volatile ConcurrentMap<String,String> attributes;
 
 	public static final long DEFAULT_EXPIRY_VALUE = 0L;
 
 	private Cookie() {
 	}
 
-	public Cookie(String name, String value, Long expires, Long maxAge, String domain, String path, boolean secure, boolean httpOnly) {
-		this.name = name;
-		this.value = value;
-		this.expires = expires;
-		this.maxAge = maxAge;
-		this.domain = domain;
-		this.path = path;
-		this.secure = secure;
-		this.httpOnly = httpOnly;
-	}
-
 	public Cookie(String name, String value) {
-		this();
 		this.name = name;
 		this.value = value;
 	}
@@ -54,24 +41,32 @@ public class Cookie implements SessionToken {
 		Cookie cookie = new Cookie();
 		for (String kv : data.split(";\\s?")) {
 			String[] parts = kv.split("\\s*=\\s*");
-			String key = parts[0];
+			if (parts.length == 0) {
+				continue;
+			}
+
+            for (String part : parts) {
+                if (part == null) {
+                    throw new CookieParsingException("Cookie parsing failed: " + data);
+                }
+            }
+
+			String key = parts[0].toLowerCase();
 			String value = parts[1] == null ? null : URLDecoder.decode(parts[1], StandardCharsets.UTF_8);
-			if (Attr.get(key) == Attr.EXPIRES) {
-				cookie.expires = value == null ? 0 : Long.parseLong(value);
-			} else if (Attr.get(key) == Attr.MAX_AGE) {
-				cookie.maxAge = value == null ? 0 : Long.parseLong(value);
-			} else if (Attr.get(key) == Attr.DOMAIN) {
-				cookie.domain = value;
-			} else if (Attr.get(key) == Attr.PATH) {
-				cookie.path = value;
-			} else if (Attr.get(key) == Attr.SECURE) {
-				cookie.secure = true;
-			} else if (Attr.get(key) == Attr.HTTP_ONLY) {
-				cookie.httpOnly = true;
+			if (key.equals(MAX_AGE.toLowerCase())) {
+				cookie.setAttributeInternal(MAX_AGE, value);
+			} else if (key.equals(DOMAIN.toLowerCase())) {
+				cookie.setAttributeInternal(DOMAIN, value);
+			} else if (key.equals(PATH.toLowerCase())) {
+				cookie.setAttributeInternal(PATH, value);
+			} else if (key.equals(SECURE.toLowerCase())) {
+				cookie.setAttributeInternal(SECURE, value);
+			} else if (key.equals(HTTP_ONLY.toLowerCase())) {
+				cookie.setAttributeInternal(HTTP_ONLY, value);
 			} else if (cookie.name == null) {
 				// If none of the attributes match that means that
 				// we have the cookie name=value pair
-				cookie.name = key;
+				cookie.name = parts[0];
 				cookie.value = value;
 			} else {
 				// If the cookie name is already been set and none of
@@ -80,24 +75,67 @@ public class Cookie implements SessionToken {
 				// cookie name and value
 				cookies.put(cookie.name, cookie);
 				cookie = new Cookie();
-				cookie.name = key;
+				cookie.name = parts[0];
 				cookie.value = value;
 			}
 		}
+
 		if (cookie.name != null) {
 			cookies.put(cookie.name, cookie);
 		}
+
 		return cookies;
 	}
 
 	public boolean isExpired() {
-		if (maxAge <= 0) return true;
+		int maxAge = getMaxAge();
+		// -1 is the session cookie
+		if (maxAge == -1) return false;
 		// Max-Age is in seconds
 		return (maxAge < System.currentTimeMillis() / 1000);
 	}
 
-	public void setExpired() {
-		maxAge = -1;
+	public void setDomain(String pattern) {
+		if (pattern == null) {
+			setAttributeInternal(DOMAIN, null);
+		} else {
+			// IE requires the domain to be lower case (unconfirmed)
+			setAttributeInternal(DOMAIN, pattern.toLowerCase(Locale.ENGLISH));
+		}
+	}
+
+	public String getDomain() {
+		return getAttribute(DOMAIN);
+	}
+
+
+	public void setMaxAge(int expiry) {
+		setAttributeInternal(MAX_AGE, Integer.toString(expiry));
+	}
+
+	public int getMaxAge() {
+		String maxAge = getAttribute(MAX_AGE);
+		if (maxAge == null) {
+			return -1;
+		} else {
+			return Integer.parseInt(maxAge);
+		}
+	}
+
+	public void setPath(String uri) {
+		setAttributeInternal(PATH, uri);
+	}
+
+	public String getPath() {
+		return getAttribute(PATH);
+	}
+
+	public void setSecure(boolean flag) {
+		setAttributeInternal(SECURE, Boolean.toString(flag));
+	}
+
+	public boolean isSecure() {
+		return Boolean.parseBoolean(getAttribute(SECURE));
 	}
 
 	public String getName() {
@@ -108,92 +146,72 @@ public class Cookie implements SessionToken {
 		this.name = name;
 	}
 
+	public void setValue(String newValue) {
+		value = newValue;
+	}
+
 	public String getValue() {
 		return value;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-
-	@Deprecated
-	public Long getExpires() {
-		return expires;
-	}
-
-	@Deprecated
-	public void setExpires(Long expires) {
-		this.expires = expires;
-	}
-
-	public Long getMaxAge() {
-		return maxAge;
-	}
-
-	public void setMaxAge(Long maxAge) {
-		this.maxAge = maxAge;
-	}
-
-	public String getDomain() {
-		return domain;
-	}
-
-	public void setDomain(String domain) {
-		this.domain = domain;
-	}
-
-	public String getPath() {
-		return path;
-	}
-
-	public void setPath(String path) {
-		this.path = path;
-	}
-
-	public boolean isSecure() {
-		return secure;
-	}
-
-	public void setSecure(boolean secure) {
-		this.secure = secure;
+	public void setHttpOnly(boolean httpOnly) {
+		setAttributeInternal(HTTP_ONLY, Boolean.toString(httpOnly));
 	}
 
 	public boolean isHttpOnly() {
-		return httpOnly;
-	}
-
-	public void setHttpOnly(boolean httpOnly) {
-		this.httpOnly = httpOnly;
+		return Boolean.parseBoolean(getAttribute(HTTP_ONLY));
 	}
 
 	@Override
 	public String getId() {
-		return value;
+		return getValue();
 	}
 
-	public enum Attr {
-		EXPIRES("expires"),
-		MAX_AGE("max-age"),
-		DOMAIN("domain"),
-		PATH("path"),
-		SECURE("secure"),
-		HTTP_ONLY("httpOnly");
+	public void setAttribute(String name, String value) {
+		if (name == null) {
+			throw new IllegalArgumentException("Cookie attribute name cannot be null");
+		}
 
-		public static Map<String, Attr> map = new HashMap<>();
-		static {
-			for (Attr a : values()) {
-				map.put(a.value, a);
+		if (name.equalsIgnoreCase(MAX_AGE)) {
+			if (value == null) {
+				setAttributeInternal(MAX_AGE, null);
+			} else {
+				// Integer.parseInt throws NFE if required
+				setMaxAge(Integer.parseInt(value));
+			}
+		} else {
+			setAttributeInternal(name, value);
+		}
+	}
+
+
+	private void setAttributeInternal(String name, String value) {
+		if (attributes == null) {
+			if (value == null) {
+				return;
+			} else {
+				attributes = new ConcurrentHashMap<>();
 			}
 		}
 
-		public static Attr get(String key) {
-			return map.get(key.toLowerCase(Locale.ROOT));
+		attributes.put(name, value);
+	}
+
+
+	public String getAttribute(String name) {
+		if (attributes == null) {
+			return null;
+		} else {
+			return attributes.get(name);
 		}
+	}
 
-		private final String value;
 
-		Attr(String value) {
-			this.value = value;
+	public Map<String,String> getAttributes() {
+		if (attributes == null) {
+			return Collections.emptyMap();
+		} else {
+			return Collections.unmodifiableMap(attributes);
 		}
 	}
 
@@ -201,18 +219,19 @@ public class Cookie implements SessionToken {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(StringFormat.format("{}={}; ", name, value));
-		if (maxAge >= DEFAULT_EXPIRY_VALUE)
-			builder.append(StringFormat.format("{}={}; ", Attr.MAX_AGE.value, maxAge));
-		if (expires >= DEFAULT_EXPIRY_VALUE)
-			builder.append(StringFormat.format("{}={}; ", Attr.EXPIRES.value, expires));
-		if (path != null)
-			builder.append(StringFormat.format("{}={}; ", Attr.PATH.value, path));
-		if (domain != null)
-			builder.append(StringFormat.format("{}={}; ", Attr.DOMAIN.value, path));
-		if (secure)
-			builder.append(StringFormat.format("{}; ", Attr.SECURE.value));
-		if (httpOnly)
-			builder.append(StringFormat.format("{}; ", Attr.HTTP_ONLY.value));
+
+		if (attributes == null) {
+			return builder.toString();
+		}
+
+		attributes.forEach((key, val) -> {
+            if (key.equals(SECURE) || key.equals(HTTP_ONLY)) {
+                builder.append(StringFormat.format("{}; ", key));
+            } else {
+                builder.append(StringFormat.format("{}={}; ", key, val));
+            }
+        });
+
 		return builder.toString();
 	}
 }

@@ -1,8 +1,12 @@
 package com._7aske.grain.web.requesthandler.handler.proxy;
 
+import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.web.http.HttpRequest;
 import com._7aske.grain.web.http.HttpResponse;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
+
+import java.util.Collection;
 
 /**
  * HandlerProxy is a component in charge of proxying and potentially modifying or
@@ -27,6 +31,14 @@ public abstract class AbstractRequestHandlerProxy implements RequestHandler {
 	 * {@inheritDoc}
 	 */
 	@Override
+	public Collection<HttpMethod> getMethods() {
+		return target.getMethods();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public boolean canHandle(HttpRequest request) {
 		// Usually, we want the proxy target to determine whether the proxy should
 		// execute or not.
@@ -34,7 +46,7 @@ public abstract class AbstractRequestHandlerProxy implements RequestHandler {
 	}
 
 	@Override
-	public String getPath() {
+	public @NotNull String getPath() {
 		return target.getPath();
 	}
 }

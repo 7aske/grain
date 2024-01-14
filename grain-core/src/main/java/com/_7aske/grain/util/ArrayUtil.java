@@ -44,7 +44,6 @@ public class ArrayUtil {
 			length += array.length;
 		}
 
-		// T[] result = new T[length];
 		final T[] result = (T[]) Array.newInstance(arrays[0].getClass().getComponentType(), length);
 
 		int offset = 0;
@@ -59,4 +58,8 @@ public class ArrayUtil {
 	public static boolean equals(ByteBuffer buffer, byte[] other) {
 		return equals(buffer, 0, other.length, other, 0,  other.length);
 	}
+
+    public static boolean isEmpty(Object[] values) {
+		return values == null || values.length == 0;
+    }
 }

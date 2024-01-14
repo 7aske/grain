@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static com._7aske.grain.core.reflect.ReflectionUtil.isAnyAnnotationPresent;
 
-public class ApplicationContextImpl implements DependencyContainer, ApplicationContext {
+public class ApplicationContextImpl implements ApplicationContext {
 	private final String basePackage;
 	private final Configuration configuration;
 	private final DependencyContainer dependencyContainer;
@@ -36,11 +36,6 @@ public class ApplicationContextImpl implements DependencyContainer, ApplicationC
 
 	public ApplicationContextImpl(String basePackage) {
 		this(basePackage, Configuration.createDefault());
-	}
-
-	@Override
-	public DependencyContainer getDependencyContainer() {
-		return dependencyContainer;
 	}
 
 	@Override

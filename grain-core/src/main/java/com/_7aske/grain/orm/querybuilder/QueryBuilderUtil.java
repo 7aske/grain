@@ -1,12 +1,12 @@
-package com._7aske.grain.util;
+package com._7aske.grain.orm.querybuilder;
 
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 import com._7aske.grain.orm.annotation.*;
 import com._7aske.grain.orm.exception.GrainDbIntrospectionException;
 import com._7aske.grain.orm.model.Model;
-import com._7aske.grain.orm.querybuilder.Join;
 import com._7aske.grain.orm.querybuilder.helper.ModelClass;
+import com._7aske.grain.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
