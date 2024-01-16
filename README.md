@@ -64,7 +64,7 @@ Framework configuration is all handled in the `parent` module. You must add it a
 <parent>
     <groupId>com._7aske.grain</groupId>
     <artifactId>parent</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
 </parent>
 
 <repositories>
