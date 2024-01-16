@@ -58,6 +58,21 @@
                 <version>${revision}</version>
             </dependency>
             <dependency>
+                <groupId>com.7aske.grain</groupId>
+                <artifactId>grain-fertilizer-tomcat</artifactId>
+                <version>1.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.7aske.grain</groupId>
+                <artifactId>grain-fertilizer-hibernate</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.7aske.grain</groupId>
+                <artifactId>grain-fertilizer-thymeleaf</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>
                 <version>${bytebuddy.version}</version>
@@ -166,6 +181,16 @@
                     </transformers>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <shadedArtifactAttached>false</shadedArtifactAttached>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
             </plugin>
             <plugin>
@@ -198,20 +223,6 @@
                     <completionGoals>versions:set-property</completionGoals>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
