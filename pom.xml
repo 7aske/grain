@@ -277,6 +277,14 @@
         </license>
     </licenses>
 
+    <repositories>
+        <repository>
+            <id>7aske-repository-releases</id>
+            <name>7aske repository</name>
+            <url>https://maven.7aske.xyz/releases</url>
+        </repository>
+    </repositories>
+
     <distributionManagement>
         <repository>
             <id>7aske-repository-releases</id>
