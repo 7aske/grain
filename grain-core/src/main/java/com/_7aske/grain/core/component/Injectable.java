@@ -58,7 +58,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		Injectable injectable = new Injectable(method.getReturnType(), name, null, order);
 		injectable.parent = provider;
 		injectable.parentMethod = method;
-		injectable.primary = isAnnotationPresent(method.getReturnType(), Primary.class);
+		injectable.primary = isAnnotationPresent(method, Primary.class);
 		Collection<InjectableReference> dependencies = Arrays.stream(method.getParameters())
 				.map(InjectableReference::of)
 				.toList();
@@ -132,10 +132,6 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	public <T> void setInstance(T instance) {
 		this.instance = instance;
-	}
-
-	public void setObjectInstance(Object instance) {
-		this.instance = type.cast(instance);
 	}
 
 	public Constructor<?> getConstructor() {

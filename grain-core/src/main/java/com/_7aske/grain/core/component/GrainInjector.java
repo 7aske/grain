@@ -67,7 +67,7 @@ public class GrainInjector {
 		Injectable injectable = new Injectable(
 				clazz,
 				grainNameResolver.resolveDeclarationName(object.getClass()));
-		injectable.setObjectInstance(object);
+		injectable.setInstance(object);
 		container.add(injectable);
 	}
 
