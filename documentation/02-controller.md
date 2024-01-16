@@ -18,7 +18,7 @@ public class ScreeningController {
   private ScreeningService screeningService;
 
   @GetMapping
-  public JsonResponse<List<Screening>> getScreenings(@RequestParam("page") Pageable page) {
+  public JsonResponse<List<Screening>> getScreenings(@RequestParam(value = "page", reqyuired = false) Pageable page) {
     return JsonResponse.ok(Screening.findAll(Screening.class, page));
   }
 
@@ -81,7 +81,8 @@ annotations are one of the following:
 
 There is a variety of return types supported by the framework for the handler methods.
 Depending on the return type framework will do additional (or no additional) processing
-of the value before returning it to the client.
+of the value before returning it to the client. Responses are handled by corresponding
+`ResponseWriter` classes.
 
 Supported return types are:
 

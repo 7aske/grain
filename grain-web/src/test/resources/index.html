@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang='en'>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport"
+	      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link href='static/style.css' rel="stylesheet">
+	<title>Document</title>
+</head>
+<body>
+
+<% if (username == null) { %>
+	<a href="">Log in</a>
+<% } else { %>
+	<a href="">Logout</a>
+<% } %>
+
+<% if (username == "test") { %>
+<h1>Hello <%=username%></h1>
+<% } else { %>
+<h1>Welcome</h1>
+<% } %>
+
+<!--<% if username != null then %>-->
+<div>Commented</div>
+<!--<% endif %>-->
+
+	<a href=""></a>
+</body>
+</html>

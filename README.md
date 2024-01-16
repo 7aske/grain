@@ -8,8 +8,6 @@ This is a pet project to showcase programming paradigms, stereotypes and
 patterns. Tries to provide all functionalities required to build an MVC or
 Service-Oriented web application.
 
-DO NOT USE IN PRODUCTION!
-
 ## Functionality
 
 * Java based configuration
@@ -20,6 +18,7 @@ DO NOT USE IN PRODUCTION!
     * Cookies
     * Headers
     * JSON serialization/deserialization
+    * Closely follows the Servlet API
 * Multithreaded request handling
 * Component system
     * Dependency injection
@@ -27,18 +26,19 @@ DO NOT USE IN PRODUCTION!
         * Conditional loading
         * Field and annotation based injection
         * Bean-like(Spring) methods
-    * Middleware
+    * Middleware (filters)
     * Controllers
         * Request parameter binding
         * Path variable binding
         * Method request mapping
         * Converters
-* Database
+        * Response writers
+* ORM
     * Connection pooling
     * Model based entity system
     * Annotation based model configuration
 * View templating
-    * JSP-like scriptlets
+    * JSP-like template engine
     * Compatible with Java
     * Fragments (reusable HTML components)
     * Form binding to controller method arguments
@@ -51,6 +51,8 @@ DO NOT USE IN PRODUCTION!
     * Roles
 * Logging system
 * Custom generated error pages
+* Starters for extending functionality
+    * Tomcat integration
 
 ## Quickstart
 
@@ -62,7 +64,7 @@ Framework configuration is all handled in the `parent` module. You must add it a
 <parent>
     <groupId>com._7aske.grain</groupId>
     <artifactId>parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.1.0</version>
 </parent>
 
 <repositories>
@@ -77,8 +79,7 @@ Framework configuration is all handled in the `parent` module. You must add it a
     ...
     <dependency>
         <groupId>com._7aske.grain</groupId>
-        <artifactId>core</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <artifactId>web</artifactId>
     </dependency>
     ...
 </dependencies>
@@ -159,27 +160,6 @@ mvn package
 ```
 
 This gives you a grainXXX.jar file that you can add to your project.
-
-### Other dependencies
-
-In order to enable logging - or any logger output add slf4j2 dependency:
-
-```xml
-...
-<!-- Logging dependencies -->
-<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-api</artifactId>
-    <version>2.0.0</version>
-</dependency>
-<dependency>
-    <groupId>org.apache.logging.log4j</groupId>
-    <artifactId>log4j-slf4j-impl</artifactId>
-    <version>2.18.0</version>
-</dependency>
-<!-- END Logging dependencies -->
-...
-```
 
 ## Examples
 

@@ -1,5 +1,6 @@
 package com._7aske.grain;
 
+import com._7aske.grain.core.ApplicationEntryPoint;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.context.ApplicationContext;
 import com._7aske.grain.core.context.ApplicationContextImpl;
@@ -7,7 +8,7 @@ import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.AppInitializationException;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.web.server.Server;
+import com._7aske.grain.logging.LoggingConfigurer;
 
 /**
  * Grain application runner responsible for handling initialization of the
@@ -34,12 +35,15 @@ public final class GrainAppRunner {
 
     // Package-private method that should be called from GrainAppRunner class
     static void run() {
-        doRun();
+        ApplicationEntryPoint entryPoint = context.getGrain(ApplicationEntryPoint.class);
+        entryPoint.run();
     }
 
     // Must be called in order to initialize application context with all
     // required parameters and allow proper injection of configuration object
     static void initialize(Class<?> clazz) {
+        LoggingConfigurer.configure();
+
         if (GrainApp.class.isAssignableFrom(clazz)) {
             GrainApp instance = (GrainApp) ReflectionUtil.newInstance(clazz);
             instance.configure(configuration);
@@ -51,11 +55,5 @@ public final class GrainAppRunner {
         // available for use in other classes that are not available for dependency injection.
         ApplicationContextHolder.setContext(context);
         logger.info("Initialized application context");
-    }
-
-    // Main run loop
-    static void doRun() {
-        Server server = context.getGrain(Server.class);
-        server.run();
     }
 }

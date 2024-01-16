@@ -1,6 +1,6 @@
 package com._7aske.grain.core.component;
 
-import com._7aske.grain.compiler.interpreter.Interpreter;
+import com._7aske.grain.gtl.interpreter.Interpreter;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;

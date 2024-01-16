@@ -3,7 +3,6 @@ package com._7aske.grain.util;
 import com._7aske.grain.GrainApp;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.component.Ordered;
-import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -132,16 +131,5 @@ public class By {
         if (c1Package.startsWith(basePackagePrefix)) return 1;
         if (c2Package.startsWith(basePackagePrefix)) return -1;
         return 0;
-    }
-
-    /**
-     * Comparator that sorts request handlers by their path length in
-     * descending order.
-     *
-     * @return comparator that sorts request handlers by their path length.
-     * @param <T> request handler type.
-     */
-    public static <T extends RequestHandler> Comparator<T> pathLength() {
-        return Comparator.comparingInt((T h) -> h.getPath().length());
     }
 }

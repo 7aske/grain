@@ -1,6 +1,9 @@
 package com._7aske.grain.core.reflect.classloader;
 
+import com._7aske.grain.exception.GrainRuntimeException;
+
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
@@ -22,38 +25,43 @@ public class GrainBasicClassLoader implements GrainClassLoader {
 		this.classLoader = ClassLoader.getSystemClassLoader();
 	}
 
+	@Override
 	public Set<Class<?>> loadClasses(Predicate<Class<?>> predicate) {
 		return doLoadClasses(basePackage, predicate);
 	}
 
+	@Override
 	public Set<Class<?>> loadClasses() {
 		return doLoadClasses(basePackage, c -> true);
-	}
+    }
 
-	private Set<Class<?>> doLoadClasses(String pkg, Predicate<Class<?>> predicate) {
-		InputStream stream = classLoader.getResourceAsStream(pkg.replaceAll("[.]", "/"));
+	private Set<Class<?>> doLoadClasses(String currentPackage, Predicate<Class<?>> predicate) {
+		InputStream stream = classLoader.getResourceAsStream(currentPackage.replaceAll("[.]", "/"));
 
 		if (stream == null) {
 			return new HashSet<>();
 		}
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
+            return reader.lines()
+                    .flatMap(classOrPackage -> {
+                        if (classOrPackage.endsWith(".class")) {
+                            return Stream.of(loadClass(classOrPackage, currentPackage));
+                        }
 
-		return reader.lines()
-				.flatMap(line -> {
-					if (line.endsWith(".class")) {
-						return Stream.of(loadClass(line, pkg));
-					} else {
-						if (pkg.equals("")) {
-							return doLoadClasses(line, predicate).stream();
-						} else {
-							return doLoadClasses(pkg + "." + line, predicate).stream();
+						String pkg = classOrPackage;
+						if (!currentPackage.isEmpty()) {
+							pkg = currentPackage + "." + classOrPackage;
 						}
-					}
-				})
-				.filter(Objects::nonNull)
-				.filter(predicate)
-				.collect(Collectors.toCollection(LinkedHashSet::new));
-	}
+
+						return doLoadClasses(pkg, predicate).stream();
+                    })
+                    .filter(Objects::nonNull)
+                    .filter(predicate)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+        } catch (IOException e) {
+            throw new GrainRuntimeException(e);
+        }
+    }
 
 }
