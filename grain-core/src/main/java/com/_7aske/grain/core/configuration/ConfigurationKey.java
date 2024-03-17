@@ -1,6 +1,7 @@
 package com._7aske.grain.core.configuration;
 
 public final class ConfigurationKey {
+
 	private ConfigurationKey() {
 	}
 
@@ -24,5 +25,6 @@ public final class ConfigurationKey {
 	public static final String REQUEST_HANDLER_ACCESS_LOG   = "grain.request-handler.access-log";
 	public static final String DATABASE_POOL_SIZE           = "grain.database.pool.size";
 	public static final String DATABASE_POOL_CONNECTION_WAIT= "grain.database.pool.connection-wait";
+	public static final String CACHE_ENABLED                = "grain.cache.enabled";
 	// @formatter:on
 }

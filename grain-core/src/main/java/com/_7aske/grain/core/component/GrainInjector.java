@@ -1,18 +1,22 @@
 package com._7aske.grain.core.component;
 
-import com._7aske.grain.gtl.interpreter.Interpreter;
+import com._7aske.grain.core.cache.CacheKeyGenerator;
+import com._7aske.grain.core.cache.CacheManager;
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.configuration.ConfigurationKey;
+import com._7aske.grain.core.reflect.GrainProxyFactory;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
 import com._7aske.grain.exception.GrainReflectionException;
+import com._7aske.grain.gtl.interpreter.Interpreter;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import com._7aske.grain.core.reflect.GrainProxyFactory;
-import com._7aske.grain.core.reflect.ReflectionUtil;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,11 +33,13 @@ public class GrainInjector {
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final GrainProxyFactory grainProxyFactory;
 	private final Logger logger = LoggerFactory.getLogger(GrainInjector.class);
+	private final Configuration configuration;
 
 	public GrainInjector(Configuration configuration) {
 		this.container = new DependencyContainerImpl();
 		this.interpreter = new Interpreter();
 		this.grainProxyFactory = new GrainProxyFactory(container, grainNameResolver);
+		this.configuration = configuration;
 		interpreter.putProperties(configuration.getProperties());
 		interpreter.putSymbol("configuration", configuration);
 		inject(this);
@@ -268,6 +274,21 @@ public class GrainInjector {
 						dependency.getConstructor(),
 						mapConstructorParametersToDependencies(dependency));
 			}
+
+			Class<?> type = instance.getClass();
+			if (dependency.isCacheAware() && configuration.getBoolean(ConfigurationKey.CACHE_ENABLED, true)) {
+				if (Modifier.isFinal(type.getModifiers())) {
+					throw new GrainInitializationException("Cannot create cache proxy for final class " + type.getName());
+				}
+
+				instance = grainProxyFactory.createCacheProxy(
+						type,
+						dependency.getConstructor().getParameterTypes(),
+						mapConstructorParametersToDependencies(dependency),
+						container.getGrain(CacheManager.class),
+						container.getGrain(CacheKeyGenerator.class));
+			}
+
 		} catch (GrainReflectionException e) {
 			throw new GrainInitializationException(String.format("Unable to instantiate grain %s", dependency), e);
 		}

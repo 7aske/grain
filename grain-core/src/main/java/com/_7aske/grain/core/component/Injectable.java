@@ -2,6 +2,7 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.annotation.NotNull;
 import com._7aske.grain.annotation.Nullable;
+import com._7aske.grain.core.cache.annotation.meta.CacheAware;
 import com._7aske.grain.core.configuration.GrainFertilizer;
 import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainInitializationException;
@@ -19,7 +20,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	private final Class<?> type;
 	private final Constructor<?> constructor;
 	private final InjectableReference[] constructorParameters;
-	private List<Method> grainMethods;
+	private final List<Method> grainMethods;
 	private final List<Field> injectableFields;
 	private final List<InjectableReference> dependencies;
 	private final List<InjectableField> valueFields;
@@ -27,6 +28,7 @@ class Injectable implements Ordered, Comparable<Injectable> {
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 	private final int order;
 	private boolean primary;
+	private final boolean isCacheAware;
 	/**
 	 * Dependency that provides this dependency via the @Grain annotated method.
 	 * Should be resolved and initialized before this dependency is initialized.
@@ -49,13 +51,16 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		this.afterInitMethods = new ArrayList<>();
 		this.order = order;
 		this.primary = isAnnotationPresent(type, Primary.class);
+		this.isCacheAware = Arrays.stream(type.getDeclaredMethods())
+				.anyMatch(m -> isAnnotationPresent(m, CacheAware.class));
 	}
 
 	public static Injectable ofMethod(@NotNull Method method, @Nullable String name, Injectable provider) {
 		int order = Optional.ofNullable(method.getAnnotation(Order.class))
 				.map(Order::value)
 				.orElse(Order.DEFAULT);
-		Injectable injectable = new Injectable(method.getReturnType(), name, null, order);
+		Class<?> type = method.getReturnType();
+		Injectable injectable = new Injectable(type, name, null, order);
 		injectable.parent = provider;
 		injectable.parentMethod = method;
 		injectable.primary = isAnnotationPresent(method, Primary.class);
@@ -90,6 +95,8 @@ class Injectable implements Ordered, Comparable<Injectable> {
 				throw new GrainInitializationException("No constructor found for class " + this.type.getName());
 			}
 		}
+		this.isCacheAware = Arrays.stream(type.getDeclaredMethods())
+				.anyMatch(m -> isAnnotationPresent(m, CacheAware.class));
 
 		if (isAnnotationPresent(this.type, GrainFertilizer.class)) {
 			this.order = Order.HIGHEST_PRECEDENCE;
@@ -168,6 +175,10 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	public boolean isGrainMethodDependency() {
 		return parent != null;
+	}
+
+	public boolean isCacheAware() {
+		return isCacheAware;
 	}
 
 	public Injectable getParent() {

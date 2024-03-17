@@ -41,8 +41,8 @@ public final class PropertiesHelper {
 			return clazz.cast(retval);
 		}
 
-		if (retval instanceof String) {
-			return converter.apply((String) retval);
+		if (retval instanceof String str) {
+			return converter.apply(str);
 		}
 
 		return defaultValue;
