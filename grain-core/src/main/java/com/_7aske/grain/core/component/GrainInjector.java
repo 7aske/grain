@@ -1,10 +1,9 @@
 package com._7aske.grain.core.component;
 
-import com._7aske.grain.core.cache.CacheKeyGenerator;
-import com._7aske.grain.core.cache.CacheManager;
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.core.configuration.ConfigurationKey;
 import com._7aske.grain.core.reflect.GrainProxyFactory;
+import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactory;
+import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactoryRegistry;
 import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
@@ -134,8 +133,8 @@ public class GrainInjector {
 				//     config.setSomething("something");
 				//     return config;
 				// }
-				Optional<Injectable> grain = this.container.getByClass(method.getReturnType());
-				if (grain.isPresent()) {
+				List<Injectable> grain = this.container.getListByClass(method.getReturnType());
+				if (!grain.isEmpty()) {
 					boolean isSelfReferencing = Arrays.stream(method.getParameterTypes())
 							.anyMatch(p -> method.getReturnType().isAssignableFrom(p));
 					if (isSelfReferencing) {
@@ -267,8 +266,7 @@ public class GrainInjector {
 						dependency.getConstructor().getParameterTypes(),
 						mapConstructorParametersToDependencies(dependency));
 			} else if (dependency.isGrainMethodDependency()) {
-				instance = InjectableReference.of(dependency.getParentMethod())
-						.resolve(container);
+				instance = resolveGrainMethod(dependency.getParentMethod(), dependency.getParent().getInstance());
 			} else {
 				instance = ReflectionUtil.newInstance(
 						dependency.getConstructor(),
@@ -276,20 +274,20 @@ public class GrainInjector {
 			}
 
 			Class<?> type = instance.getClass();
-			if (dependency.isCacheAware() && configuration.getBoolean(ConfigurationKey.CACHE_ENABLED, true)) {
-				if (Modifier.isFinal(type.getModifiers())) {
-					throw new GrainInitializationException("Cannot create cache proxy for final class " + type.getName());
+            if (Modifier.isFinal(type.getModifiers())) {
+                logger.warn("Class {} is final and cannot be proxied", type);
+            } else {
+				Optional<ProxyInterceptorAbstractFactoryRegistry> registry = container.getOptionalGrain(ProxyInterceptorAbstractFactoryRegistry.class);
+				if (registry.isPresent()) {
+					instance = grainProxyFactory.createProxyFromRegistry(
+							type,
+							dependency.getConstructor().getParameterTypes(),
+							mapConstructorParametersToDependencies(dependency),
+							registry.get());
 				}
+            }
 
-				instance = grainProxyFactory.createCacheProxy(
-						type,
-						dependency.getConstructor().getParameterTypes(),
-						mapConstructorParametersToDependencies(dependency),
-						container.getGrain(CacheManager.class),
-						container.getGrain(CacheKeyGenerator.class));
-			}
-
-		} catch (GrainReflectionException e) {
+        } catch (GrainReflectionException e) {
 			throw new GrainInitializationException(String.format("Unable to instantiate grain %s", dependency), e);
 		}
 

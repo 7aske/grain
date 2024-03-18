@@ -81,7 +81,12 @@ public class ApplicationContextImpl implements ApplicationContext {
 		return dependencyContainer.getGrains(clazz);
 	}
 
-	@Override
+    @Override
+    public boolean containsGrain(Class<?> clazz) {
+        return getOptionalGrain(clazz).isPresent();
+    }
+
+    @Override
 	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
 		return dependencyContainer.getGrainsAnnotatedBy(clazz);
 	}

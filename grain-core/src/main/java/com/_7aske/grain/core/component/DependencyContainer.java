@@ -67,4 +67,11 @@ public interface DependencyContainer {
 	 * @param <T> type of the grain.
 	 */
 	<T> Collection<T> getGrains(Class<T> clazz);
+
+	/**
+	 * Checks if the container contains a grain matching the class provided or any of its inheritors or implementors.
+	 * @param clazz class to match.
+	 * @return true if the container contains the grain, false otherwise.
+	 */
+	boolean containsGrain(Class<?> clazz);
 }

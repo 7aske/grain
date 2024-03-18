@@ -4,13 +4,16 @@ import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.GrainNameResolver;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
-import net.bytebuddy.implementation.bind.annotation.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 
-public class GrainResolvingProxyInterceptor {
+/**
+ * GrainResolvingProxyInterceptor is a ProxyInterceptor that resolves grain references
+ * and provides them to the proxy object but caching the result for future calls.
+ */
+public class GrainResolvingProxyInterceptor implements ProxyInterceptor {
     private final DependencyContainer container;
     private final GrainNameResolver grainNameResolver;
     private final Logger logger = LoggerFactory.getLogger(GrainResolvingProxyInterceptor.class);
@@ -20,11 +23,14 @@ public class GrainResolvingProxyInterceptor {
         this.grainNameResolver = grainNameResolver;
     }
 
-    @RuntimeType
-    public Object intercept(@This Object self,
-                            @Origin Method method,
-                            @AllArguments Object[] args,
-                            @SuperMethod Method superMethod) throws Throwable {
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public Object intercept(Object self,
+                            Method method,
+                            Object[] args,
+                            Method superMethod) throws Throwable {
         logger.debug("Intercepting method " + method.getName());
         String name = grainNameResolver.resolveReferenceName(method);
 

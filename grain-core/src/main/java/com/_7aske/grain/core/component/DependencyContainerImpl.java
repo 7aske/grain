@@ -45,7 +45,12 @@ class DependencyContainerImpl implements DependencyContainer, Iterable<Injectabl
 				.toList();
 	}
 
-	@Override
+    @Override
+    public boolean containsGrain(Class<?> clazz) {
+        return getByClass(clazz).isPresent();
+    }
+
+    @Override
 	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
 		return getListAnnotatedByClass(clazz)
 				.stream()

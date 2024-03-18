@@ -43,6 +43,16 @@ public class InjectableReference {
 		}
     }
 
+	public static InjectableReference of(Class<?> clazz) {
+		return new InjectableReference(
+				clazz,
+				null,
+				null,
+				null,
+				false,
+				true);
+	}
+
 	public static InjectableReference of(Parameter parameter) {
 		String name = grainNameResolver.resolveReferenceName(parameter);
 		boolean isCollection = false;

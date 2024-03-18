@@ -1,13 +1,5 @@
 package com._7aske.grain.core.reflect;
 
-import com._7aske.grain.core.cache.Cache;
-import com._7aske.grain.core.cache.CacheKeyGenerator;
-import com._7aske.grain.core.cache.CacheManager;
-import com._7aske.grain.core.cache.CacheNameResolver;
-import com._7aske.grain.core.cache.annotation.CacheEvict;
-import com._7aske.grain.core.cache.annotation.CachePut;
-import com._7aske.grain.core.cache.annotation.Cacheable;
-import com._7aske.grain.core.cache.annotation.meta.CacheAware;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainNameResolver;
@@ -18,7 +10,9 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.matcher.ElementMatchers;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -58,8 +52,10 @@ public class GrainProxyFactory {
                 continue;
             }
 
+            ProxyInterceptor interceptor = new GrainResolvingProxyInterceptor(dependencyContainer, grainNameResolver);
             byteBuddy = byteBuddy.define(method)
-                    .intercept(MethodDelegation.to(new GrainResolvingProxyInterceptor(dependencyContainer, grainNameResolver)))
+                    .intercept(MethodDelegation.to(
+                            ProxyInterceptorWrapper.wrap(interceptor)))
                     .annotateMethod(method.getDeclaredAnnotations());
         }
 
@@ -75,38 +71,22 @@ public class GrainProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Object createCacheProxy(Class<? super T> clazz,
-                                       Class<?>[] paramTypes,
-                                       Object[] args,
-                                       CacheManager cacheManager,
-                                       CacheKeyGenerator cacheKeyGenerator) {
+    public <T> Object createProxyFromRegistry(Class<? super T> clazz,
+                                              Class<?>[] paramTypes,
+                                              Object[] args,
+                                              ProxyInterceptorAbstractFactoryRegistry registry) {
         logger.debug("Creating cache proxy for class " + clazz.getName());
         DynamicType.Builder<?> byteBuddy = new ByteBuddy()
                 .subclass(clazz);
         for (Method method : clazz.getDeclaredMethods()) {
-            if (!ReflectionUtil.isAnnotationPresent(method, CacheAware.class)) {
-                continue;
-            }
-
-            String cacheName = CacheNameResolver.resolveCacheName(method);
-            Cache cache = cacheManager.getCache(cacheName);
-            if (cache == null) {
-                logger.warn("Cache with name " + cacheName + " not found");
-                cache = cacheManager.createCache(cacheName);
-            }
-
-            if (method.isAnnotationPresent(Cacheable.class)) {
-                byteBuddy = byteBuddy.define(method)
-                        .intercept(MethodDelegation.to(new CacheResolvingProxyInterceptor(cache, cacheKeyGenerator)))
-                        .annotateMethod(method.getDeclaredAnnotations());
-            } else if (method.isAnnotationPresent(CacheEvict.class)) {
-                byteBuddy = byteBuddy.define(method)
-                        .intercept(MethodDelegation.to(new CacheEvictingProxyInterceptor(cache, cacheKeyGenerator)))
-                        .annotateMethod(method.getDeclaredAnnotations());
-            } else if (method.isAnnotationPresent(CachePut.class)) {
-                byteBuddy = byteBuddy.define(method)
-                        .intercept(MethodDelegation.to(new CacheUpdatingProxyInterceptor(cache, cacheKeyGenerator)))
-                        .annotateMethod(method.getDeclaredAnnotations());
+            for (Class<? extends Annotation> annotation : registry.getSupportedAnnotations()) {
+                if (method.isAnnotationPresent(annotation)) {
+                    ProxyInterceptor interceptor = registry.getFactory(annotation).create(method);
+                    byteBuddy = byteBuddy.method(ElementMatchers.is(method))
+                            .intercept(MethodDelegation.to(
+                                    ProxyInterceptorWrapper.wrap(interceptor)))
+                            .annotateMethod(method.getDeclaredAnnotations());
+                }
             }
         }
 
