@@ -1,7 +1,6 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.exception.GrainReflectionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +37,24 @@ class GrainInjectorTest {
 		assertTrue(testDefault.isPresent());
 		assertEquals("Hello 7aske", testDefault.get().sayHello("7aske"));
 		// Non-default method invocations should
-		assertThrows(GrainReflectionException.class, () -> testDefault.get().sayGoodbye("7aske"));
+		assertThrows(AbstractMethodError.class, () -> testDefault.get().sayGoodbye("7aske"));
+	}
+
+	@Grain
+	public static class TestDefaultImpl implements TestDefault {
+		@Override
+		public String sayGoodbye(String name) {
+			return "Goodbye " + name;
+		}
+	}
+
+	@Test
+	void testCallOfAbstractMethodOnImplementedGrain() {
+		grainInjector.inject(TestDefault.class);
+		grainInjector.inject(TestDefaultImpl.class);
+		TestDefault testDefault = grainInjector.getContainer().getGrain(TestDefaultImpl.class);
+		assertEquals("Hello 7aske", testDefault.sayHello("7aske"));
+		assertEquals("Goodbye 7aske", testDefault.sayGoodbye("7aske"));
 	}
 
 	@Retention(RUNTIME)

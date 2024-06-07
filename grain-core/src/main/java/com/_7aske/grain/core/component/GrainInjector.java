@@ -2,7 +2,6 @@ package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.reflect.GrainProxyFactory;
-import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactory;
 import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactoryRegistry;
 import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
@@ -86,11 +85,70 @@ public class GrainInjector {
 			logger.warn("Registered Grain {} without @Grain annotation", clazz);
 		}
 
-		Injectable injectable = new Injectable(
-				clazz,
-				grainNameResolver.resolveDeclarationName(clazz));
+		Injectable injectable = processDependency(clazz);
+		if (injectable == null) {
+			return;
+		}
+
 		initialize(injectable);
-		container.add(injectable);
+	}
+
+	private Injectable processDependency(Class<?> clazz) {
+		if (!isAnnotationPresent(clazz, Grain.class)) {
+			logger.warn("Registered Grain {} without @Grain annotation", clazz);
+		}
+
+		if (!checkCondition(clazz.getAnnotation(Condition.class))) {
+			return null;
+		}
+
+		Injectable dependency = new Injectable(
+				clazz,
+				grainNameResolver.resolveDeclarationName(clazz)
+		);
+		// One thing that cannot be done inside the BetterDependency constructor
+		// because resulting dependencies need to be added to the DependencyContainer.
+		dependency.getGrainMethods().forEach(method -> {
+			// In situations where we have grains resulting from grain methods
+			// we first must initialize the grain that is providing the method.
+			// Because of that we set the "provider" field as a reference if
+			// we happen to come across grain method dependencies before their
+			// providers in the injection pipeline.
+			Injectable methodDependency = Injectable.ofMethod(
+					method,
+					grainNameResolver.resolveReferenceName(method),
+					dependency);
+
+			// If the Grain method returns the same type (or subtype) as one of the
+			// parameters in the Grain method parameter list we consider that
+			// as an "Override" injection, and therefore we do not need to
+			// create a new dependency in the container for it.
+			// Example would be a Grain method that is used to update the
+			// Configuration class:
+			// @Grain
+			// public Configuration configuration(Configuration config) {
+			//     config.setSomething("something");
+			//     return config;
+			// }
+			List<Injectable> grain = this.container.getListByClass(method.getReturnType());
+			if (!grain.isEmpty()) {
+				boolean isSelfReferencing = Arrays.stream(method.getParameterTypes())
+						.anyMatch(p -> method.getReturnType().isAssignableFrom(p));
+				if (isSelfReferencing) {
+					return;
+				}
+			}
+
+			// We add the dependency to the DependencyContainer allowing
+			// other grains to use it.
+			if (checkCondition(method.getAnnotation(Condition.class))) {
+				this.container.add(methodDependency);
+			}
+		});
+
+		this.container.add(dependency);
+
+		return dependency;
 	}
 
 	/**
@@ -101,54 +159,7 @@ public class GrainInjector {
 	public void inject(Set<Class<?>> classes) {
 		// First, go through all the classes converting them into dependencies
 		for (Class<?> clazz : classes) {
-			if (!checkCondition(clazz.getAnnotation(Condition.class))) {
-				continue;
-			}
-
-			Injectable dependency = new Injectable(
-					clazz,
-					grainNameResolver.resolveDeclarationName(clazz)
-			);
-			// One thing that cannot be done inside the BetterDependency constructor
-			// because resulting dependencies need to be added to the DependencyContainer.
-			dependency.getGrainMethods().forEach(method -> {
-				// In situations where we have grains resulting from grain methods
-				// we first must initialize the grain that is providing the method.
-				// Because of that we set the "provider" field as a reference if
-				// we happen to come across grain method dependencies before their
-				// providers in the injection pipeline.
-				Injectable methodDependency = Injectable.ofMethod(
-						method,
-						grainNameResolver.resolveReferenceName(method),
-						dependency);
-
-				// If the Grain method returns the same type (or subtype) as one of the
-				// parameters in the Grain method parameter list we consider that
-				// as an "Override" injection, and therefore we do not need to
-				// create a new dependency in the container for it.
-				// Example would be a Grain method that is used to update the
-				// Configuration class:
-				// @Grain
-				// public Configuration configuration(Configuration config) {
-				//     config.setSomething("something");
-				//     return config;
-				// }
-				List<Injectable> grain = this.container.getListByClass(method.getReturnType());
-				if (!grain.isEmpty()) {
-					boolean isSelfReferencing = Arrays.stream(method.getParameterTypes())
-							.anyMatch(p -> method.getReturnType().isAssignableFrom(p));
-					if (isSelfReferencing) {
-						return;
-					}
-				}
-
-				// We add the dependency to the DependencyContainer allowing
-				// other grains to use it.
-				if (checkCondition(method.getAnnotation(Condition.class))) {
-					this.container.add(methodDependency);
-				}
-			});
-			this.container.add(dependency);
+			processDependency(clazz);
 		}
 
 		// Second, after resolving all dependencies we check whether there
@@ -267,31 +278,39 @@ public class GrainInjector {
 						mapConstructorParametersToDependencies(dependency));
 			} else if (dependency.isGrainMethodDependency()) {
 				instance = resolveGrainMethod(dependency.getParentMethod(), dependency.getParent().getInstance());
+			} else if (dependency.isInterface()) {
+				instance = grainProxyFactory.createInterfaceProxy(dependency.getType());
 			} else {
-				instance = ReflectionUtil.newInstance(
-						dependency.getConstructor(),
-						mapConstructorParametersToDependencies(dependency));
+				Optional<ProxyInterceptorAbstractFactoryRegistry> registryOptional = container.getOptionalGrain(ProxyInterceptorAbstractFactoryRegistry.class);
+				if (registryOptional.isPresent() && !Modifier.isFinal(dependency.getType().getModifiers())) {
+					ProxyInterceptorAbstractFactoryRegistry registry = registryOptional.get();
+					if (registry.supports(dependency.getType())) {
+						instance = grainProxyFactory.createProxyFromRegistry(
+								dependency.getType(),
+								dependency.getConstructor().getParameterTypes(),
+								mapConstructorParametersToDependencies(dependency),
+								registry);
+					} else {
+						instance = grainProxyFactory.createMethodProxyFromRegistry(
+								dependency.getType(),
+								dependency.getConstructor().getParameterTypes(),
+								mapConstructorParametersToDependencies(dependency),
+								registry);
+					}
+				} else {
+					instance = ReflectionUtil.newInstance(
+							dependency.getConstructor(),
+							mapConstructorParametersToDependencies(dependency));
+				}
 			}
 
-			Class<?> type = instance.getClass();
-            if (Modifier.isFinal(type.getModifiers())) {
-                logger.warn("Class {} is final and cannot be proxied", type);
-            } else {
-				Optional<ProxyInterceptorAbstractFactoryRegistry> registry = container.getOptionalGrain(ProxyInterceptorAbstractFactoryRegistry.class);
-				if (registry.isPresent()) {
-					instance = grainProxyFactory.createProxyFromRegistry(
-							type,
-							dependency.getConstructor().getParameterTypes(),
-							mapConstructorParametersToDependencies(dependency),
-							registry.get());
-				}
-            }
+
 
         } catch (GrainReflectionException e) {
 			throw new GrainInitializationException(String.format("Unable to instantiate grain %s", dependency), e);
-		}
+        }
 
-		dependency.setInstance(instance);
+        dependency.setInstance(instance);
 		logger.debug("Initialized '{}'", dependency.getType().getName());
 
 		// After initialization, we call @Grain methods and update the appropriate

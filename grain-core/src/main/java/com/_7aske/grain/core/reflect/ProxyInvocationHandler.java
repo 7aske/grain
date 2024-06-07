@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Invocation handler that is used to create and cache MethodHandles for all method
  * invocations for a given proxy instance.
  */
+@Deprecated
 public class ProxyInvocationHandler implements InvocationHandler {
 	private final Map<Method, MethodHandle> cache = new ConcurrentHashMap<>();
 

@@ -17,7 +17,7 @@ import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 class Injectable implements Ordered, Comparable<Injectable> {
 	private final String name;
 	private final Class<?> type;
-	private final Constructor<?> constructor;
+	private Constructor<?> constructor;
 	private final InjectableReference[] constructorParameters;
 	private final List<Method> grainMethods;
 	private final List<Field> injectableFields;
@@ -80,7 +80,6 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		if (this.type.isInterface()) {
 			this.constructor = null;
 			this.constructorParameters = new InjectableReference[0];
-			this.instance = ReflectionUtil.createProxy(this.type);
 		} else {
 			try {
 				this.constructor = ReflectionUtil.getBestConstructor(this.type);
@@ -139,6 +138,10 @@ class Injectable implements Ordered, Comparable<Injectable> {
 		return constructor;
 	}
 
+	public void setConstructor(Constructor<?> constructor) {
+		this.constructor = constructor;
+	}
+
 	public InjectableReference[] getConstructorParameters() {
 		return constructorParameters;
 	}
@@ -165,6 +168,10 @@ class Injectable implements Ordered, Comparable<Injectable> {
 
 	public boolean isInitialized() {
 		return instance != null;
+	}
+
+	public boolean isInterface() {
+		return type.isInterface();
 	}
 
 	public boolean isGrainMethodDependency() {

@@ -200,11 +200,6 @@ public class InjectableReference {
 				.orElse("");
 		builder.append("(").append(grainName).append(")");
 
-//		if (provider != null) {
-//			builder.append(" provided by ").append(provider.getSimpleName());
-//			builder.append("(\"").append(grainNameResolver.resolveReferenceName(provider)).append("\")");
-//		}
-
 		if (isCollection) {
 			builder.append(">");
 		}

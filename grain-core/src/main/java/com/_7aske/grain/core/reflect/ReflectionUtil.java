@@ -1,10 +1,7 @@
 package com._7aske.grain.core.reflect;
 
 import com._7aske.grain.annotation.NotNull;
-import com._7aske.grain.core.reflect.ProxyInvocationHandler;
-import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainReflectionException;
-import com._7aske.grain.exception.GrainRuntimeException;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -14,7 +11,6 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Collection of utilities related for reflective operations and type inspections.
@@ -303,6 +299,7 @@ public class ReflectionUtil {
 	 * @param interfaces to create a proxy for
 	 * @return proxy object
 	 */
+	@Deprecated
 	public static <T> T createProxy(Class<?>... interfaces) {
 		return (T) Proxy.newProxyInstance(CLASS_LOADER, interfaces, new ProxyInvocationHandler());
 	}
