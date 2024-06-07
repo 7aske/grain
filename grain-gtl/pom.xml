@@ -5,19 +5,19 @@
     <parent>
         <groupId>com.7aske.grain</groupId>
         <artifactId>parent</artifactId>
-        <version>1.1.3</version>
+        <version>1.1.4-SNAPSHOT</version>
     </parent>
 
     <groupId>com.7aske.grain</groupId>
     <artifactId>gtl</artifactId>
-    <version>1.1.3</version>
+    <version>1.1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>grain-gtl</name>
     <dependencies>
         <dependency>
             <groupId>com.7aske.grain</groupId>
             <artifactId>util</artifactId>
-            <version>1.1.3</version>
+            <version>1.1.4-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
