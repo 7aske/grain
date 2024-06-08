@@ -10,7 +10,7 @@ import com._7aske.grain.core.reflect.ReflectionUtil;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
-class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
+public class DependencyContainerImpl implements DependencyContainer, Iterable<Injectable> {
 	private final Collection<Injectable> dependencies;
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 

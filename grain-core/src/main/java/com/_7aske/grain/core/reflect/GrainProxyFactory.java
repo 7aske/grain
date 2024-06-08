@@ -17,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+@Deprecated
 public class GrainProxyFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
     private final DependencyContainer dependencyContainer;

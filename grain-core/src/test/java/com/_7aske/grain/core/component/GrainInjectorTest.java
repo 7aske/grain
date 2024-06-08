@@ -1,6 +1,9 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.reflect.factory.CompositeGrainFactory;
+import com._7aske.grain.core.reflect.factory.DefaultGrainFactory;
+import com._7aske.grain.core.reflect.factory.InterfaceGrainFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +35,7 @@ class GrainInjectorTest {
 
 	@Test
 	void inject() {
+		grainInjector.inject(InterfaceGrainFactory.class);
 		grainInjector.inject(TestDefault.class);
 		Optional<TestDefault> testDefault = grainInjector.getContainer().getOptionalGrain(TestDefault.class);
 		assertTrue(testDefault.isPresent());
@@ -50,6 +54,7 @@ class GrainInjectorTest {
 
 	@Test
 	void testCallOfAbstractMethodOnImplementedGrain() {
+		grainInjector.inject(Set.of(CompositeGrainFactory.class, InterfaceGrainFactory.class, DefaultGrainFactory.class));
 		grainInjector.inject(TestDefault.class);
 		grainInjector.inject(TestDefaultImpl.class);
 		TestDefault testDefault = grainInjector.getContainer().getGrain(TestDefaultImpl.class);

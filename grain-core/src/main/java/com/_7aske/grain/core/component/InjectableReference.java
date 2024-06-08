@@ -132,7 +132,7 @@ public class InjectableReference {
 		};
 	}
 
-	Injectable resolve(DependencyContainerImpl container) {
+	public Injectable resolve(DependencyContainerImpl container) {
 		Optional<Injectable> optionalInjectable = switch (referenceType) {
 			case TYPE -> container.getByClass(type);
 			case NAME -> container.getByName(name);

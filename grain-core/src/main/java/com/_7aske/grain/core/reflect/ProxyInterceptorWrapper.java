@@ -33,7 +33,7 @@ public class ProxyInterceptorWrapper implements ProxyInterceptor {
     public Object intercept(@This Object self,
                             @Origin Method method,
                             @AllArguments Object[] args,
-                            @SuperMethod Method superMethod) throws Throwable {
+                            @SuperMethod(nullIfImpossible = true) Method superMethod) throws Throwable {
         return target.intercept(self, method, args, superMethod);
     }
 }

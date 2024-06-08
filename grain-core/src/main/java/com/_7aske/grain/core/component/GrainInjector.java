@@ -1,9 +1,9 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.core.reflect.GrainProxyFactory;
-import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactoryRegistry;
-import com._7aske.grain.core.reflect.ReflectionUtil;
+import com._7aske.grain.core.reflect.*;
+import com._7aske.grain.core.reflect.factory.DefaultGrainFactory;
+import com._7aske.grain.core.reflect.factory.GrainFactory;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
 import com._7aske.grain.exception.GrainInitializationException;
 import com._7aske.grain.exception.GrainInvalidInjectException;
@@ -14,7 +14,6 @@ import com._7aske.grain.logging.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,14 +28,12 @@ public class GrainInjector {
 	private final DependencyContainerImpl container;
 	private final Interpreter interpreter;
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
-	private final GrainProxyFactory grainProxyFactory;
 	private final Logger logger = LoggerFactory.getLogger(GrainInjector.class);
 	private final Configuration configuration;
 
 	public GrainInjector(Configuration configuration) {
 		this.container = new DependencyContainerImpl();
 		this.interpreter = new Interpreter();
-		this.grainProxyFactory = new GrainProxyFactory(container, grainNameResolver);
 		this.configuration = configuration;
 		interpreter.putProperties(configuration.getProperties());
 		interpreter.putSymbol("configuration", configuration);
@@ -261,51 +258,13 @@ public class GrainInjector {
 		if (dependency.isInitialized()) return;
 
 
+		GrainFactory grainFactory = container.getOptionalGrain(GrainFactory.class)
+				.orElse(new DefaultGrainFactory());
+
 		// We initialize the injectable
 		Object instance;
 		try {
-			if (dependency.hasGrainMethodDependencies()) {
-				// If the dependency has grain method dependencies we need to
-				// create a proxy for it and delegate all method calls to the
-				// GrainResolvingProxyInterceptor in order to prevent creation
-				// of multiple instances of the same method dependency.
-				// E.g. if we have a Grain method that returns a Configuration,
-				// and we call it in multiple places we will have multiple instances
-				// of the Configuration class.
-				instance = grainProxyFactory.create(
-						dependency.getType(),
-						dependency.getConstructor().getParameterTypes(),
-						mapConstructorParametersToDependencies(dependency));
-			} else if (dependency.isGrainMethodDependency()) {
-				instance = resolveGrainMethod(dependency.getParentMethod(), dependency.getParent().getInstance());
-			} else if (dependency.isInterface()) {
-				instance = grainProxyFactory.createInterfaceProxy(dependency.getType());
-			} else {
-				Optional<ProxyInterceptorAbstractFactoryRegistry> registryOptional = container.getOptionalGrain(ProxyInterceptorAbstractFactoryRegistry.class);
-				if (registryOptional.isPresent() && !Modifier.isFinal(dependency.getType().getModifiers())) {
-					ProxyInterceptorAbstractFactoryRegistry registry = registryOptional.get();
-					if (registry.supports(dependency.getType())) {
-						instance = grainProxyFactory.createProxyFromRegistry(
-								dependency.getType(),
-								dependency.getConstructor().getParameterTypes(),
-								mapConstructorParametersToDependencies(dependency),
-								registry);
-					} else {
-						instance = grainProxyFactory.createMethodProxyFromRegistry(
-								dependency.getType(),
-								dependency.getConstructor().getParameterTypes(),
-								mapConstructorParametersToDependencies(dependency),
-								registry);
-					}
-				} else {
-					instance = ReflectionUtil.newInstance(
-							dependency.getConstructor(),
-							mapConstructorParametersToDependencies(dependency));
-				}
-			}
-
-
-
+			instance = grainFactory.create(dependency, mapConstructorParametersToDependencies(dependency));
         } catch (GrainReflectionException e) {
 			throw new GrainInitializationException(String.format("Unable to instantiate grain %s", dependency), e);
         }
@@ -317,7 +276,10 @@ public class GrainInjector {
 		// injectable with the result
         for (Method method : dependency.getGrainMethods()) {
 			try {
-				resolveGrainMethod(method, instance);
+				Injectable methodDependency = InjectableReference.of(method)
+						.resolve(container);
+				Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
+				methodDependency.setInstance(result);
 			} catch (GrainReflectionException e) {
 				throw new GrainInitializationException("Failed to initialize grain " + dependency, e);
 			}
@@ -337,15 +299,6 @@ public class GrainInjector {
             ReflectionUtil.setFieldValue(field, instance, value);
         }
     }
-
-	private Object resolveGrainMethod(Method method, Object instance) throws GrainReflectionException {
-		Injectable methodDependency = InjectableReference.of(method)
-				.resolve(container);
-		Object result = ReflectionUtil.invokeMethod(method, instance, mapMethodParametersToDependencies(method));
-		methodDependency.setInstance(result);
-
-		return result;
-	}
 
 	/**
 	 * Maps the method parameters to instances of corresponding dependencies.
@@ -384,6 +337,10 @@ public class GrainInjector {
 	 * @return The list objects to be used as constructor parameters.
 	 */
 	private Object[] mapConstructorParametersToDependencies(Injectable injectable) {
+		if (injectable.isGrainMethodDependency()) {
+			return mapMethodParametersToDependencies(injectable.getParentMethod());
+		}
+
 		InjectableReference[] constructorParameters = injectable.getConstructorParameters();
 		Object[] parameterInstances = new Object[constructorParameters.length];
 		for (int i = 0; i < constructorParameters.length; i++) {

@@ -2,6 +2,7 @@ package com._7aske.grain.core.reflect;
 
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.GrainNameResolver;
+import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 
@@ -18,7 +19,8 @@ public class GrainResolvingProxyInterceptor implements ProxyInterceptor {
     private final GrainNameResolver grainNameResolver;
     private final Logger logger = LoggerFactory.getLogger(GrainResolvingProxyInterceptor.class);
 
-    public GrainResolvingProxyInterceptor(DependencyContainer container, GrainNameResolver grainNameResolver) {
+    public GrainResolvingProxyInterceptor(@Inject(name = "dependencyContainerImpl") DependencyContainer container,
+                                          GrainNameResolver grainNameResolver) {
         this.container = container;
         this.grainNameResolver = grainNameResolver;
     }

@@ -24,6 +24,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 		this.basePackage = basePackage;
 		this.configuration = configuration;
 		GrainInjector grainInitializer = new GrainInjector(configuration);
+		this.dependencyContainer = grainInitializer.getContainer();
 		grainInitializer.inject(this);
 
 		Set<Class<?>> classes = Arrays.stream(new String[]{GrainAppRunner.class.getPackageName(), basePackage})
@@ -34,7 +35,6 @@ public class ApplicationContextImpl implements ApplicationContext {
 
 		grainInitializer.inject(classes);
 
-		this.dependencyContainer = grainInitializer.getContainer();
 	}
 
 	public ApplicationContextImpl(String basePackage) {

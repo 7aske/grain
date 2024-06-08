@@ -14,7 +14,7 @@ import java.util.*;
 
 import static com._7aske.grain.core.reflect.ReflectionUtil.isAnnotationPresent;
 
-class Injectable implements Ordered, Comparable<Injectable> {
+public class Injectable implements Ordered, Comparable<Injectable> {
 	private final String name;
 	private final Class<?> type;
 	private Constructor<?> constructor;

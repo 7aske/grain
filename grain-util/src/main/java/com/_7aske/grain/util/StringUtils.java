@@ -42,4 +42,10 @@ public class StringUtils {
 		return paramPart.replaceAll("^\"", "")
 				.replaceAll("\"$", "");
     }
+
+    public static String uncapitalize(String field) {
+		if (field == null || field.isEmpty()) return field;
+
+		return Character.toLowerCase(field.charAt(0)) + field.substring(1);
+    }
 }
