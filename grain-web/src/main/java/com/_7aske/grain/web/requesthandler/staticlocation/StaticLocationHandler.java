@@ -1,8 +1,8 @@
 package com._7aske.grain.web.requesthandler.staticlocation;
 
 import com._7aske.grain.annotation.NotNull;
-import com._7aske.grain.web.exception.HttpException;
 import com._7aske.grain.logging.Logger;
+import com._7aske.grain.web.exception.HttpException;
 import com._7aske.grain.web.http.*;
 import com._7aske.grain.web.requesthandler.handler.RequestHandler;
 
@@ -16,7 +16,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 
-import static com._7aske.grain.logging.LoggerFactory.*;
+import static com._7aske.grain.logging.LoggerFactory.getLogger;
 import static com._7aske.grain.util.ContentTypeUtil.probeContentTypeNoThrow;
 import static com._7aske.grain.web.util.HttpPathUtil.join;
 
@@ -73,11 +73,7 @@ public class StaticLocationHandler implements RequestHandler {
 				url = classLoader.getResource(joined);
 			}
 
-			if (url == null) {
-				return false;
-			}
-
-			return Paths.get(url.getPath()).toFile().isFile();
+			return url != null;
 		} else {
 			return Paths.get(location, path).toAbsolutePath().toFile().exists();
 		}
