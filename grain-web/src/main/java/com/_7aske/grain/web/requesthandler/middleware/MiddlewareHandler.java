@@ -49,6 +49,11 @@ public class MiddlewareHandler implements RequestHandler, Ordered {
 	}
 
 	@Override
+	public void afterHandle(HttpRequest request, HttpResponse response) {
+		middleware.afterHandle(request, response);
+	}
+
+	@Override
 	public boolean canHandle(HttpRequest request) {
 //		if (request.isHandled()) return false;
 		boolean methodMatch = methods.isEmpty() || methods.contains(request.getMethod());

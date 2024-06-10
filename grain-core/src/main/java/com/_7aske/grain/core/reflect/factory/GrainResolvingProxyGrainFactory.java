@@ -15,6 +15,7 @@ import net.bytebuddy.implementation.MethodDelegation;
 import java.lang.reflect.Method;
 
 @Grain
+@Order(Order.HIGHEST_PRECEDENCE + 100)
 public class GrainResolvingProxyGrainFactory implements GrainFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
     private static final Logger logger = LoggerFactory.getLogger(GrainResolvingProxyGrainFactory.class);

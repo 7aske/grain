@@ -33,4 +33,14 @@ public interface HandlerRegistry {
 	 * @return a list of all registered {@link RequestHandler}s.
 	 */
 	List<RequestHandler> getHandlers();
+
+	/**
+	 * Called after the request has been handled.
+	 *
+	 * @param request the {@link HttpRequest} to be handled.
+	 * @param response the {@link HttpResponse} to be handled.
+	 */
+	default void afterHandle(HttpRequest request, HttpResponse response) {
+		// default implementation
+	}
 }

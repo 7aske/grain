@@ -4,6 +4,7 @@ import com._7aske.grain.core.component.*;
 import com._7aske.grain.core.reflect.ReflectionUtil;
 
 @Grain
+@Order(Order.HIGHEST_PRECEDENCE + 300)
 public class GrainMethodGrainFactory implements GrainFactory {
     private final DependencyContainerImpl dependencyContainer;
 

@@ -17,4 +17,8 @@ import com._7aske.grain.web.requesthandler.staticlocation.StaticHandlerRegistry;
  */
 public interface Middleware {
 	void handle(HttpRequest request, HttpResponse response);
+
+	default void afterHandle(HttpRequest request, HttpResponse response) {
+		// default implementation
+	}
 }

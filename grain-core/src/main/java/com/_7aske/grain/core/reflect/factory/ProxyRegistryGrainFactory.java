@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier;
 import java.util.Optional;
 
 @Grain
+@Order(Order.HIGHEST_PRECEDENCE + 400)
 public class ProxyRegistryGrainFactory implements GrainFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
     private final ProxyInterceptorAbstractFactoryRegistry proxyRegistry;

@@ -11,6 +11,7 @@ import net.bytebuddy.implementation.SuperMethodCall;
 import java.lang.reflect.Method;
 
 @Grain
+@Order(Order.HIGHEST_PRECEDENCE + 200)
 public class InterfaceGrainFactory implements GrainFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
 

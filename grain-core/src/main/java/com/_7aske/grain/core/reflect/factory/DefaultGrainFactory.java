@@ -17,6 +17,10 @@ public class DefaultGrainFactory implements GrainFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T create(Injectable dependency, Object[] args) {
+        if (dependency.isGrainMethodDependency() || dependency.isInterface()) {
+            throw new UnsupportedOperationException("Dependency is not supported by this factory");
+        }
+
         return (T) ReflectionUtil.newInstance(dependency.getConstructor(), args);
     }
 

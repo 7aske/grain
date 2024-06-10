@@ -33,6 +33,16 @@ public interface RequestHandler extends Comparable<RequestHandler> {
 	void handle(HttpRequest request, HttpResponse response) throws GrainRequestHandlerException;
 
 	/**
+	 * Called after the request has been handled.
+	 *
+	 * @param request the {@link HttpRequest} to be handled.
+	 * @param response the {@link HttpResponse} to be handled.
+	 */
+	default void afterHandle(HttpRequest request, HttpResponse response) {
+		// default implementation
+	}
+
+	/**
 	 * Defines whether this particular RequestHandler is eligible for handling
 	 * the provided request. Typically, this method checks whether the handler
 	 * has the appropriate path configured that matches the request's path.

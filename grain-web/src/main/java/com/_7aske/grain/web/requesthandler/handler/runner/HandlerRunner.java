@@ -46,12 +46,16 @@ public class HandlerRunner {
 			registry.handle(request, response);
 
 			if (response.isCommitted()){
-				return;
+				break;
 			}
 		}
 
 		if (!response.isCommitted()) {
 			throw new HttpException.NotFound(request.getPath());
+		}
+
+		for (HandlerRegistry registry : handlerRegistries) {
+			registry.afterHandle(request, response);
 		}
 	}
 }
