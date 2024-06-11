@@ -205,7 +205,8 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 			builder.append("(").append(parentName).append(")");
 		}
 
-		builder.append("[").append(getOrder()).append("]");
+		builder.append("[").append(type.getPackageName()).append("]");
+		builder.append("[").append(order).append("]");
 
 
 		return builder.toString();

@@ -1,5 +1,6 @@
 package com._7aske.grain.security.authentication;
 
+import com._7aske.grain.core.component.Order;
 import com._7aske.grain.web.controller.annotation.Controller;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.web.exception.HttpException;
@@ -21,6 +22,7 @@ import com._7aske.grain.web.view.View;
  * Default authentication entry point handling form POST requests to /login
  */
 @Controller
+@Order(Order.LOWEST_PRECEDENCE)
 @RequestMapping
 public class FormLoginAuthenticationEntryPointController {
 	@Inject

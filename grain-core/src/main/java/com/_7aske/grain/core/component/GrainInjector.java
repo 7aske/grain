@@ -171,9 +171,9 @@ public class GrainInjector {
 			// These should be skipped as they are added to the dependency
 			// container but are not actual classes that we should initialize
 			// in the DI process. Rather we let grain methods do that.
-            if (dependency.isGrainMethodDependency()) {
-                continue;
-            }
+//            if (dependency.isGrainMethodDependency()) {
+//                continue;
+//            }
 
             initialize(dependency);
         }
@@ -256,6 +256,10 @@ public class GrainInjector {
 	private void initialize(Injectable dependency) {
 		// If the dependency is initialized already we do nothing.
 		if (dependency.isInitialized()) return;
+
+		if (dependency.isGrainMethodDependency()) {
+			initialize(dependency.getParent());
+		}
 
 
 		GrainFactory grainFactory = container.getOptionalGrain(GrainFactory.class)

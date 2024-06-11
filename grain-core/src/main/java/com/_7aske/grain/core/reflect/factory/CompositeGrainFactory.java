@@ -26,7 +26,7 @@ public class CompositeGrainFactory implements GrainFactory {
 
     @Override
     public <T> T create(Injectable dependency, Object[] args) {
-        for (GrainFactory factory : factories) {
+        for (GrainFactory factory : factories.stream().sorted(By.order()).toList()) {
             if (factory.supports(dependency)) {
                 return factory.create(dependency, args);
             }

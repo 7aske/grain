@@ -15,7 +15,7 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
 	private final GrainNameResolver grainNameResolver = GrainNameResolver.getDefault();
 
 	public DependencyContainerImpl() {
-		this.dependencies = new PriorityQueue<>(By.order());
+		this.dependencies = new PriorityQueue<>(By.injectableOrder());
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
 	public Collection<Injectable> getAll() {
 		return dependencies
 				.stream()
-				.sorted(By.<Injectable>order().thenComparing(Injectable::getType, By::packages))
+				.sorted(By.injectableOrder())
 				.toList();
 
 	}

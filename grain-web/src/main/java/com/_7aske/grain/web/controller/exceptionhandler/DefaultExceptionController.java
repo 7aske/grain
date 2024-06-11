@@ -21,7 +21,8 @@ public class DefaultExceptionController {
     @Order(255)
     @ExceptionHandler(HttpException.class)
     public Object handle(HttpException ex, HttpRequest request, HttpResponse response) throws IOException {
-        response.reset();
+        if (!response.isCommitted())
+            response.reset();
         response.setStatus(ex.getStatus());
 
         if (Objects.equals(request.getHeader(ACCEPT), ContentType.APPLICATION_JSON) ||
@@ -42,7 +43,8 @@ public class DefaultExceptionController {
     @Order(256)
     @ExceptionHandler(Exception.class)
     public Object handle(Exception ex, HttpRequest request, HttpResponse response) throws IOException {
-        response.reset();
+        if (!response.isCommitted())
+            response.reset();
         response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 
         if (Objects.equals(request.getHeader(ACCEPT), ContentType.APPLICATION_JSON) ||

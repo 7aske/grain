@@ -14,26 +14,23 @@ import java.util.Optional;
 @Grain
 @Order(Order.HIGHEST_PRECEDENCE)
 public class ProxyInterceptorAbstractFactoryRegistry {
-    private final Map<Class<?>, ProxyInterceptorAbstractFactory> factories;
+    private final List<ProxyInterceptorAbstractFactory> factories;
 
     public ProxyInterceptorAbstractFactoryRegistry(List<ProxyInterceptorAbstractFactory> factoryList) {
-        factories = new HashMap<>();
-        for (ProxyInterceptorAbstractFactory factory : factoryList) {
-            factories.put(factory.getDiscriminatorType(), factory);
-        }
+        this.factories = factoryList;
     }
 
-    public Optional<ProxyInterceptorAbstractFactory> getFactory(Class<?> clazz) {
+    public Optional<ProxyInterceptorAbstractFactory> getFactory(Object object) {
         return factories
-                .entrySet()
                 .stream()
-                .filter(entry -> entry.getKey().isAssignableFrom(clazz))
-                .map(Map.Entry::getValue)
+                .filter(factory -> factory.supports(object))
                 .findFirst();
     }
 
 
-    public boolean supports(Class<?> clazz) {
-        return getFactory(clazz).isPresent();
+    public boolean supports(Object object) {
+        return factories
+                .stream()
+                .anyMatch(factory -> factory.supports(object));
     }
 }

@@ -36,7 +36,9 @@ public class ProxyRegistryGrainFactory implements GrainFactory {
 
     @Override
     public boolean supports(Injectable dependency) {
-        return !Modifier.isFinal(dependency.getType().getModifiers()) && proxyRegistry != null;
+        return !Modifier.isFinal(dependency.getType().getModifiers()) && Optional.of(proxyRegistry)
+                .map(registry -> registry.supports(dependency.getType()))
+                .orElse(false);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class ProxyRegistryGrainFactory implements GrainFactory {
         DynamicType.Builder<?> byteBuddy = new ByteBuddy()
                 .subclass(clazz);
         for (Method method : clazz.getDeclaredMethods()) {
-            Optional<ProxyInterceptorAbstractFactory> factoryOptional = proxyRegistry.getFactory(clazz);
+            Optional<ProxyInterceptorAbstractFactory> factoryOptional = proxyRegistry.getFactory(method);
             if (factoryOptional.isEmpty()) {
                 continue;
             }

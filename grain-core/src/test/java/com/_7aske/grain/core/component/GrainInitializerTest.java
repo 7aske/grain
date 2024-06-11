@@ -1,6 +1,10 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
+import com._7aske.grain.core.reflect.factory.CompositeGrainFactory;
+import com._7aske.grain.core.reflect.factory.DefaultGrainFactory;
+import com._7aske.grain.core.reflect.factory.GrainMethodGrainFactory;
+import com._7aske.grain.core.reflect.factory.InterfaceGrainFactory;
 import com._7aske.grain.exception.GrainInitializationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +21,7 @@ class GrainInitializerTest {
 	@BeforeEach
 	void setUp() {
 		grainInitializer = new GrainInjector(Configuration.createDefault());
+		grainInitializer.inject(Set.of(CompositeGrainFactory.class, InterfaceGrainFactory.class, DefaultGrainFactory.class, GrainMethodGrainFactory.class));
 	}
 
 	interface TestGrain {

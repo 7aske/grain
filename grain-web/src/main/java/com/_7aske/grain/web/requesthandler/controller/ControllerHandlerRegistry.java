@@ -1,5 +1,6 @@
 package com._7aske.grain.web.requesthandler.controller;
 
+import com._7aske.grain.util.By;
 import com._7aske.grain.web.controller.annotation.Controller;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
@@ -30,6 +31,7 @@ public class ControllerHandlerRegistry implements HandlerRegistry {
 									 ResponseWriterRegistry responseWriterRegistry,
 									 @Inject(annotatedBy = Controller.class) List<Object> controllers) {
 		this.controllers = controllers.stream()
+				.sorted(By::objectOrder)
 				.map(ControllerWrapper::new)
 				.map(wrapper -> new ControllerHandler(wrapper, parameterConverterRegistry, responseWriterRegistry))
 				.toList();

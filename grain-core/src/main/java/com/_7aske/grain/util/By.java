@@ -1,8 +1,11 @@
 package com._7aske.grain.util;
 
 import com._7aske.grain.GrainApp;
+import com._7aske.grain.core.component.Injectable;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.component.Ordered;
+import com._7aske.grain.core.reflect.ProxyInterceptorAbstractFactory;
+import com._7aske.grain.core.reflect.factory.GrainFactory;
 
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -66,6 +69,18 @@ public class By {
      */
     public static <T extends Ordered> Comparator<T> order() {
         return Comparator.comparingInt(T::getOrder);
+    }
+
+    public static Comparator<Injectable> injectableOrder() {
+        return Comparator.<Injectable, Boolean>comparing(i -> !i.getType().getPackageName().startsWith(GrainApp.class.getPackageName()))
+                .thenComparing(i -> !GrainFactory.class.isAssignableFrom(i.getType()))
+                .thenComparing(i -> !ProxyInterceptorAbstractFactory.class.isAssignableFrom(i.getType()))
+                .thenComparing((i1, i2) -> {
+                    if (i1.getType().isAssignableFrom(i2.getType())) return 0;
+                    if (i2.getType().isAssignableFrom(i1.getType())) return 0;
+                    return i1.getType().getPackageName().compareTo(i2.getType().getPackageName());
+                })
+                .thenComparing(Injectable::getOrder);
     }
 
     /**
