@@ -20,6 +20,14 @@ public class ReflectionUtil {
 	private ReflectionUtil() {
 	}
 
+	public static <T> Constructor<T> getConstructor(Class<T> clazz, Class<?>... paramTypes) {
+        try {
+            return clazz.getConstructor(paramTypes);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("No such constructor found", e);
+        }
+    }
+
 	public static <T> @NotNull Constructor<T> getAnyConstructor(Class<T> clazz) throws NoSuchMethodException {
 		Constructor<T> constructor = null;
 		NoSuchMethodException cause = new NoSuchMethodException();
@@ -108,6 +116,46 @@ public class ReflectionUtil {
 		if (object.isAnnotationPresent(annotation)) return true;
 
 		return Arrays.stream(object.getAnnotations()).anyMatch(a -> isAnnotationPresent(a.annotationType(), annotation));
+	}
+
+
+	public static <T extends Annotation, R extends Annotation> R getAnnotatedBy(Annotation a, Class<T> annotation) {
+		if (a.annotationType().equals(annotation)) {
+			return (R) a;
+		}
+
+		for (Annotation a1 : a.annotationType().getAnnotations()) {
+			if (!List.of(Target.class, Retention.class, Documented.class).contains(a1.annotationType())) {
+				T result = getAnnotatedBy(a1, annotation);
+				if (result != null)
+					return (R) a1;
+			}
+		}
+
+		return null;
+
+	}
+	public static <T extends Annotation, R extends Annotation> R getAnnotatedBy(Class<?> clazz, Class<T> annotation) {
+		for (Annotation a : clazz.getAnnotations()) {
+			if (!List.of(Target.class, Retention.class, Documented.class).contains(a.annotationType())) {
+				T result = getAnnotatedBy(a, annotation);
+				if (result != null)
+					return (R) a;
+			}
+		}
+		return null;
+	}
+
+	public static <T extends Annotation, R> R getAnnotatedBy(AccessibleObject object, Class<T> annotation) {
+		for (Annotation a : object.getAnnotations()) {
+			if (!List.of(Target.class, Retention.class, Documented.class).contains(a.annotationType())) {
+				T result = getAnnotatedBy(a, annotation);
+				if (result != null)
+					return (R) a;
+			}
+		}
+
+		return null;
 	}
 
 	/**

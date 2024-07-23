@@ -1,6 +1,6 @@
 package com._7aske.grain.security.service;
 
-import com._7aske.grain.core.component.Default;
+import com._7aske.grain.core.component.ConditionalOnMissingGrain;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.security.User;
@@ -8,7 +8,7 @@ import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.exception.UserNotFoundException;
 
 @Grain
-@Default
+@ConditionalOnMissingGrain(UserService.class)
 public class UserServiceImpl implements UserService {
 	@Inject
 	private SecurityConfiguration configuration;

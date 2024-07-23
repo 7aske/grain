@@ -4,6 +4,7 @@ import com._7aske.grain.GrainAppRunner;
 import com._7aske.grain.core.component.DependencyContainer;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.GrainInjector;
+import com._7aske.grain.core.component.Injectable;
 import com._7aske.grain.core.configuration.Configuration;
 import com._7aske.grain.core.configuration.GrainApplication;
 import com._7aske.grain.core.configuration.GrainFertilizer;
@@ -86,7 +87,32 @@ public class ApplicationContextImpl implements ApplicationContext {
         return getOptionalGrain(clazz).isPresent();
     }
 
-    @Override
+	@Override
+	public void remove(Injectable dependency) {
+		dependencyContainer.remove(dependency);
+	}
+
+	@Override
+	public List<Injectable> getListByName(String name) {
+		return dependencyContainer.getListByName(name);
+	}
+
+	@Override
+	public Optional<Injectable> getByName(String name) {
+		return dependencyContainer.getByName(name);
+	}
+
+	@Override
+	public List<Injectable> getListByClass(Class<?> clazz) {
+		return dependencyContainer.getListByClass(clazz);
+	}
+
+	@Override
+	public Optional<Injectable> getByClass(Class<?> clazz) {
+		return dependencyContainer.getByClass(clazz);
+	}
+
+	@Override
 	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
 		return dependencyContainer.getGrainsAnnotatedBy(clazz);
 	}

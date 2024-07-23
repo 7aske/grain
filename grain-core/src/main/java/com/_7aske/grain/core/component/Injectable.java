@@ -5,8 +5,10 @@ import com._7aske.grain.annotation.Nullable;
 import com._7aske.grain.core.configuration.GrainFertilizer;
 import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.exception.GrainInitializationException;
+import com._7aske.grain.gtl.interpreter.Interpreter;
 import com._7aske.grain.util.By;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -34,8 +36,10 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 	private Injectable parent;
 	private Method parentMethod;
 	private Object instance;
+	private final Conditional conditional;
+	private final Annotation condition;
 
-	private Injectable(Class<?> type, String name, Constructor<?> constructor, int order) {
+	private Injectable(Class<?> type, String name, Constructor<?> constructor, int order, Annotation condition) {
 		this.name = name;
 		this.type = type;
 		this.parent = null;
@@ -49,6 +53,10 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 		this.afterInitMethods = new ArrayList<>();
 		this.order = order;
 		this.primary = isAnnotationPresent(type, Primary.class);
+		this.condition = condition;
+		this.conditional = condition != null
+				? condition.annotationType().getAnnotation(Conditional.class)
+				: null;
 	}
 
 	public static Injectable ofMethod(@NotNull Method method, @Nullable String name, Injectable provider) {
@@ -56,7 +64,13 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 				.map(Order::value)
 				.orElse(Order.DEFAULT);
 		Class<?> type = method.getReturnType();
-		Injectable injectable = new Injectable(type, name, null, order);
+		Injectable injectable = new Injectable(
+				type,
+				name,
+				null,
+				order,
+				ReflectionUtil.getAnnotatedBy(method, Conditional.class)
+		);
 		injectable.parent = provider;
 		injectable.parentMethod = method;
 		injectable.primary = isAnnotationPresent(method, Primary.class);
@@ -69,7 +83,7 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 	}
 
 	public static Injectable ofInitialized(Object grain) {
-		return new Injectable(grain.getClass(), null, null, Order.HIGHEST_PRECEDENCE);
+		return new Injectable(grain.getClass(), null, null, Order.HIGHEST_PRECEDENCE, null);
 	}
 
 	public Injectable(@NotNull Class<?> clazz, @Nullable String name) {
@@ -124,6 +138,20 @@ public class Injectable implements Ordered, Comparable<Injectable> {
 				.filter(m -> isAnnotationPresent(m, AfterInit.class))
 				.sorted(By::order)
 				.toList();
+		this.condition = ReflectionUtil.getAnnotatedBy(this.type, Conditional.class);
+		this.conditional = this.condition != null
+				? condition.annotationType().getAnnotation(Conditional.class)
+				: null;
+	}
+
+	public boolean evaluateCondition(DependencyContainer dependencyContainer, Interpreter interpreter) {
+		if (this.conditional == null) {
+			return true;
+		}
+
+		AbstractConditionEvaluator<? extends Annotation> evaluator = ReflectionUtil.newInstance(ReflectionUtil.getConstructor(this.conditional.value(), Class.class), this.condition.annotationType());
+
+		return evaluator.doEvaluate(this.condition, this, dependencyContainer, interpreter);
 	}
 
 	public <T> T getInstance() {

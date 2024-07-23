@@ -1,6 +1,6 @@
 package com._7aske.grain.orm.database;
 
-import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.ConditionalOnExpression;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.core.configuration.Configuration;
@@ -16,7 +16,7 @@ import java.util.*;
 import static com._7aske.grain.core.configuration.ConfigurationKey.DATABASE_EXECUTOR_PRINT_SQL;
 
 @Grain
-@Condition("grain.persistence.provider == 'native'")
+@ConditionalOnExpression("grain.persistence.provider == 'native'")
 public class DatabaseExecutor {
 	@Inject
 	protected ConnectionPool connectionPool;

@@ -50,7 +50,12 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
         return getByClass(clazz).isPresent();
     }
 
-    @Override
+	@Override
+	public void remove(Injectable dependency) {
+		dependencies.remove(dependency);
+	}
+
+	@Override
 	public Collection<Object> getGrainsAnnotatedBy(Class<? extends Annotation> clazz) {
 		return getListAnnotatedByClass(clazz)
 				.stream()
@@ -80,13 +85,15 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
 		dependencies.add(dependency);
 	}
 
-	List<Injectable> getListByName(String name) {
+	@Override
+	public List<Injectable> getListByName(String name) {
 		return getAll().stream()
 				.filter(d -> Objects.equals(d.getName().orElse(grainNameResolver.resolveReferenceName(d.getType())), name))
 				.toList();
 	}
 
-	Optional<Injectable> getByName(String name) {
+	@Override
+	public Optional<Injectable> getByName(String name) {
 		List<Injectable> list = getListByName(name);
 
 		if (list.isEmpty()) {
@@ -100,7 +107,8 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
 		return Optional.of(list.get(0));
 	}
 
-	<T> List<Injectable> getListByClass(Class<T> clazz) {
+	@Override
+	public List<Injectable> getListByClass(Class<?> clazz) {
 		return getAll().stream()
 				.filter(d -> clazz.isAssignableFrom(d.getType()))
 				.toList();
@@ -112,7 +120,8 @@ public class DependencyContainerImpl implements DependencyContainer, Iterable<In
 				.toList();
 	}
 
-	<T> Optional<Injectable> getByClass(Class<T> clazz) {
+	@Override
+	public Optional<Injectable> getByClass(Class<?> clazz) {
 		List<Injectable> list = getListByClass(clazz);
 
 		if (list.isEmpty()) {

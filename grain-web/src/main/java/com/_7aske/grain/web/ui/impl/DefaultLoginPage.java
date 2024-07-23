@@ -1,12 +1,14 @@
 package com._7aske.grain.web.ui.impl;
 
 import com._7aske.grain.annotation.NotNull;
+import com._7aske.grain.core.component.ConditionalOnMissingGrain;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.web.http.ContentType;
 import com._7aske.grain.web.ui.LoginPage;
 import com._7aske.grain.web.ui.util.Styles;
 
 @Grain
+@ConditionalOnMissingGrain(LoginPage.class)
 public class DefaultLoginPage implements LoginPage {
 	public @NotNull String getContent() {
 		return "<!DOCTYPE html>\n" +

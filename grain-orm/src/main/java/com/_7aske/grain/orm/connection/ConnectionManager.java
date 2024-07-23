@@ -1,6 +1,6 @@
 package com._7aske.grain.orm.connection;
 
-import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.ConditionalOnExpression;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.core.configuration.Configuration;
@@ -14,7 +14,7 @@ import static com._7aske.grain.core.configuration.ConfigurationKey.*;
 
 
 @Grain
-@Condition("grain.persistence.provider == 'native'")
+@ConditionalOnExpression("grain.persistence.provider == 'native'")
 public final class ConnectionManager {
 	@Inject
 	public Configuration configuration;

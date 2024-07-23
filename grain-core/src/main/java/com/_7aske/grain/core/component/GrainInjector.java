@@ -1,7 +1,7 @@
 package com._7aske.grain.core.component;
 
 import com._7aske.grain.core.configuration.Configuration;
-import com._7aske.grain.core.reflect.*;
+import com._7aske.grain.core.reflect.ReflectionUtil;
 import com._7aske.grain.core.reflect.factory.DefaultGrainFactory;
 import com._7aske.grain.core.reflect.factory.GrainFactory;
 import com._7aske.grain.exception.GrainDependencyUnsatisfiedException;
@@ -12,6 +12,8 @@ import com._7aske.grain.gtl.interpreter.Interpreter;
 import com._7aske.grain.logging.Logger;
 import com._7aske.grain.logging.LoggerFactory;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -83,7 +85,7 @@ public class GrainInjector {
 		}
 
 		Injectable injectable = processDependency(clazz);
-		if (injectable == null) {
+		if (!injectable.evaluateCondition(container, interpreter)) {
 			return;
 		}
 
@@ -95,14 +97,11 @@ public class GrainInjector {
 			logger.warn("Registered Grain {} without @Grain annotation", clazz);
 		}
 
-		if (!checkCondition(clazz.getAnnotation(Condition.class))) {
-			return null;
-		}
-
 		Injectable dependency = new Injectable(
 				clazz,
 				grainNameResolver.resolveDeclarationName(clazz)
 		);
+
 		// One thing that cannot be done inside the BetterDependency constructor
 		// because resulting dependencies need to be added to the DependencyContainer.
 		dependency.getGrainMethods().forEach(method -> {
@@ -138,7 +137,7 @@ public class GrainInjector {
 
 			// We add the dependency to the DependencyContainer allowing
 			// other grains to use it.
-			if (checkCondition(method.getAnnotation(Condition.class))) {
+			if (evaluateCondition(method)) {
 				this.container.add(methodDependency);
 			}
 		});
@@ -164,6 +163,13 @@ public class GrainInjector {
 		// throw an exception.
 		logger.debug("Checking for circular dependencies");
 		checkCircularDependencies();
+
+		for (Injectable dependency : this.container) {
+            if (!dependency.evaluateCondition(container, interpreter)) {
+                logger.debug("Skipping initialization of '{}'", dependency.getType().getName());
+                container.remove(dependency);
+            }
+        }
 
 		// Third, we initialize all dependencies and set their instances.
 		logger.debug("Initializing dependencies");
@@ -204,19 +210,12 @@ public class GrainInjector {
 		logger.debug("Loaded {} Grain classes", container.getAll().size());
 	}
 
-	/**
-	 * Evaluates @Condition annotation to determine whether the given class
-	 * should be initialized.
-	 *
-	 * @param condition The @Condition annotation to evaluate.
-	 * @return True if the class should be initialized.
-	 */
-	private boolean checkCondition(Condition condition) {
-		if (condition == null || condition.value() == null || condition.value().isBlank()) {
+	private boolean checkCondition(ConditionalOnExpression conditionalOnExpression) {
+		if (conditionalOnExpression == null || conditionalOnExpression.value() == null || conditionalOnExpression.value().isBlank()) {
 			return true;
 		}
 
-		String code = condition.value();
+		String code = conditionalOnExpression.value();
 		return Boolean.parseBoolean(String.valueOf(interpreter.evaluate(code)));
 	}
 
@@ -261,7 +260,6 @@ public class GrainInjector {
 			initialize(dependency.getParent());
 		}
 
-
 		GrainFactory grainFactory = container.getOptionalGrain(GrainFactory.class)
 				.orElse(new DefaultGrainFactory());
 
@@ -292,9 +290,10 @@ public class GrainInjector {
 
         // Finally, we set values to all @Inject annotated fields.
         for (Field field : dependency.getInjectableFields()) {
-            if (!checkCondition(field.getAnnotation(Condition.class))) {
+            if (!evaluateCondition(field)) {
                 continue;
             }
+
             InjectableReference reference = InjectableReference.of(field);
             // @Note #resolveInstance will attempt to initialize the value if
             // it is not initialized but that should matter in this because it
@@ -443,5 +442,25 @@ public class GrainInjector {
 		}
 
 		checked.add(start);
+	}
+
+	/**
+	 * Evaluates @Conditional annotation to determine whether the object should
+	 * be initialized.
+	 *
+	 * @param accessibleObject The object to evaluate the condition for.
+	 * @return True if the object should be initialized.
+	 */
+	private boolean evaluateCondition(AccessibleObject accessibleObject) {
+		Annotation condition = ReflectionUtil.getAnnotatedBy(accessibleObject, Conditional.class);
+		if (condition == null) {
+			return true;
+		}
+
+		Conditional conditional = condition.annotationType().getAnnotation(Conditional.class);
+
+		AbstractConditionEvaluator<? extends Annotation> evaluator = ReflectionUtil.newInstance(ReflectionUtil.getConstructor(conditional.value(), Class.class), condition.annotationType());
+
+		return evaluator.doEvaluate(condition, null, container, interpreter);
 	}
 }

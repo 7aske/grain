@@ -2,6 +2,7 @@ package com._7aske.grain.core.component;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -74,4 +75,42 @@ public interface DependencyContainer {
 	 * @return true if the container contains the grain, false otherwise.
 	 */
 	boolean containsGrain(Class<?> clazz);
+
+	/**
+	 * Removes the Injectable from the container.
+	 * @param dependency dependency to remove.
+	 */
+	void remove(Injectable dependency);
+
+	/**
+	 * Raw get list by name.
+	 *
+	 * @param name name of the injectable.
+	 * @return list of injectables.
+	 */
+	List<Injectable> getListByName(String name);
+
+	/**
+	 * Raw get by name.
+	 *
+	 * @param name name of the injectable.
+	 * @return injectable.
+	 */
+	Optional<Injectable> getByName(String name);
+
+	/**
+	 * Raw get list by class.
+	 *
+	 * @param clazz class or super-class of the injectable.
+	 * @return list of injectables.
+	 */
+	List<Injectable> getListByClass(Class<?> clazz);
+
+	/**
+	 * Raw get by class.
+	 *
+	 * @param clazz class or super-class of the injectable.
+	 * @return injectable.
+	 */
+	Optional<Injectable> getByClass(Class<?> clazz);
 }

@@ -1,6 +1,6 @@
 package com._7aske.grain.security.handler.proxy.factory;
 
-import com._7aske.grain.core.component.Condition;
+import com._7aske.grain.core.component.ConditionalOnExpression;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.configuration.ConfigurationKey;
@@ -11,7 +11,7 @@ import com._7aske.grain.security.handler.proxy.SecurityHandlerProxy;
 
 @Grain
 @Order(255)
-@Condition(ConfigurationKey.SECURITY_ENABLED)
+@ConditionalOnExpression(ConfigurationKey.SECURITY_ENABLED)
 public class SecurityHandlerProxyFactory implements HandlerProxyFactory {
 	private final SecurityConfiguration securityConfiguration;
 
