@@ -1,4 +1,4 @@
-package com._7aske.grain.security.handler.proxy.factory;
+package com._7aske.grain.security.proxy.factory;
 
 import com._7aske.grain.ApplicationContextHolder;
 import com._7aske.grain.GrainApp;

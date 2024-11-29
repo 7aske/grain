@@ -11,7 +11,7 @@ public class DefaultGrainFactory implements GrainFactory {
 
     @Override
     public boolean supports(Injectable dependency) {
-        return !dependency.isInterface();
+        return !dependency.isGrainMethodDependency() && !dependency.isInterface();
     }
 
     @Override

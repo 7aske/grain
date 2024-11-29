@@ -164,7 +164,7 @@ public class GrainInjector {
 		logger.debug("Checking for circular dependencies");
 		checkCircularDependencies();
 
-		for (Injectable dependency : this.container) {
+		for (Injectable dependency : container) {
             if (!dependency.evaluateCondition(container, interpreter)) {
                 logger.debug("Skipping initialization of '{}'", dependency.getType().getName());
                 container.remove(dependency);
@@ -173,7 +173,7 @@ public class GrainInjector {
 
 		// Third, we initialize all dependencies and set their instances.
 		logger.debug("Initializing dependencies");
-		for (Injectable dependency : this.container) {
+		for (Injectable dependency : container) {
 			// These should be skipped as they are added to the dependency
 			// container but are not actual classes that we should initialize
 			// in the DI process. Rather we let grain methods do that.

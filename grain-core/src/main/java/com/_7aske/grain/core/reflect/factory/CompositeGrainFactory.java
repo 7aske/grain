@@ -26,10 +26,20 @@ public class CompositeGrainFactory implements GrainFactory {
 
     @Override
     public <T> T create(Injectable dependency, Object[] args) {
-        for (GrainFactory factory : factories.stream().sorted(By.order()).toList()) {
+        int supports = 0;
+        int lastSupports = 0;
+        int index = 0;
+        List<GrainFactory> factories = this.factories.stream().toList();
+        for (GrainFactory factory : factories) {
             if (factory.supports(dependency)) {
-                return factory.create(dependency, args);
+                supports++;
+                lastSupports = index++;
             }
+        }
+        if (supports == 1) {
+            return factories.get(lastSupports).create(dependency, args);
+        } else if (supports > 1) {
+            throw new GrainInitializationException("Multiple factories support dependency: " + dependency);
         }
 
         throw new GrainInitializationException("No suitable factory found for dependency: " + dependency);

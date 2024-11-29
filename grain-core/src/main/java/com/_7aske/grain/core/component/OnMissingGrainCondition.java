@@ -22,7 +22,15 @@ public class OnMissingGrainCondition extends AbstractConditionEvaluator<Conditio
                     .orElse(true);
         }
 
-        return Arrays.stream(annotation.value())
+        Class<?>[] value = annotation.value();
+        if (value.length == 0) {
+            return container.getListByClass(injectable.getType())
+                    .stream()
+                    .filter(d -> d != injectable)
+                    .noneMatch(d -> d.evaluateCondition(container, interpreter));
+        }
+
+        return Arrays.stream(value)
                 .noneMatch(c -> container.getListByClass(c)
                         .stream()
                         .filter(d -> d != injectable)

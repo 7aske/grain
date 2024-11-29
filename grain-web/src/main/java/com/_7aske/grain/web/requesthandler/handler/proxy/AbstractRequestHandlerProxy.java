@@ -12,7 +12,7 @@ import java.util.Collection;
  * HandlerProxy is a component in charge of proxying and potentially modifying or
  * blocking {@link RequestHandler#handle(HttpRequest, HttpResponse)} method calls.
  *
- * @see com._7aske.grain.security.handler.proxy.SecurityHandlerProxy
+ * @see com._7aske.grain.security.proxy.SecurityHandlerProxy
  * @see DefaultRequestHandlerProxy
  */
 public abstract class AbstractRequestHandlerProxy implements RequestHandler {

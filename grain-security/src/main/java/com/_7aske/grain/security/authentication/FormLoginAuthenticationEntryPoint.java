@@ -1,13 +1,8 @@
 package com._7aske.grain.security.authentication;
 
+import com._7aske.grain.core.component.ConditionalOnMissingGrain;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.web.http.GrainHttpResponse;
-import com._7aske.grain.web.http.HttpRequest;
-import com._7aske.grain.web.http.HttpResponse;
-import com._7aske.grain.web.http.session.Cookie;
-import com._7aske.grain.web.http.session.SessionConstants;
-import com._7aske.grain.web.http.session.SessionStore;
 import com._7aske.grain.security.Authentication;
 import com._7aske.grain.security.CookieAuthentication;
 import com._7aske.grain.security.SecurityConstants;
@@ -15,21 +10,31 @@ import com._7aske.grain.security.User;
 import com._7aske.grain.security.crypto.PasswordEncoder;
 import com._7aske.grain.security.exception.*;
 import com._7aske.grain.security.service.UserService;
+import com._7aske.grain.web.http.GrainHttpResponse;
+import com._7aske.grain.web.http.HttpRequest;
+import com._7aske.grain.web.http.HttpResponse;
+import com._7aske.grain.web.http.session.Cookie;
+import com._7aske.grain.web.http.session.SessionConstants;
+import com._7aske.grain.web.http.session.SessionStore;
 
 import java.util.UUID;
 
 import static com._7aske.grain.web.http.session.SessionConstants.SESSION_COOKIE_NAME;
 
 @Grain
+@ConditionalOnMissingGrain
 public class FormLoginAuthenticationEntryPoint implements AuthenticationEntryPoint {
-	@Inject
-	private UserService userService;
-	@Inject
-	private PasswordEncoder passwordEncoder;
-	@Inject
-	private SessionStore sessionStore;
+	private final UserService userService;
+	private final PasswordEncoder passwordEncoder;
+	private final SessionStore sessionStore;
 
-	@Override
+    public FormLoginAuthenticationEntryPoint(UserService userService, PasswordEncoder passwordEncoder, SessionStore sessionStore) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+        this.sessionStore = sessionStore;
+    }
+
+    @Override
 	public Authentication authenticate(HttpRequest request, HttpResponse response) throws GrainSecurityException {
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");

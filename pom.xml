@@ -28,6 +28,7 @@
         <module>grain-util</module>
         <module>grain-orm</module>
         <module>grain-gtl</module>
+        <module>grain-security</module>
     </modules>
 
     <dependencyManagement>

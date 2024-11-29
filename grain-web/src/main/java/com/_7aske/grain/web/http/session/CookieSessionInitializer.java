@@ -1,5 +1,6 @@
 package com._7aske.grain.web.http.session;
 
+import com._7aske.grain.core.component.ConditionalOnMissingGrain;
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
 import com._7aske.grain.core.configuration.Configuration;
@@ -16,13 +17,17 @@ import static com._7aske.grain.web.http.session.SessionConstants.SESSION_COOKIE_
 import static com._7aske.grain.web.http.session.SessionConstants.SESSION_DEFAULT_MAX_AGE;
 
 @Grain
+@ConditionalOnMissingGrain
 public class CookieSessionInitializer implements SessionInitializer {
-	@Inject
-	private Configuration configuration;
-	@Inject
-	private SessionStore sessionStore;
+	private final Configuration configuration;
+	private final SessionStore sessionStore;
 
-	public Session initialize(HttpRequest request, HttpResponse response) {
+    public CookieSessionInitializer(Configuration configuration, SessionStore sessionStore) {
+        this.configuration = configuration;
+        this.sessionStore = sessionStore;
+    }
+
+    public Session initialize(HttpRequest request, HttpResponse response) {
 		if (!Objects.equals(configuration.getBoolean(ConfigurationKey.SESSION_ENABLED), true)) {
 			return null;
 		}

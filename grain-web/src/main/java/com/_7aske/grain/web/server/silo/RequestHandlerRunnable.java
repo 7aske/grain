@@ -14,7 +14,6 @@ import com._7aske.grain.web.controller.exceptionhandler.ExceptionControllerHandl
 import com._7aske.grain.web.http.GrainHttpRequest;
 import com._7aske.grain.web.http.GrainHttpResponse;
 import com._7aske.grain.web.http.HttpHeaders;
-import com._7aske.grain.web.http.codec.json.JsonWriter;
 import com._7aske.grain.web.http.session.Session;
 import com._7aske.grain.web.http.session.SessionInitializer;
 import com._7aske.grain.web.requesthandler.handler.runner.HandlerRunner;
@@ -35,7 +34,6 @@ public class RequestHandlerRunnable implements Runnable {
 	private final HandlerRunner handlerRunner;
 	private final SessionInitializer sessionInitializer;
 	private final HttpRequestAuthenticationProviderStrategy provider;
-	private final JsonWriter jsonWriter = new JsonWriter(false);
 	private final boolean logEnabled;
 	private final boolean sessionEnabled;
 	private final SimpleDateFormat DATE_HEADER_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");

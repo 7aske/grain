@@ -1,5 +1,6 @@
 package com._7aske.grain.web.http.session;
 
+import com._7aske.grain.core.component.ConditionalOnMissingGrain;
 import com._7aske.grain.core.component.Grain;
 
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentMap;
  * DatabaseSessionStore for example.
  */
 @Grain
+@ConditionalOnMissingGrain
 public class InMemorySessionStore implements SessionStore {
 	private final ConcurrentMap<String, Map<Object, Object>> sessions;
 

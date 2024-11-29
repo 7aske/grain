@@ -1,4 +1,4 @@
-package com._7aske.grain.security.handler.proxy;
+package com._7aske.grain.security.proxy;
 
 import com._7aske.grain.web.exception.HttpException;
 import com._7aske.grain.security.config.SecurityConfiguration;

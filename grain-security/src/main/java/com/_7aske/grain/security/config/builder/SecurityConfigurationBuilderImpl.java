@@ -2,13 +2,13 @@ package com._7aske.grain.security.config.builder;
 
 import com._7aske.grain.core.component.Grain;
 import com._7aske.grain.core.component.Inject;
-import com._7aske.grain.web.http.HttpMethod;
 import com._7aske.grain.security.Authority;
-import com._7aske.grain.security.BasicAuthority;
 import com._7aske.grain.security.BasicUser;
+import com._7aske.grain.security.BasicAuthority;
 import com._7aske.grain.security.config.SecurityConfiguration;
 import com._7aske.grain.security.config.rule.Rule;
 import com._7aske.grain.security.crypto.PasswordEncoder;
+import com._7aske.grain.web.http.HttpMethod;
 
 import java.util.Arrays;
 import java.util.Collection;
